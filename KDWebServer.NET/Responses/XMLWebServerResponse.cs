@@ -3,33 +3,36 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog.Fluent;
 
-namespace KDWebServer
+namespace KDWebServer.Responses
 {
   public class XMLWebServerResponse : IWebServerResponse
   {
     private readonly string _xml;
 
-    public XMLWebServerResponse(string xml)
+    private XMLWebServerResponse(string xml)
     {
       _xml = xml;
     }
 
-    public override Task WriteToResponse(InternalWebServerClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
       handler.Logger.Info()
              .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 100).Replace("\n", " ")})")
              .Property("xml", _xml)
+             .Property("code", StatusCode)
              .Property("client_id", handler.ClientId)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_xml);
 
-      response.StatusCode = _statusCode;
+      response.StatusCode = StatusCode;
       response.SendChunked = true;
       response.ContentType = "text/xml";
       response.ContentLength64 = resp.LongLength;
 
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }
+
+    internal static XMLWebServerResponse FromString(string xml) => new XMLWebServerResponse(xml);
   }
 }

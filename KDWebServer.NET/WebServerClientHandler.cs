@@ -3,47 +3,45 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
-using System.Xml;
 using System.Xml.Linq;
 using KDLib;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Fluent;
-using Formatting = Newtonsoft.Json.Formatting;
 
 namespace KDWebServer
 {
-  public class InternalWebServerClientHandler
+  public class WebServerClientHandler
   {
     private readonly HttpListenerContext _httpContext;
     public long ProcessingTime;
 
-    public InternalWebServer InternalWebServer { get; }
+    public WebServer WebServer { get; }
     public NLog.Logger Logger { get; }
     public string ClientId { get; }
     public IPAddress RemoteEndpoint { get; }
 
-    public InternalWebServerClientHandler(InternalWebServer internalWebServer, HttpListenerContext httpContext)
+    public WebServerClientHandler(WebServer webServer, HttpListenerContext httpContext)
     {
       _httpContext = httpContext;
-      InternalWebServer = internalWebServer;
-      Logger = internalWebServer.LogFactory.GetLogger<NLog.Logger>("webserver.client"); 
+      WebServer = webServer;
+      Logger = webServer.LogFactory.GetLogger<NLog.Logger>("webserver.client");
 
       string shortId = StringUtils.GenerateRandomString(4);
       RemoteEndpoint = Utils.GetClientIp(_httpContext);
       ClientId = $"{RemoteEndpoint} {shortId}";
     }
 
-    private (WebServerUtils.RouteMatch RouteMatch, InternalWebServer.EndpointDefinition Endpoint) MatchRoutes(string path, HttpMethod method)
+    private (WebServerUtils.RouteMatch RouteMatch, WebServer.EndpointDefinition Endpoint) MatchRoutes(string path, HttpMethod method)
     {
       int bestScore = -1;
       WebServerUtils.RouteMatch bestRoute = null;
-      InternalWebServer.EndpointDefinition bestEndpoint = null;
+      WebServer.EndpointDefinition bestEndpoint = null;
 
-      foreach (var (route, endpointDefinition) in InternalWebServer._endpoints) {
+      foreach (var pair in WebServer.Endpoints) {
+        var route = pair.Key;
+        var endpointDefinition = pair.Value;
+
         if (!route.Methods.Contains(method))
           continue;
 
@@ -69,7 +67,11 @@ namespace KDWebServer
       httpContext.Response.AddHeader("Access-Control-Allow-Origin", "*");
 
       string bodyStr = null;
-      using (MappedDiagnosticsLogicalContext.SetScoped("client_id", ClientId)) {
+      using (MappedDiagnosticsLogicalContext.SetScoped("client_id", ClientId))
+      using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", RemoteEndpoint))
+      using (MappedDiagnosticsLogicalContext.SetScoped("method", _httpContext.Request.HttpMethod))
+      using (MappedDiagnosticsLogicalContext.SetScoped("path", _httpContext.Request.Url.AbsolutePath))
+      using (MappedDiagnosticsLogicalContext.SetScoped("query", _httpContext.Request.Url.Query)) {
         try {
           var method = WebServerUtils.StringToHttpMethod(httpContext.Request.HttpMethod);
           if (method == HttpMethod.Head) {
@@ -83,11 +85,6 @@ namespace KDWebServer
           if (match.RouteMatch == null) {
             Logger.Trace()
                   .Message($"[{ClientId}] new invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
-                  // .Property("client_id", ClientId)
-                  .Property("remote_ip", RemoteEndpoint)
-                  .Property("method", _httpContext.Request.HttpMethod)
-                  .Property("path", _httpContext.Request.Url.AbsolutePath)
-                  .Property("query", _httpContext.Request.Url.Query)
                   .Write();
 
             httpContext.Response.StatusCode = 404;
@@ -109,7 +106,7 @@ namespace KDWebServer
             else if (ct.MediaType == "application/json") {
               string payload = await ctx.ReadAsString();
               ctx.JsonData = JToken.Parse(payload);
-              bodyStr = ctx.JsonData.ToString(Formatting.Indented);
+              bodyStr = ctx.JsonData.ToString(Newtonsoft.Json.Formatting.Indented);
             }
             else if (ct.MediaType == "text/xml") {
               string payload = await ctx.ReadAsString();
@@ -120,11 +117,6 @@ namespace KDWebServer
 
           Logger.Trace()
                 .Message($"[{ClientId}] new HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
-                // .Property("client_id", ClientId)
-                .Property("remote_ip", RemoteEndpoint)
-                .Property("method", _httpContext.Request.HttpMethod)
-                .Property("path", _httpContext.Request.Url.AbsolutePath)
-                .Property("query", _httpContext.Request.Url.Query)
                 .Property("content", bodyStr)
                 .Write();
 
@@ -148,11 +140,6 @@ namespace KDWebServer
         catch (Exception e) {
           Logger.Error()
                 .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
-                // .Property("client_id", ClientId)
-                .Property("remote_ip", RemoteEndpoint)
-                .Property("method", _httpContext.Request.HttpMethod)
-                .Property("path", _httpContext.Request.Url.AbsolutePath)
-                .Property("query", _httpContext.Request.Url.Query)
                 .Property("content", bodyStr)
                 .Exception(e)
                 .Write();

@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 
 namespace KDWebServer
 {
-  internal class Utils
+  internal static class Utils
   {
     public static string ExtractSimpleHtmlText(string html, int maxLength)
     {
@@ -29,14 +27,14 @@ namespace KDWebServer
     public static IPAddress GetClientIp(HttpListenerContext httpContext, HashSet<IPAddress> trustedProxies = null)
     {
       return GetClientIp(httpContext.Request.RemoteEndPoint?.Address,
-                         httpContext.Request.Headers["X-Forwarded-For"]?.Split(","),
+                         httpContext.Request.Headers["X-Forwarded-For"]?.Split(','),
                          httpContext.Request.Headers["X-Real-IP"],
                          trustedProxies);
     }
 
     private static IPAddress GetClientIp(IPAddress clientIp, IReadOnlyList<string> xForwardedFor, string realIp, HashSet<IPAddress> trustedProxies = null)
     {
-      if (trustedProxies.Contains(clientIp)) {
+      if (trustedProxies != null && trustedProxies.Contains(clientIp)) {
         if (xForwardedFor != null)
           return IPAddress.Parse(xForwardedFor[0]);
         else if (realIp != null)

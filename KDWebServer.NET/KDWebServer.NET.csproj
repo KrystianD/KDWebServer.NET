@@ -1,15 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <RootNamespace>KDWebServer</RootNamespace>
+        <PackageVersion>0.1.0</PackageVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>Krystian Dużyński</Authors>
+        <LangVersion>7.3</LangVersion>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DotLiquid" Version="2.0.298" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.8.14" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-    <PackageReference Include="NLog" Version="4.5.11" />
-    <PackageReference Include="KDLib.NET" Version="0.1.3" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="DotLiquid" Version="2.0.298" />
+        <PackageReference Include="HtmlAgilityPack" Version="1.8.14" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+        <PackageReference Include="NLog" Version="4.5.11" />
+        <PackageReference Include="KDLib.NET" Version="0.2.4.4" />
+    </ItemGroup>
 
 </Project>

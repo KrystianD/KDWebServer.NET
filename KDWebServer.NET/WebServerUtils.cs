@@ -12,7 +12,7 @@ namespace KDWebServer
     public class RouteDescriptor
     {
       public Regex Regex;
-      public Dictionary<string, Func<string, object>> Params = new Dictionary<string, Func<string, object>>();
+      public readonly Dictionary<string, Func<string, object>> Params = new Dictionary<string, Func<string, object>>();
       public int Score;
       public HashSet<HttpMethod> Methods;
 
@@ -24,15 +24,18 @@ namespace KDWebServer
         if (!m.Success)
           return false;
 
-        foreach (var (name, conv) in Params)
+        foreach (var pair in Params) {
+          var name = pair.Key;
+          var conv = pair.Value;
           match.Params.Add(name, conv(m.Groups[name].Value));
+        }
         return true;
       }
     }
 
     public class RouteMatch
     {
-      public Dictionary<string, object> Params = new Dictionary<string, object>();
+      public readonly Dictionary<string, object> Params = new Dictionary<string, object>();
     }
 
     public static HttpMethod StringToHttpMethod(string method)
@@ -62,7 +65,7 @@ namespace KDWebServer
         route = $"^{Regex.Escape(route)}$";
       }
 
-      RouteDescriptor m = new RouteDescriptor();
+      var routeDesc = new RouteDescriptor();
 
       bool hasRegex = false;
       string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-z0-9]+)>", match =>
@@ -74,10 +77,10 @@ namespace KDWebServer
 
         switch (type) {
           case "string":
-            m.Params.Add(name, s => s);
+            routeDesc.Params.Add(name, s => s);
             break;
           case "int":
-            m.Params.Add(name, s =>
+            routeDesc.Params.Add(name, s =>
             {
               if (!int.TryParse(s, out var v))
                 throw new RouteInvalidValueProvidedException();
@@ -95,10 +98,10 @@ namespace KDWebServer
       if (hasRegex)
         score -= 10;
 
-      m.Regex = new Regex(r);
-      m.Score = score;
+      routeDesc.Regex = new Regex(r);
+      routeDesc.Score = score;
 
-      return m;
+      return routeDesc;
     }
   }
 }
