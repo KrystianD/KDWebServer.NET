@@ -47,6 +47,12 @@ namespace KDWebServer
         return int.Parse(val);
       }
 
+      public long GetLong(int index = 0)
+      {
+        string val = GetString(index);
+        return long.Parse(val);
+      }
+
       public Value GetSingleValue()
       {
         if (_values.Count > 1)
@@ -150,6 +156,20 @@ namespace KDWebServer
         return false;
 
       value = v.GetInt();
+      return true;
+    }
+
+    public long GetLong(string name) => TryGetLong(name, out var value) ? value : throw new IndexOutOfRangeException();
+    public long GetLongOrDefault(string name, long @default = default) => TryGetLong(name, out var value) ? value : @default;
+
+    public bool TryGetLong(string name, out long value)
+    {
+      value = default;
+
+      if (!_valuesCollections.TryGetValue(name, out var v))
+        return false;
+
+      value = v.GetLong();
       return true;
     }
 
