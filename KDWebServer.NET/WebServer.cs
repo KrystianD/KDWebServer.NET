@@ -48,7 +48,7 @@ namespace KDWebServer
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
-    public async void Run(int port)
+    public async Task Run(int port)
     {
       if (Endpoints.Count == 0)
         return;
