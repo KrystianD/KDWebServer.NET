@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using NLog.Fluent;
 
@@ -6,26 +7,45 @@ namespace KDWebServer.Responses
 {
   public class StatusCodeWebServerResponse : IWebServerResponse
   {
-    private StatusCodeWebServerResponse(int code)
+    private readonly string _text;
+
+    private StatusCodeWebServerResponse(int code, string text = "")
     {
+      _text = text;
       StatusCode = code;
     }
 
     internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
-      HttpStatusCode code = (HttpStatusCode) StatusCode;
+      HttpStatusCode code = (HttpStatusCode)StatusCode;
+
+      var textStr = "";
+      if (_text != "")
+        textStr = $" with text: /{Utils.LimitText(_text, 30)}/";
 
       handler.Logger.Info()
-             .Message($"[{handler.ClientId}] sending {code} code response ({handler.ProcessingTime}ms)")
+             .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.ProcessingTime}ms)")
+             .Property("text", _text)
              .Property("code", StatusCode)
              .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;
-      return Task.CompletedTask;
+      if (_text == null) {
+        return Task.CompletedTask;
+      }
+      else {
+        byte[] resp = Encoding.UTF8.GetBytes(_text);
+        response.SendChunked = true;
+        response.ContentType = "text/plain";
+        response.ContentLength64 = resp.LongLength;
+
+        return response.OutputStream.WriteAsync(resp, 0, resp.Length);
+      }
     }
 
-    internal static StatusCodeWebServerResponse FromStatusCode(int statusCode) => new StatusCodeWebServerResponse(statusCode);
-    internal static StatusCodeWebServerResponse FromStatusCode(HttpStatusCode statusCode) => FromStatusCode((int) statusCode);
+
+    internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new StatusCodeWebServerResponse(statusCode, text);
+    internal static StatusCodeWebServerResponse FromStatusCode(HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
   }
 }
