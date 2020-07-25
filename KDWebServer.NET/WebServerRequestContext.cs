@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
@@ -24,7 +24,7 @@ namespace KDWebServer
 
     // Request
     public string ForwardedUri { get; }
-    public IPAddress RemoteEndpoint { get; }
+    public System.Net.IPAddress RemoteEndpoint { get; }
 
     // Headers
     public QueryStringValuesCollection Headers { get; }

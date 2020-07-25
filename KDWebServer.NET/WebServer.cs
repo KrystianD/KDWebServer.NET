@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
+using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -61,7 +61,7 @@ namespace KDWebServer
 
       while (true) {
         try {
-          var httpContext = await listener.GetContextAsync();
+          var httpContext = await Task.Factory.FromAsync(listener.BeginGetContext, listener.EndGetContext, null);
 
           var handler = new WebServerClientHandler(this, httpContext);
           handler.Handle();

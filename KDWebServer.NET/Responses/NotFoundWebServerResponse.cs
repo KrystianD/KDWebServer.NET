@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text;
+﻿using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using NLog.Fluent;
 

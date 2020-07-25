@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net;
+using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Xml.Linq;
@@ -19,7 +19,7 @@ namespace KDWebServer
     public WebServer WebServer { get; }
     public NLog.Logger Logger { get; }
     public string ClientId { get; }
-    public IPAddress RemoteEndpoint { get; }
+    public System.Net.IPAddress RemoteEndpoint { get; }
 
     public WebServerClientHandler(WebServer webServer, HttpListenerContext httpContext)
     {

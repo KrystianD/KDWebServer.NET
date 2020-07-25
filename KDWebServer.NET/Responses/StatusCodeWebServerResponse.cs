@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using WebSocketSharp.Net;
 using System.Text;
 using System.Threading.Tasks;
 using NLog.Fluent;
@@ -46,6 +46,6 @@ namespace KDWebServer.Responses
 
 
     internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new StatusCodeWebServerResponse(statusCode, text);
-    internal static StatusCodeWebServerResponse FromStatusCode(HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
+    internal static StatusCodeWebServerResponse FromStatusCode(System.Net.HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
   }
 }

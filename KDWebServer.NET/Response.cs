@@ -18,7 +18,7 @@ namespace KDWebServer
     public static RedirectWebServerResponse Redirect(string location) => RedirectWebServerResponse.FromLocation(location);
 
     public static StatusCodeWebServerResponse StatusCode(int code, string text = "") => StatusCodeWebServerResponse.FromStatusCode(code, text);
-    public static StatusCodeWebServerResponse StatusCode(HttpStatusCode code, string text = "") => StatusCodeWebServerResponse.FromStatusCode(code, text);
+    public static StatusCodeWebServerResponse StatusCode(System.Net.HttpStatusCode code, string text = "") => StatusCodeWebServerResponse.FromStatusCode(code, text);
 
     public static TemplateWebServerResponse TemplateFile(string templatePath, Dictionary<string, object> data = null) => TemplateWebServerResponse.FromFile(templatePath, data);
     public static TemplateWebServerResponse TemplateFile(string templatePath, object data = null) => TemplateWebServerResponse.FromFile(templatePath, data);

@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using NLog.Fluent;
 

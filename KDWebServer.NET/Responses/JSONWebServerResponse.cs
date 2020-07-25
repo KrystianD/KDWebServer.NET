@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using WebSocketSharp.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;

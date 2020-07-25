@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
