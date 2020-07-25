@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Responses;
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace KDWebServer
 {
@@ -35,5 +36,8 @@ namespace KDWebServer
     public static TextWebServerResponse Text(string text, string contentType) => TextWebServerResponse.FromString(text, contentType);
 
     public static XMLWebServerResponse Xml(string xml) => XMLWebServerResponse.FromString(xml);
+
+    public static BinaryWebServerResponse Bytes(byte[] data, string mimeType = "application/octet-stream") => BinaryWebServerResponse.FromBytes(data, mimeType);
+    public static StreamWebServerResponse Stream(Stream stream, bool closeAfter, string mimeType = "application/octet-stream") => StreamWebServerResponse.FromStream(stream, closeAfter, mimeType);
   }
 }
