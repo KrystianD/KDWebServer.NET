@@ -3,10 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using WebSocketSharp.Net;
 using System.Net.Http;
+using System.Net.Security;
 using System.Threading.Tasks;
 
 namespace KDWebServer
 {
+  public class WebServerSslConfig
+  {
+    public string CertificatePath { get; set; }
+    public string KeyPath { get; set; }
+    public bool ClientCertificateRequired { get; set; } = false;
+    public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (sender, certificate, chain, sslPolicyErrors) => true;
+  }
+
   public class WebServer
   {
     public delegate Task<IWebServerResponse> EndpointHandler(WebServerRequestContext ctx);
@@ -48,17 +57,28 @@ namespace KDWebServer
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
-    public async Task Run(int port)
+    public async Task Run(int port, WebServerSslConfig sslConfig = null)
     {
       if (Endpoints.Count == 0)
         return;
 
       var listener = new HttpListener();
-      _logger.Info($"Starting server on port {port}");
-      listener.Prefixes.Add($"http://+:{port}/");
+
+      if (sslConfig == null) {
+        _logger.Info($"Starting HTTP server on port {port}");
+        listener.Prefixes.Add($"http://+:{port}/");
+      }
+      else {
+        _logger.Info($"Starting HTTPS server on port {port}");
+        listener.Prefixes.Add($"https://+:{port}/");
+
+        listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);
+        listener.SslConfiguration.ClientCertificateRequired = sslConfig.ClientCertificateRequired;
+        listener.SslConfiguration.CheckCertificateRevocation = false;
+        listener.SslConfiguration.ClientCertificateValidationCallback = sslConfig.ClientCertificateValidationCallback;
+      }
 
       listener.Start();
-
       while (true) {
         try {
           var httpContext = await Task.Factory.FromAsync(listener.BeginGetContext, listener.EndGetContext, null);

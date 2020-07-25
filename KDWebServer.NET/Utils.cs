@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
@@ -64,6 +67,30 @@ namespace KDWebServer
       int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
       double num = Math.Round(bytes / Math.Pow(1024, place), 1);
       return $"{Math.Sign(byteCount) * num:0.##} {suf[place]}";
+    }
+
+    public static X509Certificate2 LoadPemCertificate(string certificatePath, string privateKeyPath)
+    {
+      using var publicKey = new X509Certificate2(certificatePath);
+
+      var privateKeyText = File.ReadAllText(privateKeyPath);
+      var privateKeyBlocks = privateKeyText.Split("-", StringSplitOptions.RemoveEmptyEntries);
+      var privateKeyBytes = Convert.FromBase64String(privateKeyBlocks[1]);
+      using var rsa = RSA.Create();
+
+      switch (privateKeyBlocks[0]) {
+        case "BEGIN PRIVATE KEY":
+          rsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+          break;
+        case "BEGIN RSA PRIVATE KEY":
+          rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
+          break;
+        default:
+          throw new ArgumentException("Invalid private key PEM file");
+      }
+
+      var keyPair = publicKey.CopyWithPrivateKey(rsa);
+      return new X509Certificate2(keyPair.Export(X509ContentType.Pfx));
     }
   }
 }
