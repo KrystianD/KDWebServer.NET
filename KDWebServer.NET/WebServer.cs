@@ -57,7 +57,17 @@ namespace KDWebServer
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
-    public async Task Run(int port, WebServerSslConfig sslConfig = null)
+    public void RunSync(int port, WebServerSslConfig sslConfig = null)
+    {
+      InternalRun(port, sslConfig).Wait();
+    }
+
+    public void RunAsync(int port, WebServerSslConfig sslConfig = null)
+    {
+      var _ = InternalRun(port, sslConfig);
+    }
+
+    private async Task InternalRun(int port, WebServerSslConfig sslConfig)
     {
       if (Endpoints.Count == 0)
         return;
@@ -79,6 +89,7 @@ namespace KDWebServer
       }
 
       listener.Start();
+      
       while (true) {
         try {
           var httpContext = await Task.Factory.FromAsync(listener.BeginGetContext, listener.EndGetContext, null);

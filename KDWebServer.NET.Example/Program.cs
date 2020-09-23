@@ -26,6 +26,8 @@ namespace KDWebServer.Example
 
       server.AddGETEndpoint("/", async ctx => Response.Text("OK"));
 
+      server.AddPOSTEndpoint("/", async ctx => Response.Text("OK"));
+
       server.AddGETEndpoint("/user/<string:name>", async ctx => Response.Text($"user: {ctx.Params["name"]}"));
 
       server.AddGETEndpoint("/data", async ctx => Response.Json(new { a = 1, b = 2 }));
@@ -44,7 +46,7 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
-      await server.Run(8080);
+      server.RunSync(8080);
     }
   }
 }
