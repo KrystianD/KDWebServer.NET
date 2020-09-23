@@ -49,12 +49,12 @@ namespace KDWebServer
     {
       if (!httpContext.Request.HasEntityBody)
         return null;
-      using (Stream inputStream = httpContext.Request.InputStream) {
-        using (StreamReader streamReader = new StreamReader(inputStream, httpContext.Request.ContentEncoding)) {
-          requestPayload = await streamReader.ReadToEndAsync();
-          return requestPayload;
-        }
-      }
+
+      using var ms = new MemoryStream();
+      
+      await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
+      
+      return httpContext.Request.ContentEncoding.GetString(ms.ToArray());
     }
   }
 }
