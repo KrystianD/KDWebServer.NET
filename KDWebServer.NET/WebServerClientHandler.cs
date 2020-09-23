@@ -3,6 +3,7 @@ using System.Diagnostics;
 using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using KDLib;
 using Newtonsoft.Json.Linq;
@@ -97,22 +98,7 @@ namespace KDWebServer
 
           // Parse request
           if (httpContext.Request.ContentType != null) {
-            var ct = new ContentType(httpContext.Request.ContentType);
-            if (ct.MediaType == "application/x-www-form-urlencoded") {
-              string payload = await ctx.ReadAsString();
-              ctx.FormData = QueryStringValuesCollection.Parse(payload);
-              bodyStr = Uri.UnescapeDataString(payload);
-            }
-            else if (ct.MediaType == "application/json") {
-              string payload = await ctx.ReadAsString();
-              ctx.JsonData = JToken.Parse(payload);
-              bodyStr = ctx.JsonData.ToString(Newtonsoft.Json.Formatting.Indented);
-            }
-            else if (ct.MediaType == "text/xml") {
-              string payload = await ctx.ReadAsString();
-              ctx.XmlData = XDocument.Parse(payload);
-              bodyStr = ctx.XmlData.ToString(SaveOptions.None);
-            }
+            bodyStr = await ParseKnownTypes(httpContext, ctx);
           }
 
           Logger.Trace()
@@ -148,6 +134,45 @@ namespace KDWebServer
         }
 
         httpContext.Response.OutputStream.Close();
+      }
+    }
+    
+    private static async Task<string> ParseKnownTypes(HttpListenerContext httpContext, WebServerRequestContext ctx)
+    {
+      ContentType ct;
+
+      try { ct = new ContentType(httpContext.Request.ContentType); }
+      catch (FormatException) { return null; }
+
+      string payload;
+
+      switch (ct.MediaType) {
+        case "application/x-www-form-urlencoded":
+          payload = await ctx.ReadAsString();
+          if (payload == null)
+            return "(empty)";
+
+          ctx.FormData = QueryStringValuesCollection.Parse(payload);
+          return Uri.UnescapeDataString(payload);
+
+        case "application/json":
+          payload = await ctx.ReadAsString();
+          if (payload == null)
+            return "(empty)";
+
+          ctx.JsonData = JToken.Parse(payload);
+          return ctx.JsonData.ToString(Newtonsoft.Json.Formatting.Indented);
+
+        case "text/xml":
+          payload = await ctx.ReadAsString();
+          if (payload == null)
+            return "(empty)";
+
+          ctx.XmlData = XDocument.Parse(payload);
+          return ctx.XmlData.ToString(SaveOptions.None);
+
+        default:
+          return null;
       }
     }
   }
