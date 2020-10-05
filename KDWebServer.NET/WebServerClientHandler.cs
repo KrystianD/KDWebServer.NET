@@ -74,15 +74,14 @@ namespace KDWebServer
       using (MappedDiagnosticsLogicalContext.SetScoped("path", _httpContext.Request.Url.AbsolutePath))
       using (MappedDiagnosticsLogicalContext.SetScoped("query", _httpContext.Request.Url.Query)) {
         try {
-          var method = WebServerUtils.StringToHttpMethod(httpContext.Request.HttpMethod);
-          if (method == HttpMethod.Head) {
+          if (ctx.HttpMethod == HttpMethod.Head) {
             httpContext.Response.StatusCode = 200;
             httpContext.Response.ContentLength64 = 0;
             httpContext.Response.OutputStream.Close();
             return;
           }
 
-          var match = MatchRoutes(ctx.Path, method);
+          var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
             Logger.Trace()
                   .Message($"[{ClientId}] new invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -12,9 +13,9 @@ namespace KDWebServer
     public HttpListenerContext httpContext;
 
     public string Path => httpContext.Request.Url.AbsolutePath;
-    public string HttpMethod => httpContext.Request.HttpMethod;
 
     private string requestPayload;
+    public HttpMethod HttpMethod { get; }
 
     // Routing
     public Dictionary<string, object> Params { get; set; }
@@ -43,6 +44,8 @@ namespace KDWebServer
 
       RemoteEndpoint = Utils.GetClientIp(httpContext);
       ForwardedUri = Headers.GetStringOrDefault("X-Forwarded-Uri", null);
+
+      HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
     }
 
     public async Task<string> ReadAsString()
