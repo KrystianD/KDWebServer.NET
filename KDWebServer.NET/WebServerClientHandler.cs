@@ -132,10 +132,14 @@ namespace KDWebServer
           httpContext.Response.StatusCode = 500;
         }
 
-        httpContext.Response.OutputStream.Close();
+        try {
+          httpContext.Response.OutputStream.Close();
+        }
+        catch { // ignored
+        }
       }
     }
-    
+
     private static async Task<string> ParseKnownTypes(HttpListenerContext httpContext, WebServerRequestContext ctx)
     {
       ContentType ct;
