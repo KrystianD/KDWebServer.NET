@@ -4,12 +4,14 @@ using System.Diagnostics;
 using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 
 namespace KDWebServer
 {
   public class WebServerSslConfig
   {
+    public SslProtocols EnabledSslProtocols { get; set; } = SslProtocols.Tls12;
     public string CertificatePath { get; set; }
     public string KeyPath { get; set; }
     public bool ClientCertificateRequired { get; set; } = false;
@@ -82,6 +84,7 @@ namespace KDWebServer
         _logger.Info($"Starting HTTPS server on port {port}");
         listener.Prefixes.Add($"https://+:{port}/");
 
+        listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
         listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);
         listener.SslConfiguration.ClientCertificateRequired = sslConfig.ClientCertificateRequired;
         listener.SslConfiguration.CheckCertificateRevocation = false;
@@ -89,7 +92,7 @@ namespace KDWebServer
       }
 
       listener.Start();
-      
+
       while (true) {
         try {
           var httpContext = await Task.Factory.FromAsync(listener.BeginGetContext, listener.EndGetContext, null);
