@@ -135,16 +135,38 @@ namespace KDWebServer
 
     public string GetString(string name)
     {
-      if (!_valuesCollections.ContainsKey(name))
-        throw new IndexOutOfRangeException();
+      if (TryGetString(name, out var value))
+        return value;
+      throw new IndexOutOfRangeException();
+    }
 
-      return _valuesCollections[name].GetString();
+    public bool TryGetString(string name, out string value)
+    {
+      value = default;
+
+      if (!_valuesCollections.TryGetValue(name, out var v))
+        return false;
+
+      value = v.GetString();
+      return true;
     }
 
     public int GetInt(string name)
     {
-      string val = GetString(name);
-      return int.Parse(val);
+      if (TryGetInt(name, out var value))
+        return value;
+      throw new IndexOutOfRangeException();
+    }
+
+    public bool TryGetInt(string name, out int value)
+    {
+      value = default;
+
+      if (!_valuesCollections.TryGetValue(name, out var v))
+        return false;
+
+      value = v.GetInt();
+      return true;
     }
 
     public bool Contains(string name)
@@ -154,9 +176,14 @@ namespace KDWebServer
 
     public Value this[string name] => GetValue(name);
 
-    public string GetStringOrDefault(string name, string @default = null)
+    public string GetStringOrDefault(string name, string @default = default)
     {
       return _valuesCollections.ContainsKey(name) ? GetString(name) : @default;
+    }
+
+    public int GetIntOrDefault(string name, int @default = default)
+    {
+      return _valuesCollections.ContainsKey(name) ? GetInt(name) : @default;
     }
   }
 }
