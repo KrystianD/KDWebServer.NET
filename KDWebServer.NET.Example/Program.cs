@@ -46,6 +46,8 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
+      server.AddGETEndpoint("/auth", async ctx => throw new UnauthorizedException());
+
       server.RunSync("0.0.0.0", 8080);
     }
   }

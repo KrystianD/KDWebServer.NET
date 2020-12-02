@@ -3,6 +3,7 @@ using System.Diagnostics;
 using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using KDLib;
@@ -121,6 +122,14 @@ namespace KDWebServer
 
             await response.WriteToResponse(this, httpContext.Response);
           }
+        }
+        catch (UnauthorizedException) {
+          Logger.Info()
+                .Message($"[{ClientId}] Unauthorized HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Property("content", bodyStr)
+                .Write();
+
+          httpContext.Response.StatusCode = 401;
         }
         catch (Exception e) {
           Logger.Error()
