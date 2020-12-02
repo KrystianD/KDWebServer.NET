@@ -59,17 +59,17 @@ namespace KDWebServer
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
-    public void RunSync(int port, WebServerSslConfig sslConfig = null)
+    public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
     {
-      InternalRun(port, sslConfig).Wait();
+      InternalRun(host, port, sslConfig).Wait();
     }
 
-    public void RunAsync(int port, WebServerSslConfig sslConfig = null)
+    public void RunAsync(string host, int port, WebServerSslConfig sslConfig = null)
     {
-      var _ = InternalRun(port, sslConfig);
+      var _ = InternalRun(host, port, sslConfig);
     }
 
-    private async Task InternalRun(int port, WebServerSslConfig sslConfig)
+    private async Task InternalRun(string host, int port, WebServerSslConfig sslConfig)
     {
       if (Endpoints.Count == 0)
         return;
@@ -78,11 +78,11 @@ namespace KDWebServer
 
       if (sslConfig == null) {
         _logger.Info($"Starting HTTP server on port {port}");
-        listener.Prefixes.Add($"http://+:{port}/");
+        listener.Prefixes.Add($"http://{host}:{port}/");
       }
       else {
         _logger.Info($"Starting HTTPS server on port {port}");
-        listener.Prefixes.Add($"https://+:{port}/");
+        listener.Prefixes.Add($"https://{host}:{port}/");
 
         listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
         listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);

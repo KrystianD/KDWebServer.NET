@@ -46,7 +46,7 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
-      server.RunSync(8080);
+      server.RunSync("0.0.0.0", 8080);
     }
   }
 }
