@@ -77,11 +77,11 @@ namespace KDWebServer
       var listener = new HttpListener();
 
       if (sslConfig == null) {
-        _logger.Info($"Starting HTTP server on port {port}");
+        _logger.Info($"Starting HTTP server on port {host}:{port}");
         listener.Prefixes.Add($"http://{host}:{port}/");
       }
       else {
-        _logger.Info($"Starting HTTPS server on port {port}");
+        _logger.Info($"Starting HTTPS server on port {host}:{port}");
         listener.Prefixes.Add($"https://{host}:{port}/");
 
         listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
