@@ -22,6 +22,8 @@ namespace KDWebServer
   {
     public delegate Task<IWebServerResponse> EndpointHandler(WebServerRequestContext ctx);
 
+    private HttpListener _listener;
+
     internal class EndpointDefinition
     {
       public readonly string Endpoint;
@@ -61,41 +63,46 @@ namespace KDWebServer
 
     public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
     {
-      InternalRun(host, port, sslConfig).Wait();
+      Start(host, port, sslConfig);
+      InternalRun().Wait();
     }
 
     public void RunAsync(string host, int port, WebServerSslConfig sslConfig = null)
     {
-      var _ = InternalRun(host, port, sslConfig);
+      Start(host, port, sslConfig);
+      var _ = InternalRun();
     }
 
-    private async Task InternalRun(string host, int port, WebServerSslConfig sslConfig)
+    private void Start(string host, int port, WebServerSslConfig sslConfig)
     {
       if (Endpoints.Count == 0)
         return;
 
-      var listener = new HttpListener();
+      _listener = new HttpListener();
 
       if (sslConfig == null) {
-        _logger.Info($"Starting HTTP server on port {host}:{port}");
-        listener.Prefixes.Add($"http://{host}:{port}/");
+        _logger.Info($"Starting HTTP server on {host}:{port}");
+        _listener.Prefixes.Add($"http://{host}:{port}/");
       }
       else {
-        _logger.Info($"Starting HTTPS server on port {host}:{port}");
-        listener.Prefixes.Add($"https://{host}:{port}/");
+        _logger.Info($"Starting HTTPS server on {host}:{port}");
+        _listener.Prefixes.Add($"https://{host}:{port}/");
 
-        listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
-        listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);
-        listener.SslConfiguration.ClientCertificateRequired = sslConfig.ClientCertificateRequired;
-        listener.SslConfiguration.CheckCertificateRevocation = false;
-        listener.SslConfiguration.ClientCertificateValidationCallback = sslConfig.ClientCertificateValidationCallback;
+        _listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
+        _listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);
+        _listener.SslConfiguration.ClientCertificateRequired = sslConfig.ClientCertificateRequired;
+        _listener.SslConfiguration.CheckCertificateRevocation = false;
+        _listener.SslConfiguration.ClientCertificateValidationCallback = sslConfig.ClientCertificateValidationCallback;
       }
 
-      listener.Start();
+      _listener.Start();
+    }
 
+    private async Task InternalRun()
+    {
       while (true) {
         try {
-          var httpContext = await Task.Factory.FromAsync(listener.BeginGetContext, listener.EndGetContext, null);
+          var httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
 
           var handler = new WebServerClientHandler(this, httpContext);
           handler.Handle();
