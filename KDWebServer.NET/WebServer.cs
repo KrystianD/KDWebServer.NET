@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -20,18 +20,20 @@ namespace KDWebServer
 
   public class WebServer
   {
-    public delegate Task<IWebServerResponse> EndpointHandler(WebServerRequestContext ctx);
+    public delegate Task<IWebServerResponse> AsyncEndpointHandler(WebServerRequestContext ctx);
+
+    public delegate IWebServerResponse EndpointHandler(WebServerRequestContext ctx);
 
     private HttpListener _listener;
 
     internal class EndpointDefinition
     {
       public readonly string Endpoint;
-      public readonly EndpointHandler Callback;
+      public readonly AsyncEndpointHandler Callback;
 
-      public EndpointDefinition(string endpoint, EndpointHandler callback)
+      public EndpointDefinition(string endpoint, AsyncEndpointHandler callback)
       {
-        Endpoint = endpoint;
+        Endpoint = endpoint;  
         Callback = callback;
       }
     }
@@ -48,7 +50,9 @@ namespace KDWebServer
       _logger = factory.GetLogger<NLog.Logger>("webserver");
     }
 
-    public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods)
+    public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods) => AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods);
+
+    public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods)
     {
       if (!(endpoint.StartsWith("/") || endpoint == "*"))
         throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
@@ -59,7 +63,9 @@ namespace KDWebServer
     }
 
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
+    public void AddGETEndpoint(string endpoint, AsyncEndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
+    public void AddPOSTEndpoint(string endpoint, AsyncEndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
     public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
     {
@@ -98,6 +104,7 @@ namespace KDWebServer
       _listener.Start();
     }
 
+    [SuppressMessage("ReSharper", "FunctionNeverReturns")]
     private async Task InternalRun()
     {
       while (true) {
