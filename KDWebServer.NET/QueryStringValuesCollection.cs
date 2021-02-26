@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
 namespace KDWebServer
 {
+  [PublicAPI]
   public class QueryStringValuesCollection
   {
     public class Value
@@ -92,16 +94,16 @@ namespace KDWebServer
     public IDictionary<string, string> GetAsDictionarySingleValues()
     {
       var dict = new Dictionary<string, string>();
-      foreach (var valuesCollection in _valuesCollections)
-        dict.Add(valuesCollection.Key, valuesCollection.Value.GetString());
+      foreach (var (key, value) in _valuesCollections)
+        dict.Add(key, value.GetString());
       return dict;
     }
 
     public IDictionary<string, List<string>> GetAsDictionary()
     {
       var dict = new Dictionary<string, List<string>>();
-      foreach (var valuesCollection in _valuesCollections)
-        dict.Add(valuesCollection.Key, valuesCollection.Value.GetValues().Select(x => x.AsString).ToList());
+      foreach (var (key, value) in _valuesCollections)
+        dict.Add(key, value.GetValues().Select(x => x.AsString).ToList());
       return dict;
     }
 
@@ -109,9 +111,9 @@ namespace KDWebServer
     {
       var data = new JObject();
 
-      foreach (var valuesCollection in _valuesCollections) {
-        var valuesArray = new JArray(valuesCollection.Value.GetValues().Select(x => x.AsString));
-        data.Add(new JProperty(valuesCollection.Key, valuesArray));
+      foreach (var (key, value) in _valuesCollections) {
+        var valuesArray = new JArray(value.GetValues().Select(x => x.AsString));
+        data.Add(new JProperty(key, valuesArray));
       }
 
       return data;
@@ -133,12 +135,8 @@ namespace KDWebServer
       return _valuesCollections[name];
     }
 
-    public string GetString(string name)
-    {
-      if (TryGetString(name, out var value))
-        return value;
-      throw new IndexOutOfRangeException();
-    }
+    public string GetString(string name) => TryGetString(name, out var value) ? value : throw new IndexOutOfRangeException();
+    public string GetStringOrDefault(string name, string @default = default) => TryGetString(name, out var value) ? value : @default;
 
     public bool TryGetString(string name, out string value)
     {
@@ -151,12 +149,8 @@ namespace KDWebServer
       return true;
     }
 
-    public int GetInt(string name)
-    {
-      if (TryGetInt(name, out var value))
-        return value;
-      throw new IndexOutOfRangeException();
-    }
+    public int GetInt(string name) => TryGetInt(name, out var value) ? value : throw new IndexOutOfRangeException();
+    public int GetIntOrDefault(string name, int @default = default) => TryGetInt(name, out var value) ? value : @default;
 
     public bool TryGetInt(string name, out int value)
     {
@@ -175,15 +169,5 @@ namespace KDWebServer
     }
 
     public Value this[string name] => GetValue(name);
-
-    public string GetStringOrDefault(string name, string @default = default)
-    {
-      return _valuesCollections.ContainsKey(name) ? GetString(name) : @default;
-    }
-
-    public int GetIntOrDefault(string name, int @default = default)
-    {
-      return _valuesCollections.ContainsKey(name) ? GetInt(name) : @default;
-    }
   }
 }
