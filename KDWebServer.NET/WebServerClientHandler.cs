@@ -82,7 +82,7 @@ namespace KDWebServer
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
             Logger.Trace()
-                  .Message($"[{ClientId}] new invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                  .Message($"[{ClientId}] New invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                   .Properties(props)
                   .Write();
 
@@ -100,7 +100,7 @@ namespace KDWebServer
           }
 
           Logger.Trace()
-                .Message($"[{ClientId}] new HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
                 .Property("content", bodyStr)
                 .Write();
