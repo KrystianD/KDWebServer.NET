@@ -82,7 +82,7 @@ namespace KDWebServer
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
             Logger.Trace()
-                  .Message($"[{ClientId}] New invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                  .Message($"[{ClientId}] Not found HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
                   .Properties(props)
                   .Property("status_code", 404)
                   .Write();
@@ -101,7 +101,7 @@ namespace KDWebServer
           }
 
           Logger.Trace()
-                .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
                 .Properties(props)
                 .Property("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary())
                 .Property("content", bodyStr)
