@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using WebSocketSharp.Net;
 using System.Net.Http;
@@ -68,17 +69,21 @@ namespace KDWebServer
 
       httpContext.Response.AddHeader("Access-Control-Allow-Origin", "*");
 
+      var props = new Dictionary<string, string>() {
+          ["method"] = _httpContext.Request.HttpMethod,
+          ["path"] = _httpContext.Request.Url.AbsolutePath,
+          ["query"] = _httpContext.Request.Url.Query,
+      };
+
       string bodyStr = null;
       using (MappedDiagnosticsLogicalContext.SetScoped("client_id", ClientId))
-      using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", RemoteEndpoint))
-      using (MappedDiagnosticsLogicalContext.SetScoped("method", _httpContext.Request.HttpMethod))
-      using (MappedDiagnosticsLogicalContext.SetScoped("path", _httpContext.Request.Url.AbsolutePath))
-      using (MappedDiagnosticsLogicalContext.SetScoped("query", _httpContext.Request.Url.Query)) {
+      using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", RemoteEndpoint)) {
         try {
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
             Logger.Trace()
                   .Message($"[{ClientId}] new invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                  .Properties(props)
                   .Write();
 
             httpContext.Response.StatusCode = 404;
@@ -96,6 +101,7 @@ namespace KDWebServer
 
           Logger.Trace()
                 .Message($"[{ClientId}] new HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Properties(props)
                 .Property("content", bodyStr)
                 .Write();
 
@@ -119,6 +125,7 @@ namespace KDWebServer
         catch (UnauthorizedException) {
           Logger.Info()
                 .Message($"[{ClientId}] Unauthorized HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Properties(props)
                 .Property("content", bodyStr)
                 .Write();
 
@@ -127,6 +134,7 @@ namespace KDWebServer
         catch (Exception e) {
           Logger.Error()
                 .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Properties(props)
                 .Property("content", bodyStr)
                 .Exception(e)
                 .Write();
