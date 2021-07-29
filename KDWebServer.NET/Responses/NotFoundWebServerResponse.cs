@@ -15,7 +15,7 @@ namespace KDWebServer.Responses
     {
       handler.Logger.Trace()
              .Message("[{webServer.clientId}] sending NotFound response ({webServer.ProcessingTime}ms)")
-             .Property("code", StatusCode)
+             .Property("status_code", StatusCode)
              .Write();
 
       response.StatusCode = StatusCode;

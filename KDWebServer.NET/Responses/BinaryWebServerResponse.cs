@@ -20,7 +20,7 @@ namespace KDWebServer.Responses
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending binary response ({handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")
              .Property("data_length", _data.Length)
-             .Property("code", StatusCode)
+             .Property("status_code", StatusCode)
              .Write();
 
       response.StatusCode = StatusCode;

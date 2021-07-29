@@ -21,7 +21,7 @@ namespace KDWebServer.Responses
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")
              .Property("data", _json)
-             .Property("code", StatusCode)
+             .Property("status_code", StatusCode)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_json);

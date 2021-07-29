@@ -21,7 +21,7 @@ namespace KDWebServer.Responses
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 100).Replace("\n", " ")})")
              .Property("body", text)
-             .Property("code", StatusCode)
+             .Property("status_code", StatusCode)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_html);
