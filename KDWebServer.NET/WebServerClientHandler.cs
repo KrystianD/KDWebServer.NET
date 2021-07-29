@@ -151,7 +151,7 @@ namespace KDWebServer
       }
     }
 
-    private static async Task<string> ParseKnownTypes(HttpListenerContext httpContext, WebServerRequestContext ctx)
+    private static async Task<object> ParseKnownTypes(HttpListenerContext httpContext, WebServerRequestContext ctx)
     {
       ContentType ct;
 
@@ -167,7 +167,7 @@ namespace KDWebServer
             return "(empty)";
 
           ctx.FormData = QueryStringValuesCollection.Parse(payload);
-          return Uri.UnescapeDataString(payload);
+          return ctx.FormData;
 
         case "application/json":
           payload = await ctx.ReadAsString();
@@ -175,7 +175,7 @@ namespace KDWebServer
             return "(empty)";
 
           ctx.JsonData = JToken.Parse(payload);
-          return ctx.JsonData.ToString(Newtonsoft.Json.Formatting.Indented);
+          return ctx.JsonData;
 
         case "text/xml":
           payload = await ctx.ReadAsString();
@@ -183,7 +183,7 @@ namespace KDWebServer
             return "(empty)";
 
           ctx.XmlData = XDocument.Parse(payload);
-          return ctx.XmlData.ToString(SaveOptions.None);
+          return ctx.XmlData;
 
         default:
           return null;
