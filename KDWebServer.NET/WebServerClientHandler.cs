@@ -102,6 +102,7 @@ namespace KDWebServer
           Logger.Trace()
                 .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
+                .Property("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary())
                 .Property("content", bodyStr)
                 .Write();
 
