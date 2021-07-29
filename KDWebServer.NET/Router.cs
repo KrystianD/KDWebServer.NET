@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace KDWebServer
 {
-  public static class WebServerUtils
+  internal static class Router
   {
     public class RouteInvalidValueProvidedException : Exception { }
 
@@ -24,11 +24,9 @@ namespace KDWebServer
         if (!m.Success)
           return false;
 
-        foreach (var pair in Params) {
-          var name = pair.Key;
-          var conv = pair.Value;
-          match.Params.Add(name, conv(m.Groups[name].Value));
-        }
+        foreach (var (name, converter) in Params)
+          match.Params.Add(name, converter(m.Groups[name].Value));
+
         return true;
       }
     }
@@ -53,8 +51,7 @@ namespace KDWebServer
       var routeDesc = new RouteDescriptor();
 
       bool hasRegex = false;
-      string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-z0-9]+)>", match =>
-      {
+      string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-z0-9]+)>", match => {
         string type = match.Groups["type"].Value;
         string name = match.Groups["name"].Value;
 
@@ -65,8 +62,7 @@ namespace KDWebServer
             routeDesc.Params.Add(name, s => s);
             break;
           case "int":
-            routeDesc.Params.Add(name, s =>
-            {
+            routeDesc.Params.Add(name, s => {
               if (!int.TryParse(s, out var v))
                 throw new RouteInvalidValueProvidedException();
 

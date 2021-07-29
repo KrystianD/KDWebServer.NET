@@ -35,10 +35,10 @@ namespace KDWebServer
       ClientId = $"{RemoteEndpoint} {shortId}";
     }
 
-    private (WebServerUtils.RouteMatch RouteMatch, WebServer.EndpointDefinition Endpoint) MatchRoutes(string path, HttpMethod method)
+    private (Router.RouteMatch RouteMatch, WebServer.EndpointDefinition Endpoint) MatchRoutes(string path, HttpMethod method)
     {
       int bestScore = -1;
-      WebServerUtils.RouteMatch bestRoute = null;
+      Router.RouteMatch bestRoute = null;
       WebServer.EndpointDefinition bestEndpoint = null;
 
       foreach (var pair in WebServer.Endpoints) {
@@ -48,7 +48,7 @@ namespace KDWebServer
         if (!route.Methods.Contains(method))
           continue;
 
-        WebServerUtils.RouteMatch m;
+        Router.RouteMatch m;
         if (route.TryMatch(path, out m)) {
           if (bestScore == -1 || route.Score > bestScore) {
             bestScore = route.Score;

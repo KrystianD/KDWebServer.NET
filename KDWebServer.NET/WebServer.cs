@@ -42,7 +42,7 @@ namespace KDWebServer
 
     private readonly NLog.Logger _logger;
 
-    internal readonly Dictionary<WebServerUtils.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<WebServerUtils.RouteDescriptor, EndpointDefinition>();
+    internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
 
     public WebServer(NLog.LogFactory factory)
     {
@@ -57,7 +57,7 @@ namespace KDWebServer
       if (!(endpoint.StartsWith("/") || endpoint == "*"))
         throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
 
-      var route = WebServerUtils.CompileRoute(endpoint);
+      var route = Router.CompileRoute(endpoint);
       route.Methods = methods;
       Endpoints.Add(route, new EndpointDefinition(endpoint, callback));
     }
