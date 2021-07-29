@@ -38,21 +38,6 @@ namespace KDWebServer
       public readonly Dictionary<string, object> Params = new Dictionary<string, object>();
     }
 
-    public static HttpMethod StringToHttpMethod(string method)
-    {
-      switch (method.ToUpper()) {
-        case "GET": return HttpMethod.Get;
-        case "PUT": return HttpMethod.Put;
-        case "POST": return HttpMethod.Post;
-        case "DELETE": return HttpMethod.Delete;
-        case "HEAD": return HttpMethod.Head;
-        case "OPTIONS": return HttpMethod.Options;
-        case "TRACE": return HttpMethod.Trace;
-        default:
-          throw new Exception($"invalid method: {method}");
-      }
-    }
-
     public static RouteDescriptor CompileRoute(string route)
     {
       int score = 100;

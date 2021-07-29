@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -12,6 +13,21 @@ namespace KDWebServer
 {
   internal static class Utils
   {
+    public static HttpMethod StringToHttpMethod(string method)
+    {
+      switch (method.ToUpper()) {
+        case "GET": return HttpMethod.Get;
+        case "PUT": return HttpMethod.Put;
+        case "POST": return HttpMethod.Post;
+        case "DELETE": return HttpMethod.Delete;
+        case "HEAD": return HttpMethod.Head;
+        case "OPTIONS": return HttpMethod.Options;
+        case "TRACE": return HttpMethod.Trace;
+        default:
+          throw new Exception($"invalid method: {method}");
+      }
+    }
+    
     public static string ExtractSimpleHtmlText(string html, int maxLength)
     {
       var e = new HtmlDocument();
