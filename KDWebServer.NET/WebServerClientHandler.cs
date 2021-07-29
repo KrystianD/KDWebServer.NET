@@ -84,6 +84,7 @@ namespace KDWebServer
             Logger.Trace()
                   .Message($"[{ClientId}] New invalid HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                   .Properties(props)
+                  .Property("status_code", 404)
                   .Write();
 
             httpContext.Response.StatusCode = 404;
@@ -127,7 +128,7 @@ namespace KDWebServer
           Logger.Info()
                 .Message($"[{ClientId}] Unauthorized HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
-                .Property("content", bodyStr)
+                .Property("status_code", 401)
                 .Write();
 
           httpContext.Response.StatusCode = 401;
@@ -136,7 +137,7 @@ namespace KDWebServer
           Logger.Error()
                 .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
-                .Property("content", bodyStr)
+                .Property("status_code", 500)
                 .Exception(e)
                 .Write();
 
