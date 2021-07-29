@@ -7,8 +7,6 @@ namespace KDWebServer
 {
   internal static class Router
   {
-    public class RouteInvalidValueProvidedException : Exception { }
-
     public class RouteDescriptor
     {
       public Regex Regex;
