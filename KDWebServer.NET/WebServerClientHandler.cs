@@ -80,6 +80,7 @@ namespace KDWebServer
           // Parse request
           props.Add("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary());
 
+          props.Add("content_type", httpContext.Request.ContentType);
           props.Add("content_length", httpContext.Request.ContentLength64);
           if (httpContext.Request.ContentType != null)
             props.Add("content", await ParseKnownTypes(httpContext, ctx));
