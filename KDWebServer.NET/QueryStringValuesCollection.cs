@@ -91,7 +91,7 @@ namespace KDWebServer
 
     public static QueryStringValuesCollection Parse(string qs) => FromNameValueCollection(HttpUtility.ParseQueryString(qs));
 
-    public IDictionary<string, string> GetAsDictionarySingleValues()
+    public Dictionary<string, string> GetAsDictionarySingleValues()
     {
       var dict = new Dictionary<string, string>();
       foreach (var (key, value) in _valuesCollections)
@@ -99,7 +99,7 @@ namespace KDWebServer
       return dict;
     }
 
-    public IDictionary<string, List<string>> GetAsDictionary()
+    public Dictionary<string, List<string>> GetAsDictionary()
     {
       var dict = new Dictionary<string, List<string>>();
       foreach (var (key, value) in _valuesCollections)
@@ -107,17 +107,7 @@ namespace KDWebServer
       return dict;
     }
 
-    public JObject ToJson()
-    {
-      var data = new JObject();
-
-      foreach (var (key, value) in _valuesCollections) {
-        var valuesArray = new JArray(value.GetValues().Select(x => x.AsString));
-        data.Add(new JProperty(key, valuesArray));
-      }
-
-      return data;
-    }
+    public JObject ToJson() => JObject.FromObject(GetAsDictionary());
 
     public Value GetValue(string name)
     {
