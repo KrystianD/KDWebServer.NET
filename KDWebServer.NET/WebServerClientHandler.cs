@@ -69,16 +69,21 @@ namespace KDWebServer
 
       httpContext.Response.AddHeader("Access-Control-Allow-Origin", "*");
 
-      var props = new Dictionary<string, string>() {
+      var props = new Dictionary<string, object>() {
           ["method"] = _httpContext.Request.HttpMethod,
           ["path"] = _httpContext.Request.Url.AbsolutePath,
-          ["query"] = _httpContext.Request.Url.Query,
       };
 
-      string bodyStr = null;
       using (MappedDiagnosticsLogicalContext.SetScoped("client_id", ClientId))
       using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", RemoteEndpoint)) {
         try {
+          // Parse request
+          props.Add("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary());
+
+          props.Add("content_length", httpContext.Request.ContentLength64);
+          if (httpContext.Request.ContentType != null)
+            props.Add("content", await ParseKnownTypes(httpContext, ctx));
+
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
             Logger.Trace()
@@ -95,16 +100,9 @@ namespace KDWebServer
           var ep = match.Endpoint;
           ctx.Params = match.RouteMatch.Params;
 
-          // Parse request
-          if (httpContext.Request.ContentType != null) {
-            bodyStr = await ParseKnownTypes(httpContext, ctx);
-          }
-
           Logger.Trace()
                 .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
                 .Properties(props)
-                .Property("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary())
-                .Property("content", bodyStr)
                 .Write();
 
           Stopwatch timer = new Stopwatch();
