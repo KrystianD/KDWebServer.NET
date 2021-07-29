@@ -16,7 +16,6 @@ namespace KDWebServer.Responses
       handler.Logger.Info()
              .Message("[{webServer.clientId}] sending NotFound response ({webServer.ProcessingTime}ms)")
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;

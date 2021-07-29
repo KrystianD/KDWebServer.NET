@@ -33,7 +33,6 @@ namespace KDWebServer.Responses
       handler.Logger.Info()
              .Message($"[{handler.ClientId}] sending stream response ({handler.ProcessingTime}ms) ({lengthToSendStr})")
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;

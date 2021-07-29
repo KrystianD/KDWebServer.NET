@@ -21,7 +21,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending binary response ({handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")
              .Property("data_length", _data.Length)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;

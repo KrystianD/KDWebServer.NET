@@ -30,7 +30,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
              .Property("body", logText)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(html);

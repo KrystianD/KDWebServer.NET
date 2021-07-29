@@ -27,7 +27,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.ProcessingTime}ms)")
              .Property("text", _text)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;

@@ -20,7 +20,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending Redirect response ({handler.ProcessingTime}ms) (to {_location})")
              .Property("location", _location)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       response.StatusCode = StatusCode;

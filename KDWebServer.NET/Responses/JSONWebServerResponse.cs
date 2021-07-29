@@ -22,7 +22,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")
              .Property("data", _json)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_json);

@@ -20,7 +20,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 100).Replace("\n", " ")})")
              .Property("xml", _xml)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_xml);

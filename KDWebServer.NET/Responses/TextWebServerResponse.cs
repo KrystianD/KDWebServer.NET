@@ -22,7 +22,6 @@ namespace KDWebServer.Responses
              .Message($"[{handler.ClientId}] sending text response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30)})")
              .Property("text", _text)
              .Property("code", StatusCode)
-             .Property("client_id", handler.ClientId)
              .Write();
 
       byte[] resp = Encoding.UTF8.GetBytes(_text);
