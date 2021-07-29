@@ -18,7 +18,7 @@ namespace KDWebServer.Responses
     {
       var text = Utils.ExtractSimpleHtmlText(_html, 1000);
 
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 100).Replace("\n", " ")})")
              .Property("body", text)
              .Property("code", StatusCode)

@@ -13,7 +13,7 @@ namespace KDWebServer.Responses
 
     internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message("[{webServer.clientId}] sending NotFound response ({webServer.ProcessingTime}ms)")
              .Property("code", StatusCode)
              .Write();

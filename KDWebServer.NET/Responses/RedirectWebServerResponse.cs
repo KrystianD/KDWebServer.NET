@@ -16,7 +16,7 @@ namespace KDWebServer.Responses
 
     internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending Redirect response ({handler.ProcessingTime}ms) (to {_location})")
              .Property("location", _location)
              .Property("code", StatusCode)

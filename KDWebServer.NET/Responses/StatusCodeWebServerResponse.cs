@@ -23,7 +23,7 @@ namespace KDWebServer.Responses
       if (_text != "")
         textStr = $" with text: /{Utils.LimitText(_text, 30)}/";
 
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.ProcessingTime}ms)")
              .Property("text", _text)
              .Property("code", StatusCode)

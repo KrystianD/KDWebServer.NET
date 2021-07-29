@@ -18,7 +18,7 @@ namespace KDWebServer.Responses
 
     internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending text response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30)})")
              .Property("text", _text)
              .Property("code", StatusCode)

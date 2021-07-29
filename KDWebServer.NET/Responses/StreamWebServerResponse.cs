@@ -30,7 +30,7 @@ namespace KDWebServer.Responses
         lengthToSendStr = Utils.BytesToString(lengthToSend);
       }
 
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending stream response ({handler.ProcessingTime}ms) ({lengthToSendStr})")
              .Property("code", StatusCode)
              .Write();

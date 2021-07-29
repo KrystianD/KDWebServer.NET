@@ -26,7 +26,7 @@ namespace KDWebServer.Responses
 
       var logText = Utils.ExtractSimpleHtmlText(html, 1000);
 
-      handler.Logger.Info()
+      handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
              .Property("body", logText)
              .Property("code", StatusCode)
