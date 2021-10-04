@@ -31,7 +31,7 @@ namespace KDWebServer
       Logger = webServer.LogFactory.GetLogger<NLog.Logger>("webserver.client");
 
       string shortId = StringUtils.GenerateRandomString(4);
-      RemoteEndpoint = Utils.GetClientIp(_httpContext);
+      RemoteEndpoint = Utils.GetClientIp(_httpContext, WebServer.TrustedProxies);
       ClientId = $"{RemoteEndpoint} {shortId}";
     }
 
@@ -63,7 +63,7 @@ namespace KDWebServer
 
     public async void Handle()
     {
-      WebServerRequestContext ctx = new WebServerRequestContext(_httpContext);
+      WebServerRequestContext ctx = new WebServerRequestContext(_httpContext, RemoteEndpoint);
 
       var httpContext = _httpContext;
 

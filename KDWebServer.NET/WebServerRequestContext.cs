@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
-using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
@@ -35,14 +36,14 @@ namespace KDWebServer
     public JToken JsonData { get; set; }
     public XDocument XmlData { get; set; }
 
-    public WebServerRequestContext(HttpListenerContext httpContext)
+    public WebServerRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint)
     {
       this.httpContext = httpContext;
 
       QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
       Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
 
-      RemoteEndpoint = Utils.GetClientIp(httpContext);
+      RemoteEndpoint = remoteEndpoint;
       ForwardedUri = Headers.GetStringOrDefault("X-Forwarded-Uri", null);
 
       HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);

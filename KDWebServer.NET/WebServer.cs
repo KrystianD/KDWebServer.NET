@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using WebSocketSharp.Net;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using HttpListener = WebSocketSharp.Net.HttpListener;
 
 namespace KDWebServer
 {
@@ -43,11 +45,17 @@ namespace KDWebServer
     private readonly NLog.Logger _logger;
 
     internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
+    internal HashSet<IPAddress> TrustedProxies;
 
     public WebServer(NLog.LogFactory factory)
     {
       LogFactory = factory;
       _logger = factory.GetLogger<NLog.Logger>("webserver");
+    }
+
+    public void SetTrustedProxies(IEnumerable<IPAddress> trustedProxies)
+    {
+      TrustedProxies = trustedProxies.ToHashSet();
     }
 
     public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods) => AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods);
