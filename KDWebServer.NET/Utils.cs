@@ -27,7 +27,7 @@ namespace KDWebServer
           throw new Exception($"invalid method: {method}");
       }
     }
-    
+
     public static string ExtractSimpleHtmlText(string html, int maxLength)
     {
       var e = new HtmlDocument();

@@ -55,9 +55,9 @@ namespace KDWebServer
         return null;
 
       using var ms = new MemoryStream();
-      
+
       await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
-      
+
       return httpContext.Request.ContentEncoding.GetString(ms.ToArray());
     }
   }

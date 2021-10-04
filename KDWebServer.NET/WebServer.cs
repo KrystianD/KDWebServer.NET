@@ -35,7 +35,7 @@ namespace KDWebServer
 
       public EndpointDefinition(string endpoint, AsyncEndpointHandler callback)
       {
-        Endpoint = endpoint;  
+        Endpoint = endpoint;
         Callback = callback;
       }
     }

@@ -6,7 +6,7 @@ namespace KDWebServer
   public abstract class IWebServerResponse
   {
     public int StatusCode { get; set; } = 200;
-    
+
     internal readonly WebHeaderCollection _headers = new WebHeaderCollection();
 
     internal abstract Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response);

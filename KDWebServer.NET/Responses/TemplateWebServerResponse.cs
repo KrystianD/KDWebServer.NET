@@ -66,7 +66,7 @@ namespace KDWebServer.Responses
 
     internal static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data = null) => FromFile(templatePath, Hash.FromDictionary(data));
     internal static TemplateWebServerResponse FromFile(string templatePath, object data = null) => FromFile(templatePath, Hash.FromAnonymousObject(data));
-    
+
 #if NETCOREAPP
     internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data = null) => FromFileAsync(templatePath, Hash.FromDictionary(data));
     internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data = null) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
