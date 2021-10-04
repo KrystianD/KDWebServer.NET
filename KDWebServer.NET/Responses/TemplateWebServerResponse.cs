@@ -61,15 +61,18 @@ namespace KDWebServer.Responses
     }
 #endif
 
-    internal static TemplateWebServerResponse FromString(string templateString, Dictionary<string, object> data = null) => FromString(templateString, Hash.FromDictionary(data));
-    internal static TemplateWebServerResponse FromString(string templateString, object data = null) => FromString(templateString, Hash.FromAnonymousObject(data));
+    internal static TemplateWebServerResponse FromString(string templateString) => FromString(templateString, (Hash)null);
+    internal static TemplateWebServerResponse FromString(string templateString, Dictionary<string, object> data) => FromString(templateString, Hash.FromDictionary(data));
+    internal static TemplateWebServerResponse FromString(string templateString, object data) => FromString(templateString, Hash.FromAnonymousObject(data));
 
-    internal static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data = null) => FromFile(templatePath, Hash.FromDictionary(data));
-    internal static TemplateWebServerResponse FromFile(string templatePath, object data = null) => FromFile(templatePath, Hash.FromAnonymousObject(data));
+    internal static TemplateWebServerResponse FromFile(string templatePath) => FromFile(templatePath, (Hash)null);
+    internal static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data) => FromFile(templatePath, Hash.FromDictionary(data));
+    internal static TemplateWebServerResponse FromFile(string templatePath, object data) => FromFile(templatePath, Hash.FromAnonymousObject(data));
 
 #if NETCOREAPP
-    internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data = null) => FromFileAsync(templatePath, Hash.FromDictionary(data));
-    internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data = null) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
+    internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath) => FromFileAsync(templatePath, (Hash)null);
+    internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data) => FromFileAsync(templatePath, Hash.FromDictionary(data));
+    internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
 #endif
   }
 }
