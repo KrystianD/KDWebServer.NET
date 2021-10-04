@@ -11,6 +11,7 @@ namespace KDWebServer
 
     internal abstract Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response);
 
+    public void SetHeader(System.Net.HttpResponseHeader header, string value) => _headers.Add((HttpResponseHeader)header, value);
     public void SetHeader(HttpResponseHeader header, string value) => _headers.Add(header, value);
     public void SetHeader(string name, string value) => _headers.Add(name, value);
   }
