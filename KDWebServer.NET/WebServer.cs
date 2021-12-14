@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using NLog;
 using HttpListener = WebSocketSharp.Net.HttpListener;
 
 namespace KDWebServer
@@ -50,7 +51,7 @@ namespace KDWebServer
     public WebServer(NLog.LogFactory factory)
     {
       LogFactory = factory;
-      _logger = factory.GetLogger<NLog.Logger>("webserver");
+      _logger = factory?.GetLogger<NLog.Logger>("webserver") ?? LogManager.LogFactory.CreateNullLogger();
     }
 
     public void SetTrustedProxies(IEnumerable<IPAddress> trustedProxies)

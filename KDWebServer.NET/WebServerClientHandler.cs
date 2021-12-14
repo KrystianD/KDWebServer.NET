@@ -28,7 +28,7 @@ namespace KDWebServer
     {
       _httpContext = httpContext;
       WebServer = webServer;
-      Logger = webServer.LogFactory.GetLogger<NLog.Logger>("webserver.client");
+      Logger = webServer.LogFactory?.GetLogger<NLog.Logger>("webserver.client") ?? LogManager.LogFactory.CreateNullLogger();
 
       string shortId = StringUtils.GenerateRandomString(4);
       RemoteEndpoint = Utils.GetClientIp(_httpContext, WebServer.TrustedProxies);
