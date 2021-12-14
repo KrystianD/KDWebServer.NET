@@ -50,7 +50,7 @@ namespace KDWebServer
     public WebServer(NLog.LogFactory factory)
     {
       LogFactory = factory;
-      _logger = factory?.GetLogger<NLog.Logger>("webserver");
+      _logger = factory.GetLogger<NLog.Logger>("webserver");
     }
 
     public void SetTrustedProxies(IEnumerable<IPAddress> trustedProxies)
@@ -92,11 +92,11 @@ namespace KDWebServer
       _listener = new HttpListener();
 
       if (sslConfig == null) {
-        _logger?.Info($"Starting HTTP server on {host}:{port}");
+        _logger.Info($"Starting HTTP server on {host}:{port}");
         _listener.Prefixes.Add($"http://{host}:{port}/");
       }
       else {
-        _logger?.Info($"Starting HTTPS server on {host}:{port}");
+        _logger.Info($"Starting HTTPS server on {host}:{port}");
         _listener.Prefixes.Add($"https://{host}:{port}/");
 
         _listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
@@ -120,7 +120,7 @@ namespace KDWebServer
           handler.Handle();
         }
         catch (Exception e) {
-          _logger?.Error(e, "An error occurred during handling webserver client");
+          _logger.Error(e, "An error occurred during handling webserver client");
         }
       }
     }

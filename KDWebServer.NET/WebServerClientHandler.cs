@@ -28,7 +28,7 @@ namespace KDWebServer
     {
       _httpContext = httpContext;
       WebServer = webServer;
-      Logger = webServer.LogFactory?.GetLogger<NLog.Logger>("webserver.client");
+      Logger = webServer.LogFactory.GetLogger<NLog.Logger>("webserver.client");
 
       string shortId = StringUtils.GenerateRandomString(4);
       RemoteEndpoint = Utils.GetClientIp(_httpContext, WebServer.TrustedProxies);
@@ -87,7 +87,7 @@ namespace KDWebServer
 
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
-            Logger?.Trace()
+            Logger.Trace()
                   .Message($"[{ClientId}] Not found HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
                   .Properties(props)
                   .Property("status_code", 404)
@@ -101,7 +101,7 @@ namespace KDWebServer
           var ep = match.Endpoint;
           ctx.Params = match.RouteMatch.Params;
 
-          Logger?.Trace()
+          Logger.Trace()
                 .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
                 .Properties(props)
                 .Write();
@@ -124,7 +124,7 @@ namespace KDWebServer
           }
         }
         catch (UnauthorizedException) {
-          Logger?.Info()
+          Logger.Info()
                 .Message($"[{ClientId}] Unauthorized HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
                 .Property("status_code", 401)
@@ -133,7 +133,7 @@ namespace KDWebServer
           httpContext.Response.StatusCode = 401;
         }
         catch (Exception e) {
-          Logger?.Error()
+          Logger.Error()
                 .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
                 .Properties(props)
                 .Property("status_code", 500)
