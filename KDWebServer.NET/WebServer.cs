@@ -9,6 +9,7 @@ using System.Security.Authentication;
 using System.Threading.Tasks;
 using NLog;
 using HttpListener = WebSocketSharp.Net.HttpListener;
+using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
@@ -114,14 +115,19 @@ namespace KDWebServer
     private async Task InternalRun()
     {
       while (true) {
+        HttpListenerContext httpContext = null;
         try {
-          var httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
+          httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
 
           var handler = new WebServerClientHandler(this, httpContext);
           handler.Handle();
         }
         catch (Exception e) {
           _logger.Error(e, "An error occurred during handling webserver client");
+          if (httpContext != null) {
+            httpContext.Response.StatusCode = 500;
+            httpContext.Response.Close();
+          }
         }
       }
     }
