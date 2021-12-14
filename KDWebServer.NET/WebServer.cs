@@ -89,9 +89,6 @@ namespace KDWebServer
 
     private void Start(string host, int port, WebServerSslConfig sslConfig)
     {
-      if (Endpoints.Count == 0)
-        return;
-
       _listener = new HttpListener();
 
       if (sslConfig == null) {
