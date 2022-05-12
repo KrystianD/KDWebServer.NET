@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <RootNamespace>KDWebServer</RootNamespace>
-        <PackageVersion>0.3.5</PackageVersion>
+        <PackageVersion>0.3.6</PackageVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Krystian Dużyński</Authors>
         <LangVersion>8</LangVersion>
