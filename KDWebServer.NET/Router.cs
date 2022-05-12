@@ -67,8 +67,16 @@ namespace KDWebServer
               return v;
             });
             break;
+          case "long":
+            routeDesc.Params.Add(name, s => {
+              if (!long.TryParse(s, out var v))
+                throw new RouteInvalidValueProvidedException();
+
+              return v;
+            });
+            break;
           default:
-            throw new Exception("invalid route type");
+            throw new Exception("invalid route parameter type");
         }
 
         return "(?<" + name + ">[^/]+)";
