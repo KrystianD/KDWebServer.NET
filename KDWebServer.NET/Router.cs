@@ -49,7 +49,7 @@ namespace KDWebServer
       var routeDesc = new RouteDescriptor();
 
       bool hasRegex = false;
-      string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-z0-9]+)>", match => {
+      string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-zA-Z0-9_-]+)>", match => {
         string type = match.Groups["type"].Value;
         string name = match.Groups["name"].Value;
 
