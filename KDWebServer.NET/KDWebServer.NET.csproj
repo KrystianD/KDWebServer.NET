@@ -16,7 +16,10 @@
         <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
         <PackageReference Include="NLog" Version="4.5.11" />
         <PackageReference Include="KDLib" Version="0.4.2" />
-        <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" NoWarn="NU1701" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\websocket-sharp\websocket-sharp\websocket-sharp.csproj" />
     </ItemGroup>
 
 </Project>

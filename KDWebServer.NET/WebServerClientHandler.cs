@@ -67,7 +67,7 @@ namespace KDWebServer
 
       var httpContext = _httpContext;
 
-      httpContext.Response.AddHeader("Access-Control-Allow-Origin", "*");
+      httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
       var props = new Dictionary<string, object>() {
           ["method"] = _httpContext.Request.HttpMethod,
