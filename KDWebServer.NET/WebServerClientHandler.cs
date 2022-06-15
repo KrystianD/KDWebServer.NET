@@ -132,6 +132,15 @@ namespace KDWebServer
 
           httpContext.Response.StatusCode = 401;
         }
+        catch (RouteInvalidValueProvidedException) {
+          Logger.Info()
+                .Message($"[{ClientId}] Invalid route parameters provided - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
+                .Properties(props)
+                .Property("status_code", 400)
+                .Write();
+
+          httpContext.Response.StatusCode = 400;
+        }
         catch (Exception e) {
           Logger.Error()
                 .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.PathAndQuery}")
