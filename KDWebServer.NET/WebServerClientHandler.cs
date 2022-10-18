@@ -20,7 +20,7 @@ namespace KDWebServer
     public long ProcessingTime;
 
     public WebServer WebServer { get; }
-    public NLog.Logger Logger { get; }
+    public NLog.ILogger Logger { get; }
     public string ClientId { get; }
     public System.Net.IPAddress RemoteEndpoint { get; }
 
@@ -28,7 +28,7 @@ namespace KDWebServer
     {
       _httpContext = httpContext;
       WebServer = webServer;
-      Logger = webServer.LogFactory?.GetLogger<NLog.Logger>("webserver.client") ?? LogManager.LogFactory.CreateNullLogger();
+      Logger = webServer.LogFactory?.GetLogger("webserver.client") ?? LogManager.LogFactory.CreateNullLogger();
 
       string shortId = StringUtils.GenerateRandomString(4);
       RemoteEndpoint = Utils.GetClientIp(_httpContext, WebServer.TrustedProxies);

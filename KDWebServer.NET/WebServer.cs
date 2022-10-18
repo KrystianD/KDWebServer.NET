@@ -44,7 +44,7 @@ namespace KDWebServer
 
     internal NLog.LogFactory LogFactory { get; }
 
-    private readonly NLog.Logger _logger;
+    private readonly NLog.ILogger _logger;
 
     internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
     internal HashSet<IPAddress> TrustedProxies;
@@ -52,7 +52,7 @@ namespace KDWebServer
     public WebServer(NLog.LogFactory factory)
     {
       LogFactory = factory;
-      _logger = factory?.GetLogger<NLog.Logger>("webserver") ?? LogManager.LogFactory.CreateNullLogger();
+      _logger = factory?.GetLogger("webserver") ?? LogManager.LogFactory.CreateNullLogger();
     }
 
     public void SetTrustedProxies(IEnumerable<IPAddress> trustedProxies)
