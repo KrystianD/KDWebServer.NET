@@ -32,6 +32,7 @@ namespace KDWebServer
     public QueryStringValuesCollection Headers { get; }
 
     // Content
+    public byte[] RawData { get; set; }
     public QueryStringValuesCollection FormData { get; set; }
     public JToken JsonData { get; set; }
     public XDocument XmlData { get; set; }
@@ -49,16 +50,6 @@ namespace KDWebServer
       HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
     }
 
-    public async Task<string> ReadAsString()
-    {
-      if (!httpContext.Request.HasEntityBody)
-        return null;
-
-      using var ms = new MemoryStream();
-
-      await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
-
-      return httpContext.Request.ContentEncoding.GetString(ms.ToArray());
-    }
+    public string ReadAsString() => RawData == null ? null : httpContext.Request.ContentEncoding.GetString(RawData);
   }
 }

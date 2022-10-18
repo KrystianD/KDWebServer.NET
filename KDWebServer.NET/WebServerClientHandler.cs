@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Mime;
@@ -80,10 +81,14 @@ namespace KDWebServer
           // Parse request
           props.Add("query", QueryStringValuesCollection.FromNameValueCollection(_httpContext.Request.QueryString).GetAsDictionary());
 
+          await ReadPayload(ctx);
+
           props.Add("content_type", httpContext.Request.ContentType);
           props.Add("content_length", httpContext.Request.ContentLength64);
-          if (httpContext.Request.ContentType != null)
-            props.Add("content", await ParseKnownTypes(httpContext, ctx));
+          if (httpContext.Request.ContentType != null) {
+            var parsedContent = ProcessKnownTypes(ctx);
+            props.Add("content", parsedContent);
+          }
 
           var match = MatchRoutes(ctx.Path, ctx.HttpMethod);
           if (match.RouteMatch == null) {
@@ -160,9 +165,25 @@ namespace KDWebServer
       }
     }
 
-    private static async Task<object> ParseKnownTypes(HttpListenerContext httpContext, WebServerRequestContext ctx)
+    private static async Task ReadPayload(WebServerRequestContext ctx)
+    {
+      var httpContext = ctx.httpContext;
+
+      if (!httpContext.Request.HasEntityBody)
+        return;
+
+      using var ms = new MemoryStream();
+
+      await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
+
+      ctx.RawData = ms.ToArray();
+    }
+
+    private static object ProcessKnownTypes(WebServerRequestContext ctx)
     {
       ContentType ct;
+
+      var httpContext = ctx.httpContext;
 
       try { ct = new ContentType(httpContext.Request.ContentType); }
       catch (FormatException) { return null; }
@@ -171,31 +192,34 @@ namespace KDWebServer
 
       switch (ct.MediaType) {
         case "application/x-www-form-urlencoded":
-          payload = await ctx.ReadAsString();
-          if (payload == null)
+          if (!httpContext.Request.HasEntityBody)
             return "(empty)";
+
+          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
           ctx.FormData = QueryStringValuesCollection.Parse(payload);
           return ctx.FormData;
 
         case "application/json":
-          payload = await ctx.ReadAsString();
-          if (payload == null)
+          if (!httpContext.Request.HasEntityBody)
             return "(empty)";
+
+          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
           ctx.JsonData = JToken.Parse(payload);
           return ctx.JsonData;
 
         case "text/xml":
-          payload = await ctx.ReadAsString();
-          if (payload == null)
+          if (!httpContext.Request.HasEntityBody)
             return "(empty)";
+
+          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
           ctx.XmlData = XDocument.Parse(payload);
           return ctx.XmlData;
 
         default:
-          return null;
+          return "(unknown-type)";
       }
     }
   }
