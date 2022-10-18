@@ -14,7 +14,7 @@ namespace KDWebServer
     public static JSONWebServerResponse Json(JToken data) => JSONWebServerResponse.FromData(data);
     public static JSONWebServerResponse Json(object data) => JSONWebServerResponse.FromData(data);
 
-    public static NotFoundWebServerResponse NotFound() => NotFoundWebServerResponse.Create();
+    public static NotFoundWebServerResponse NotFound(string text = null, JToken json = null, string html = null) => NotFoundWebServerResponse.Create(text, json, html);
 
     public static RedirectWebServerResponse Redirect(string location) => RedirectWebServerResponse.FromLocation(location);
 
