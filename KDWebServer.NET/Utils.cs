@@ -28,7 +28,7 @@ namespace KDWebServer
       }
     }
 
-    public static string ExtractSimpleHtmlText(string html, int maxLength)
+    public static string ExtractSimpleHtmlText(string html)
     {
       var e = new HtmlDocument();
       e.LoadHtml(html);
@@ -38,10 +38,7 @@ namespace KDWebServer
       var text = node.InnerText;
       if (string.IsNullOrWhiteSpace(text))
         return "<no-text>";
-      text = Regex.Replace(text, @"[ \t\n\r]+", " ").Trim();
-      if (text.Length > maxLength)
-        text = text.Substring(0, maxLength - 3) + "...";
-      return text;
+      return Regex.Replace(text, @"[ \t\n\r]+", " ").Trim();
     }
 
 

@@ -24,11 +24,11 @@ namespace KDWebServer.Responses
       var template = Template.Parse(_templateText);
       string html = template.Render(_hash);
 
-      var logText = Utils.ExtractSimpleHtmlText(html, 1000);
+      var logText = Utils.ExtractSimpleHtmlText(html);
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
-             .Property("body", logText)
+             .Property("body", Utils.LimitText(logText, 1000))
              .Property("status_code", StatusCode)
              .Write();
 

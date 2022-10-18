@@ -16,11 +16,11 @@ namespace KDWebServer.Responses
 
     internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
     {
-      var text = Utils.ExtractSimpleHtmlText(_html, 1000);
+      var text = Utils.ExtractSimpleHtmlText(_html);
 
       handler.Logger.Trace()
-             .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 100).Replace("\n", " ")})")
-             .Property("body", text)
+             .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
+             .Property("body", Utils.LimitText(text, 1000))
              .Property("status_code", StatusCode)
              .Write();
 
