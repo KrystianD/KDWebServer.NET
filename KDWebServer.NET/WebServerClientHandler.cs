@@ -9,6 +9,7 @@ using System.Security.Authentication;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using KDLib;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Fluent;
@@ -17,6 +18,8 @@ namespace KDWebServer
 {
   public class WebServerClientHandler
   {
+    private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.None };
+
     private readonly HttpListenerContext _httpContext;
     public long ProcessingTime;
 
@@ -206,7 +209,7 @@ namespace KDWebServer
 
           payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
-          ctx.JsonData = JToken.Parse(payload);
+          ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings);
           return ctx.JsonData;
 
         case "text/xml":
