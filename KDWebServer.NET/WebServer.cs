@@ -7,10 +7,8 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using KDWebServer.Handlers;
 using NLog;
-using WebSocketSharp;
-using WebSocketSharp.Server;
-using HttpClientHandler = KDWebServer.Handlers.HttpClientHandler;
 using HttpListener = WebSocketSharp.Net.HttpListener;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
@@ -122,8 +120,8 @@ namespace KDWebServer
         try {
           httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
 
-          var handler = new HttpClientHandler(this, httpContext);
-          handler.Handle();
+          var rq = new RequestDispatcher(this);
+          rq.DispatchRequest(httpContext);
         }
         catch (Exception e) {
           _logger.Error(e, "An error occurred during handling webserver client");
