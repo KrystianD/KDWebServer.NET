@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using WebSocketSharp.Net;
 using System.Net.Http;
 using System.Net.Mime;
-using System.Security.Authentication;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using KDLib;
@@ -13,10 +11,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Fluent;
+using WebSocketSharp.Net;
 
-namespace KDWebServer
+namespace KDWebServer.Handlers
 {
-  public class WebServerClientHandler
+  public class HttpClientHandler
   {
     private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.None };
 
@@ -28,7 +27,7 @@ namespace KDWebServer
     public string ClientId { get; }
     public System.Net.IPAddress RemoteEndpoint { get; }
 
-    public WebServerClientHandler(WebServer webServer, HttpListenerContext httpContext)
+    public HttpClientHandler(WebServer webServer, HttpListenerContext httpContext)
     {
       _httpContext = httpContext;
       WebServer = webServer;
@@ -67,7 +66,7 @@ namespace KDWebServer
 
     public async void Handle()
     {
-      WebServerRequestContext ctx = new WebServerRequestContext(_httpContext, RemoteEndpoint);
+      HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint);
 
       var httpContext = _httpContext;
 
@@ -168,7 +167,7 @@ namespace KDWebServer
       }
     }
 
-    private static async Task ReadPayload(WebServerRequestContext ctx)
+    private static async Task ReadPayload(HttpRequestContext ctx)
     {
       var httpContext = ctx.httpContext;
 
@@ -182,7 +181,7 @@ namespace KDWebServer
       ctx.RawData = ms.ToArray();
     }
 
-    private static object ProcessKnownTypes(WebServerRequestContext ctx)
+    private static object ProcessKnownTypes(HttpRequestContext ctx)
     {
       ContentType ct;
 

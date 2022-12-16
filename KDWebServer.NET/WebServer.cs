@@ -8,6 +8,9 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using NLog;
+using WebSocketSharp;
+using WebSocketSharp.Server;
+using HttpClientHandler = KDWebServer.Handlers.HttpClientHandler;
 using HttpListener = WebSocketSharp.Net.HttpListener;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
@@ -24,9 +27,9 @@ namespace KDWebServer
 
   public class WebServer
   {
-    public delegate Task<IWebServerResponse> AsyncEndpointHandler(WebServerRequestContext ctx);
+    public delegate Task<IWebServerResponse> AsyncEndpointHandler(HttpRequestContext ctx);
 
-    public delegate IWebServerResponse EndpointHandler(WebServerRequestContext ctx);
+    public delegate IWebServerResponse EndpointHandler(HttpRequestContext ctx);
 
     private HttpListener _listener;
 
@@ -119,7 +122,7 @@ namespace KDWebServer
         try {
           httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
 
-          var handler = new WebServerClientHandler(this, httpContext);
+          var handler = new HttpClientHandler(this, httpContext);
           handler.Handle();
         }
         catch (Exception e) {

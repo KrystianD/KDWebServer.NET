@@ -1,6 +1,7 @@
 ﻿using WebSocketSharp.Net;
 using System.IO;
 using System.Threading.Tasks;
+using KDWebServer.Handlers;
 using NLog.Fluent;
 
 namespace KDWebServer.Responses
@@ -18,7 +19,7 @@ namespace KDWebServer.Responses
       _mimeType = mimeType;
     }
 
-    internal override async Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
     {
       long lengthToSend = -1;
       var lengthToSendStr = "unknown length";

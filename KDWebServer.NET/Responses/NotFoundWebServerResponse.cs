@@ -2,6 +2,7 @@
 using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
+using KDWebServer.Handlers;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
 
@@ -26,7 +27,7 @@ namespace KDWebServer.Responses
       StatusCode = 404;
     }
 
-    internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
     {
       var logMsg = handler.Logger.Trace()
                           .Property("status_code", StatusCode);

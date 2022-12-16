@@ -1,6 +1,7 @@
 ﻿using WebSocketSharp.Net;
 using System.Text;
 using System.Threading.Tasks;
+using KDWebServer.Handlers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
@@ -16,7 +17,7 @@ namespace KDWebServer.Responses
       _json = json;
     }
 
-    internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")

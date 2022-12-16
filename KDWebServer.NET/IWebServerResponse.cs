@@ -1,5 +1,6 @@
 ﻿using WebSocketSharp.Net;
 using System.Threading.Tasks;
+using KDWebServer.Handlers;
 
 namespace KDWebServer
 {
@@ -9,7 +10,7 @@ namespace KDWebServer
 
     internal readonly WebHeaderCollection _headers = new WebHeaderCollection();
 
-    internal abstract Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response);
+    internal abstract Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response);
 
     public void SetHeader(System.Net.HttpResponseHeader header, string value) => _headers.Add((HttpResponseHeader)header, value);
     public void SetHeader(HttpResponseHeader header, string value) => _headers.Add(header, value);

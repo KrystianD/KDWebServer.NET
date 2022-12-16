@@ -1,6 +1,7 @@
 ﻿using WebSocketSharp.Net;
 using System.Text;
 using System.Threading.Tasks;
+using KDWebServer.Handlers;
 using NLog.Fluent;
 
 namespace KDWebServer.Responses
@@ -16,7 +17,7 @@ namespace KDWebServer.Responses
       _contentType = contentType;
     }
 
-    internal override Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending text response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")

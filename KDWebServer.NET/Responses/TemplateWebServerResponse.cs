@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using DotLiquid;
+using KDWebServer.Handlers;
 using NLog.Fluent;
 
 namespace KDWebServer.Responses
@@ -19,7 +20,7 @@ namespace KDWebServer.Responses
       _hash = hash;
     }
 
-    internal override async Task WriteToResponse(WebServerClientHandler handler, HttpListenerResponse response)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
     {
       var template = Template.Parse(_templateText);
       string html = template.Render(_hash);

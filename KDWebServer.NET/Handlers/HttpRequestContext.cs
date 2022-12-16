@@ -1,15 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
-namespace KDWebServer
+namespace KDWebServer.Handlers
 {
-  public class WebServerRequestContext
+  public class HttpRequestContext
   {
     public HttpListenerContext httpContext;
 
@@ -37,7 +35,7 @@ namespace KDWebServer
     public JToken JsonData { get; set; }
     public XDocument XmlData { get; set; }
 
-    public WebServerRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint)
+    public HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint)
     {
       this.httpContext = httpContext;
 
