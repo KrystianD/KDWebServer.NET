@@ -19,7 +19,7 @@ namespace KDWebServer.Handlers.Http
     private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.None };
 
     private readonly HttpListenerContext _httpContext;
-    private readonly RequestDispatcher.RouteEndpointMatch _match;
+    private readonly RequestDispatcher.RouteEndpointMatch Match;
     public long ProcessingTime;
 
     private WebServer WebServer { get; }
@@ -35,7 +35,7 @@ namespace KDWebServer.Handlers.Http
 
       RemoteEndpoint = remoteEndpoint;
       ClientId = clientId;
-      _match = match;
+      Match = match;
     }
 
     public async Task Handle(Dictionary<string, object> props)
@@ -53,8 +53,8 @@ namespace KDWebServer.Handlers.Http
         props.Add("content", parsedContent);
       }
 
-      var ep = _match.Endpoint;
-      ctx.Params = _match.RouteMatch.Params;
+      var ep = Match.Endpoint;
+      ctx.Params = Match.RouteMatch.Params;
 
       Logger.Trace()
             .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
@@ -93,7 +93,7 @@ namespace KDWebServer.Handlers.Http
 
     private static async Task ReadPayload(HttpRequestContext ctx)
     {
-      var httpContext = ctx.httpContext;
+      var httpContext = ctx.HttpContext;
 
       if (!httpContext.Request.HasEntityBody)
         return;
@@ -109,7 +109,7 @@ namespace KDWebServer.Handlers.Http
     {
       ContentType ct;
 
-      var httpContext = ctx.httpContext;
+      var httpContext = ctx.HttpContext;
 
       try { ct = new ContentType(httpContext.Request.ContentType); }
       catch (FormatException) { return null; }

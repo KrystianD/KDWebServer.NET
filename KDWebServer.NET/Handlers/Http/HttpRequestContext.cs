@@ -9,9 +9,9 @@ namespace KDWebServer.Handlers.Http
 {
   public class HttpRequestContext
   {
-    public HttpListenerContext httpContext;
+    public readonly HttpListenerContext HttpContext;
 
-    public string Path => httpContext.Request.Url.AbsolutePath;
+    public string Path => HttpContext.Request.Url.AbsolutePath;
 
     private string requestPayload;
     public HttpMethod HttpMethod { get; }
@@ -37,7 +37,7 @@ namespace KDWebServer.Handlers.Http
 
     public HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint)
     {
-      this.httpContext = httpContext;
+      HttpContext = httpContext;
 
       QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
       Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
@@ -48,6 +48,6 @@ namespace KDWebServer.Handlers.Http
       HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
     }
 
-    public string ReadAsString() => RawData == null ? null : httpContext.Request.ContentEncoding.GetString(RawData);
+    public string ReadAsString() => RawData == null ? null : HttpContext.Request.ContentEncoding.GetString(RawData);
   }
 }
