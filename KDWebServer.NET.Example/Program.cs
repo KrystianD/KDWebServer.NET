@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 #if !NET6_0_OR_GREATER
 using MoreLinq.Extensions;
 #endif
@@ -33,7 +32,7 @@ namespace KDWebServer.Example
       };
     }
 
-    static async Task Main(string[] args)
+    private static void SetupLogging()
     {
       var config = new LoggingConfiguration();
 
@@ -42,11 +41,10 @@ namespace KDWebServer.Example
         if (logEventInfo.Properties.ContainsKey("CallerFilePath")) logEventInfo.Properties.Remove("CallerFilePath");
         if (logEventInfo.Properties.ContainsKey("CallerLineNumber")) logEventInfo.Properties.Remove("CallerLineNumber");
 
-        var parametersStr = string.Join(",",
-                                        NLog.MappedDiagnosticsLogicalContext.GetNames().Select(key => (key, value: NLog.MappedDiagnosticsLogicalContext.GetObject(key)))
-                                            .Concat(logEventInfo.Properties.Select(x => (key: (string)x.Key, value: x.Value)))
-                                            .DistinctBy(x => x.key)
-                                            .Select(x => $"{x.key}={FormatForLog(x.value, false, keepShort: true)}"));
+        var parametersStr = string.Join(",", MappedDiagnosticsLogicalContext.GetNames().Select(key => (key, value: NLog.MappedDiagnosticsLogicalContext.GetObject(key)))
+                                                                            .Concat(logEventInfo.Properties.Select(x => (key: (string)x.Key, value: x.Value)))
+                                                                            .DistinctBy(x => x.key)
+                                                                            .Select(x => $"{x.key}={FormatForLog(x.value, false, keepShort: true)}"));
 
         return parametersStr.Length == 0 ? "" : $"({parametersStr})";
       });
@@ -58,18 +56,23 @@ namespace KDWebServer.Example
       config.AddRuleForAllLevels(consoleTarget);
 
       LogManager.Configuration = config;
+    }
+
+    private static void Main()
+    {
+      SetupLogging();
 
       var server = new WebServer(LogManager.LogFactory);
 
-      server.AddGETEndpoint("/", async ctx => Response.Text("OK"));
+      server.AddGETEndpoint("/", _ => Response.Text("OK"));
 
-      server.AddPOSTEndpoint("/", async ctx => Response.Text("OK"));
+      server.AddPOSTEndpoint("/", _ => Response.Text("OK"));
 
-      server.AddGETEndpoint("/user/<string:name>", async ctx => Response.Text($"user: {ctx.Params["name"]}"));
+      server.AddGETEndpoint("/user/<string:name>", ctx => Response.Text($"user: {ctx.Params["name"]}"));
 
-      server.AddGETEndpoint("/data", async ctx => Response.Json(new { a = 1, b = 2 }));
+      server.AddGETEndpoint("/data", _ => Response.Json(new { a = 1, b = 2 }));
 
-      server.AddGETEndpoint("/stream_fixed", async ctx => {
+      server.AddGETEndpoint("/stream_fixed", _ => {
         Stream ms = new MemoryStream();
         ms.WriteByte((byte)'A');
         ms.WriteByte((byte)'A');
@@ -83,7 +86,7 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
-      server.AddGETEndpoint("/auth", async ctx => throw new UnauthorizedException());
+      server.AddGETEndpoint("/auth", async _ => throw new UnauthorizedException());
 
       server.RunSync("0.0.0.0", 8080);
     }
