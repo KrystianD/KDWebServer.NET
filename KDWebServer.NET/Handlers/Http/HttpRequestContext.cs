@@ -15,7 +15,6 @@ namespace KDWebServer.Handlers.Http
 
     public string Path => HttpContext.Request.Url.AbsolutePath;
 
-    private string requestPayload;
     public HttpMethod HttpMethod { get; }
 
     // Routing
