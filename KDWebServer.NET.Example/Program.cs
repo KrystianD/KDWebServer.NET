@@ -5,7 +5,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using KDLib;
+#if !NET6_0_OR_GREATER
+using MoreLinq.Extensions;
+#endif
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -40,12 +42,11 @@ namespace KDWebServer.Example
         if (logEventInfo.Properties.ContainsKey("CallerFilePath")) logEventInfo.Properties.Remove("CallerFilePath");
         if (logEventInfo.Properties.ContainsKey("CallerLineNumber")) logEventInfo.Properties.Remove("CallerLineNumber");
 
-        var parametersStr =
-            NLog.MappedDiagnosticsLogicalContext.GetNames().Select(key => (key, value: NLog.MappedDiagnosticsLogicalContext.GetObject(key)))
-                .Concat(logEventInfo.Properties.Select(x => (key: (string)x.Key, value: x.Value)))
-                .Distinct(x => x.key)
-                .Select(x => $"{x.key}={FormatForLog(x.value, false, keepShort: true)}")
-                .JoinString(", ");
+        var parametersStr = string.Join(",",
+                                        NLog.MappedDiagnosticsLogicalContext.GetNames().Select(key => (key, value: NLog.MappedDiagnosticsLogicalContext.GetObject(key)))
+                                            .Concat(logEventInfo.Properties.Select(x => (key: (string)x.Key, value: x.Value)))
+                                            .DistinctBy(x => x.key)
+                                            .Select(x => $"{x.key}={FormatForLog(x.value, false, keepShort: true)}"));
 
         return parametersStr.Length == 0 ? "" : $"({parametersStr})";
       });

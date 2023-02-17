@@ -11,4 +11,8 @@
       <ProjectReference Include="..\KDWebServer.NET\KDWebServer.NET.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="morelinq" Version="3.3.2" />
+    </ItemGroup>
+
 </Project>

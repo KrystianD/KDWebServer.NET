@@ -15,7 +15,6 @@
         <PackageReference Include="JetBrains.Annotations" Version="2021.1.0-eap01" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="NLog" Version="4.5.11" />
-        <PackageReference Include="KDLib" Version="0.4.2" />
         <PackageReference Include="KDWebSocketSharp" Version="1.0.6" />
     </ItemGroup>
 

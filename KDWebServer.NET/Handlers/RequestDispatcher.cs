@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using KDLib;
 using NLog;
 using NLog.Fluent;
 using WebSocketSharp.Net;
@@ -27,7 +26,7 @@ namespace KDWebServer.Handlers
 
     public async void DispatchRequest(HttpListenerContext httpContext)
     {
-      string shortId = StringUtils.GenerateRandomString(4);
+      string shortId = Utils.GenerateRandomString(4);
       var remoteEndpoint = Utils.GetClientIp(httpContext, WebServer.TrustedProxies);
       var clientId = $"{remoteEndpoint} {shortId}";
 
