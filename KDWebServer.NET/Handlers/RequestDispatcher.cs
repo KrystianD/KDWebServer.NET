@@ -34,59 +34,56 @@ namespace KDWebServer.Handlers
       var request = httpContext.Request;
       var response = httpContext.Response;
 
+      var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
+      var logSuffix = $"{request.HttpMethod} {request.Url.AbsolutePath}";
+
       var loggingProps = new Dictionary<string, object>() {
           ["method"] = request.HttpMethod,
           ["path"] = request.Url.AbsolutePath,
+          ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
       };
+
+      void CloseStream(int? errorCode = null)
+      {
+        try {
+          if (errorCode.HasValue)
+            response.StatusCode = errorCode.Value;
+          response.OutputStream.Close();
+        }
+        catch { // ignored
+        }
+      }
 
       using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
       using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", remoteEndpoint)) {
+        RouteEndpointMatch match;
         try {
-          loggingProps.Add("query", QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary());
-
-          var match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
+          match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
           if (match == null) {
             Logger.Trace()
-                  .Message($"[{clientId}] Not found HTTP request - {request.HttpMethod} {request.Url.AbsolutePath}")
+                  .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
                   .Properties(loggingProps)
                   .Property("status_code", 404)
                   .Write();
 
-            response.StatusCode = 404;
-            response.OutputStream.Close();
-          }
-          else {
-            var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
-            await httpHandler.Handle(loggingProps);
-
-            try {
-              response.OutputStream.Close();
-            }
-            catch { // ignored
-            }
+            CloseStream(404);
+            return;
           }
         }
         catch (RouteInvalidValueProvidedException) {
           Logger.Info()
-                .Message($"[{clientId}] Invalid route parameters provided - {request.HttpMethod} {request.Url.PathAndQuery}")
+                .Message($"[{clientId}] Invalid route parameters provided - {logSuffix}")
                 .Properties(loggingProps)
                 .Property("status_code", 400)
                 .Write();
 
-          response.StatusCode = 400;
-          response.OutputStream.Close();
+          CloseStream(400);
+          return;
         }
-        catch (Exception e) {
-          Logger.Error()
-                .Message($"[{clientId}] Error during handling HTTP request - {request.HttpMethod} {request.Url.PathAndQuery}")
-                .Properties(loggingProps)
-                .Property("status_code", 500)
-                .Exception(e)
-                .Write();
 
-          response.StatusCode = 500;
-          response.OutputStream.Close();
-        }
+        var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+        await httpHandler.Handle(loggingProps);
+        CloseStream();
       }
     }
 

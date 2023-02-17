@@ -63,19 +63,31 @@ namespace KDWebServer.Handlers.Http
 
       Stopwatch timer = new Stopwatch();
       timer.Start();
-      var response = await ep.Callback(ctx);
+      try {
+        var response = await ep.Callback(ctx);
 
-      ProcessingTime = timer.ElapsedMilliseconds;
+        ProcessingTime = timer.ElapsedMilliseconds;
 
-      if (response == null) {
-        _httpContext.Response.StatusCode = 200;
-        _httpContext.Response.ContentLength64 = 0;
+        if (response == null) {
+          _httpContext.Response.StatusCode = 200;
+          _httpContext.Response.ContentLength64 = 0;
+        }
+        else {
+          foreach (string responseHeader in response._headers)
+            _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
+
+          await response.WriteToResponse(this, _httpContext.Response);
+        }
       }
-      else {
-        foreach (string responseHeader in response._headers)
-          _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
+      catch (Exception e) {
+        Logger.Error()
+              .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+              .Properties(props)
+              .Property("status_code", 500)
+              .Exception(e)
+              .Write();
 
-        await response.WriteToResponse(this, _httpContext.Response);
+        _httpContext.Response.StatusCode = 500;
       }
     }
 
