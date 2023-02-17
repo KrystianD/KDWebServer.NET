@@ -12,7 +12,7 @@ using NLog;
 using NLog.Fluent;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
-namespace KDWebServer.Handlers
+namespace KDWebServer.Handlers.Http
 {
   public class HttpClientHandler
   {

@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using DotLiquid;
-using KDWebServer.Handlers;
+using KDWebServer.Handlers.Http;
 using NLog.Fluent;
 
 namespace KDWebServer.Responses

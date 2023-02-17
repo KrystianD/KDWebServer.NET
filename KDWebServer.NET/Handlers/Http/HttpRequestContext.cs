@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
-namespace KDWebServer.Handlers
+namespace KDWebServer.Handlers.Http
 {
   public class HttpRequestContext
   {

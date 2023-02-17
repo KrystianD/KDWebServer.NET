@@ -1,7 +1,7 @@
 ﻿using WebSocketSharp.Net;
 using System.Text;
 using System.Threading.Tasks;
-using KDWebServer.Handlers;
+using KDWebServer.Handlers.Http;
 using NLog.Fluent;
 
 namespace KDWebServer.Responses

@@ -56,7 +56,7 @@ namespace KDWebServer.Handlers
             response.OutputStream.Close();
           }
           else {
-            var httpHandler = new HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+            var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
             await httpHandler.Handle(loggingProps);
 
             try {

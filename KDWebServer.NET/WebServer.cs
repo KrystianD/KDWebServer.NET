@@ -8,6 +8,7 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using KDWebServer.Handlers;
+using KDWebServer.Handlers.Http;
 using NLog;
 using HttpListener = WebSocketSharp.Net.HttpListener;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;

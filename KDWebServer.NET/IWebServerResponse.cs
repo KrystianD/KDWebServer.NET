@@ -1,6 +1,6 @@
 ﻿using WebSocketSharp.Net;
 using System.Threading.Tasks;
-using KDWebServer.Handlers;
+using KDWebServer.Handlers.Http;
 
 namespace KDWebServer
 {

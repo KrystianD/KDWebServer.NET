@@ -2,7 +2,7 @@
 using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
-using KDWebServer.Handlers;
+using KDWebServer.Handlers.Http;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
 
