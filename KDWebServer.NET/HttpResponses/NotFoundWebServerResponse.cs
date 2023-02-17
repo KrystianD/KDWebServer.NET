@@ -1,12 +1,12 @@
 ﻿using System.Text;
-using WebSocketSharp.Net;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
 using KDWebServer.Handlers.Http;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
+using WebSocketSharp.Net;
 
-namespace KDWebServer.Responses
+namespace KDWebServer.HttpResponses
 {
   public class NotFoundWebServerResponse : IWebServerResponse
   {

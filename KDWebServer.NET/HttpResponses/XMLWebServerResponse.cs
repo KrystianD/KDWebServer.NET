@@ -1,10 +1,10 @@
-﻿using WebSocketSharp.Net;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using NLog.Fluent;
+using WebSocketSharp.Net;
 
-namespace KDWebServer.Responses
+namespace KDWebServer.HttpResponses
 {
   public class XMLWebServerResponse : IWebServerResponse
   {

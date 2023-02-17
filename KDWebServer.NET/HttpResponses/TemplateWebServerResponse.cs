@@ -1,13 +1,13 @@
-﻿using WebSocketSharp.Net;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using DotLiquid;
 using KDWebServer.Handlers.Http;
 using NLog.Fluent;
+using WebSocketSharp.Net;
 
-namespace KDWebServer.Responses
+namespace KDWebServer.HttpResponses
 {
   public class TemplateWebServerResponse : IWebServerResponse
   {
