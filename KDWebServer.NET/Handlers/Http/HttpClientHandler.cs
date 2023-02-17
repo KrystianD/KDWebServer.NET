@@ -40,7 +40,7 @@ namespace KDWebServer.Handlers.Http
 
     public async Task Handle(Dictionary<string, object> props)
     {
-      HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint);
+      HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match);
 
       _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
@@ -54,7 +54,6 @@ namespace KDWebServer.Handlers.Http
       }
 
       var ep = Match.Endpoint;
-      ctx.Params = Match.RouteMatch.Params;
 
       Logger.Trace()
             .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")

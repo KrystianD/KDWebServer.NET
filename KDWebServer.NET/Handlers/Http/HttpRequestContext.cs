@@ -14,6 +14,8 @@ namespace KDWebServer.Handlers.Http
     public readonly HttpListenerContext HttpContext;
 
     public string Path => HttpContext.Request.Url.AbsolutePath;
+    public string ForwardedUri => Headers.GetStringOrDefault("X-Forwarded-Uri", null);
+    public System.Net.IPAddress RemoteEndpoint { get; }
 
     public HttpMethod HttpMethod { get; }
 
@@ -22,10 +24,6 @@ namespace KDWebServer.Handlers.Http
 
     // Params
     public QueryStringValuesCollection QueryString { get; }
-
-    // Request
-    public string ForwardedUri { get; }
-    public System.Net.IPAddress RemoteEndpoint { get; }
 
     // Headers
     public QueryStringValuesCollection Headers { get; }
@@ -36,17 +34,19 @@ namespace KDWebServer.Handlers.Http
     public JToken JsonData { get; set; }
     public XDocument XmlData { get; set; }
 
-    public HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint)
+    internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match)
     {
       HttpContext = httpContext;
 
+      HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
+
+      Params = match.RouteMatch.Params;
+
       QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
+
       Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
 
       RemoteEndpoint = remoteEndpoint;
-      ForwardedUri = Headers.GetStringOrDefault("X-Forwarded-Uri", null);
-
-      HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
     }
 
     public string ReadAsString() => RawData == null ? null : HttpContext.Request.ContentEncoding.GetString(RawData);
