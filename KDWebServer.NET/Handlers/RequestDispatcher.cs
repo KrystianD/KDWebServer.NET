@@ -79,9 +79,38 @@ namespace KDWebServer.Handlers
           return;
         }
 
-        var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
-        await httpHandler.Handle(loggingProps);
-        CloseStream();
+        if (match.Endpoint.IsWebsocket) {
+          if (request.IsWebSocketRequest) {
+            var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+            await wsHandler.Handle(loggingProps);
+            CloseStream();
+          }
+          else { // HTTP request to WS endpoint
+            Logger.Info()
+                  .Message($"[{clientId}] HTTP request to WS endpoint - {logSuffix}")
+                  .Properties(loggingProps)
+                  .Property("status_code", 426)
+                  .Write();
+
+            CloseStream(426);
+          }
+        }
+        else {
+          if (request.IsWebSocketRequest) { // WS request to HTTP endpoint
+            Logger.Info()
+                  .Message($"[{clientId}] WS request to HTTP endpoint - {logSuffix}")
+                  .Properties(loggingProps)
+                  .Property("status_code", 405)
+                  .Write();
+
+            CloseStream(405);
+          }
+          else {
+            var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+            await httpHandler.Handle(loggingProps);
+            CloseStream();
+          }
+        }
       }
     }
 

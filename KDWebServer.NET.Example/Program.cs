@@ -88,6 +88,14 @@ namespace KDWebServer.Example
 
       server.AddGETEndpoint("/auth", async _ => throw new UnauthorizedException());
 
+      server.AddWsEndpoint("/ws", async ctx => {
+        while (true) {
+          var msg = await ctx.ReceiveMessageAsync();
+          Console.WriteLine($"got ws message: {msg.Data}");
+          await ctx.SendMessageAsync(msg.Data);
+        }
+      });
+
       server.RunSync("0.0.0.0", 8080);
     }
   }

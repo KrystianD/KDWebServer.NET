@@ -9,6 +9,7 @@ using System.Security.Authentication;
 using System.Threading.Tasks;
 using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
+using KDWebServer.Handlers.Websocket;
 using NLog;
 using HttpListener = WebSocketSharp.Net.HttpListener;
 using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
@@ -30,17 +31,23 @@ namespace KDWebServer
 
     public delegate IWebServerResponse EndpointHandler(HttpRequestContext ctx);
 
+    public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx);
+
     private HttpListener _listener;
 
     internal class EndpointDefinition
     {
       public readonly string Endpoint;
-      public readonly AsyncEndpointHandler Callback;
+      public readonly AsyncEndpointHandler HttpCallback;
+      public readonly AsyncWebsocketEndpointHandler WsCallback;
 
-      public EndpointDefinition(string endpoint, AsyncEndpointHandler callback)
+      public bool IsWebsocket => WsCallback != null;
+
+      public EndpointDefinition(string endpoint, AsyncEndpointHandler httpCallback, AsyncWebsocketEndpointHandler wsCallback)
       {
         Endpoint = endpoint;
-        Callback = callback;
+        HttpCallback = httpCallback;
+        WsCallback = wsCallback;
       }
     }
 
@@ -71,7 +78,17 @@ namespace KDWebServer
 
       var route = Router.CompileRoute(endpoint);
       route.Methods = methods;
-      Endpoints.Add(route, new EndpointDefinition(endpoint, callback));
+      Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null));
+    }
+
+    public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
+    {
+      if (!(endpoint.StartsWith("/") || endpoint == "*"))
+        throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
+
+      var route = Router.CompileRoute(endpoint);
+      route.Methods = new HashSet<HttpMethod>() { HttpMethod.Get };
+      Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback));
     }
 
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });

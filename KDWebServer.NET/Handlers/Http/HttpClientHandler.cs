@@ -63,7 +63,7 @@ namespace KDWebServer.Handlers.Http
       Stopwatch timer = new Stopwatch();
       timer.Start();
       try {
-        var response = await ep.Callback(ctx);
+        var response = await ep.HttpCallback(ctx);
 
         ProcessingTime = timer.ElapsedMilliseconds;
 
