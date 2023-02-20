@@ -2,5 +2,7 @@ using System;
 
 namespace KDWebServer
 {
-  public class UnauthorizedException : Exception { }
+  public class UnauthorizedException : Exception
+  {
+  }
 }
