@@ -50,7 +50,7 @@ namespace KDWebServer.Handlers.Http
       props.Add("content_length", _httpContext.Request.ContentLength64);
       if (_httpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
-        props.Add("content", parsedContent);
+        props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
       }
 
       var ep = Match.Endpoint;

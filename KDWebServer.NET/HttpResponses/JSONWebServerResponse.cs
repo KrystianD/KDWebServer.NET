@@ -21,7 +21,7 @@ namespace KDWebServer.HttpResponses
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")
-             .Property("data", Utils.LimitText(_json, 1000))
+             .Property("data", loggerConfig.LogPayloads ? Utils.LimitText(_json, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();
 

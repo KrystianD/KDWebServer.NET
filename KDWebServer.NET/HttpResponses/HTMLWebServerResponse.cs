@@ -21,7 +21,7 @@ namespace KDWebServer.HttpResponses
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
-             .Property("body", Utils.LimitText(text, 1000))
+             .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(text, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();
 

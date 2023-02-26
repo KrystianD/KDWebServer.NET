@@ -30,6 +30,7 @@ namespace KDWebServer
   [PublicAPI]
   public class WebServerLoggerConfig
   {
+    public bool LogPayloads = true;
   }
 
   [PublicAPI]

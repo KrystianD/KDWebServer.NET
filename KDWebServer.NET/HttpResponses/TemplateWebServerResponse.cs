@@ -29,7 +29,7 @@ namespace KDWebServer.HttpResponses
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
-             .Property("body", Utils.LimitText(logText, 1000))
+             .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(logText, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();
 
