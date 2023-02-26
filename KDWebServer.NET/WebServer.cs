@@ -17,6 +17,7 @@ using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
+  [PublicAPI]
   public class WebServerSslConfig
   {
     public SslProtocols EnabledSslProtocols { get; set; } = SslProtocols.Tls12;
@@ -26,10 +27,12 @@ namespace KDWebServer
     public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (sender, certificate, chain, sslPolicyErrors) => true;
   }
 
+  [PublicAPI]
   public class WebServerLoggerConfig
   {
   }
 
+  [PublicAPI]
   public class WebServer
   {
     public delegate Task<IWebServerResponse> AsyncEndpointHandler(HttpRequestContext ctx);
