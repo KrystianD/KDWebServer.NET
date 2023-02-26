@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
@@ -23,6 +24,10 @@ namespace KDWebServer
     public string KeyPath { get; set; }
     public bool ClientCertificateRequired { get; set; } = false;
     public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (sender, certificate, chain, sslPolicyErrors) => true;
+  }
+
+  public class WebServerLoggerConfig
+  {
   }
 
   public class WebServer
@@ -52,15 +57,17 @@ namespace KDWebServer
     }
 
     internal NLog.LogFactory LogFactory { get; }
+    internal WebServerLoggerConfig LoggerConfig { get; }
 
     private readonly NLog.ILogger _logger;
 
     internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
     internal HashSet<IPAddress> TrustedProxies;
 
-    public WebServer(NLog.LogFactory factory)
+    public WebServer(NLog.LogFactory factory, [CanBeNull] WebServerLoggerConfig loggerConfig = null)
     {
       LogFactory = factory;
+      LoggerConfig = loggerConfig ?? new WebServerLoggerConfig();
       _logger = factory?.GetLogger("webserver") ?? LogManager.LogFactory.CreateNullLogger();
     }
 

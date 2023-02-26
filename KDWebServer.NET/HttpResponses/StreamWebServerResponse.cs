@@ -19,7 +19,7 @@ namespace KDWebServer.HttpResponses
       _mimeType = mimeType;
     }
 
-    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       long lengthToSend = -1;
       var lengthToSendStr = "unknown length";

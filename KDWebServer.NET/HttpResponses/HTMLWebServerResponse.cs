@@ -15,7 +15,7 @@ namespace KDWebServer.HttpResponses
       _html = html;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       var text = Utils.ExtractSimpleHtmlText(_html);
 

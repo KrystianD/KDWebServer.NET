@@ -17,7 +17,7 @@ namespace KDWebServer.HttpResponses
       _contentType = contentType;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending text response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")

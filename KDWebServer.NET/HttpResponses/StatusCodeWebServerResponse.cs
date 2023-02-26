@@ -16,7 +16,7 @@ namespace KDWebServer.HttpResponses
       StatusCode = code;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       HttpStatusCode code = (HttpStatusCode)StatusCode;
 

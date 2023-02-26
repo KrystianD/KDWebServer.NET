@@ -17,7 +17,7 @@ namespace KDWebServer.HttpResponses
       _json = json;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")

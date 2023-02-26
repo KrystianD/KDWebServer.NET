@@ -20,7 +20,7 @@ namespace KDWebServer.HttpResponses
       _hash = hash;
     }
 
-    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       var template = Template.Parse(_templateText);
       string html = template.Render(_hash);

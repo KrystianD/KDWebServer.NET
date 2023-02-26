@@ -75,7 +75,7 @@ namespace KDWebServer.Handlers.Http
           foreach (string responseHeader in response._headers)
             _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
 
-          await response.WriteToResponse(this, _httpContext.Response);
+          await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig);
         }
       }
       catch (Exception e) {

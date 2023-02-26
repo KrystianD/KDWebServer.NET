@@ -15,7 +15,7 @@ namespace KDWebServer.HttpResponses
       _xml = xml;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 30).Replace("\n", " ")})")

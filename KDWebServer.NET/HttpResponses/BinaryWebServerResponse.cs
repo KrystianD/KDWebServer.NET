@@ -16,7 +16,7 @@ namespace KDWebServer.HttpResponses
       _mimeType = mimeType;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending binary response ({handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")

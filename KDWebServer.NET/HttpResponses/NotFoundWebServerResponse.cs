@@ -27,7 +27,7 @@ namespace KDWebServer.HttpResponses
       StatusCode = 404;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
     {
       var logMsg = handler.Logger.Trace()
                           .Property("status_code", StatusCode);
