@@ -16,7 +16,7 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="4.5.11" />
-        <PackageReference Include="KDWebSocketSharp" Version="1.0.6" />
+        <PackageReference Include="KDWebSocketSharp" Version="1.0.7" />
     </ItemGroup>
 
 </Project>
