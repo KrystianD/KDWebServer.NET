@@ -1,10 +1,10 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
 using KDWebServer.Handlers.Http;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
-using WebSocketSharp.Net;
 
 namespace KDWebServer.HttpResponses
 {

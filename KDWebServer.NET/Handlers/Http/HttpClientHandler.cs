@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Fluent;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer.Handlers.Http
 {

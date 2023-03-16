@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Xml.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer.Handlers.Http
 {

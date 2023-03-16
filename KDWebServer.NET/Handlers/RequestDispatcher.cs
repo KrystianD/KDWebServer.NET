@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using NLog;
 using NLog.Fluent;
-using WebSocketSharp.Net;
 
 namespace KDWebServer.Handlers
 {

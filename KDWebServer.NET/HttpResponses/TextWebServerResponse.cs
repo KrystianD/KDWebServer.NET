@@ -1,8 +1,8 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using NLog.Fluent;
-using WebSocketSharp.Net;
 
 namespace KDWebServer.HttpResponses
 {

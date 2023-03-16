@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 #if !NET6_0_OR_GREATER
 using MoreLinq.Extensions;
 #endif
@@ -90,9 +91,9 @@ namespace KDWebServer.Example
 
       server.AddWsEndpoint("/ws", async ctx => {
         while (true) {
-          var msg = await ctx.ReceiveMessageAsync();
+          var msg = await ctx.ReceiveMessageAsync(CancellationToken.None);
           Console.WriteLine($"got ws message: {msg.Data}");
-          await ctx.SendMessageAsync(msg.Data);
+          await ctx.SendMessageAsync(msg.Data, CancellationToken.None);
         }
       });
 

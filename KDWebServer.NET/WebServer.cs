@@ -12,8 +12,6 @@ using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
 using NLog;
-using HttpListener = WebSocketSharp.Net.HttpListener;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
@@ -125,17 +123,10 @@ namespace KDWebServer
 
       if (sslConfig == null) {
         _logger.Info($"Starting HTTP server on {host}:{port}");
-        _listener.Prefixes.Add($"http://{host}:{port}/");
+        _listener.Prefixes.Add($"http://*:{port}/");
       }
       else {
-        _logger.Info($"Starting HTTPS server on {host}:{port}");
-        _listener.Prefixes.Add($"https://{host}:{port}/");
-
-        _listener.SslConfiguration.EnabledSslProtocols = sslConfig.EnabledSslProtocols;
-        _listener.SslConfiguration.ServerCertificate = Utils.LoadPemCertificate(sslConfig.CertificatePath, sslConfig.KeyPath);
-        _listener.SslConfiguration.ClientCertificateRequired = sslConfig.ClientCertificateRequired;
-        _listener.SslConfiguration.CheckCertificateRevocation = false;
-        _listener.SslConfiguration.ClientCertificateValidationCallback = sslConfig.ClientCertificateValidationCallback;
+        throw new ArgumentException("ssl not supported");
       }
 
       _listener.Start();

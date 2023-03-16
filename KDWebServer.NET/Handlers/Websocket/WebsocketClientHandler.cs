@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NLog;
 using NLog.Fluent;
-using WebSocketSharp;
-using ErrorEventArgs = WebSocketSharp.ErrorEventArgs;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer.Handlers.Websocket
 {
@@ -38,41 +37,24 @@ namespace KDWebServer.Handlers.Websocket
 
     public async Task Handle(Dictionary<string, object> props)
     {
-      var wsCtx = _httpContext.AcceptWebSocket(null);
+      var wsCtx = await _httpContext.AcceptWebSocketAsync(null);
 
       var ws = wsCtx.WebSocket;
       WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws);
 
       var cts = new CancellationTokenSource();
 
-      ws.OnMessage += (_, args) => {
-        try {
-          ctx.ReceiverQ.Enqueue(args, cts.Token);
-        }
-        catch (TaskCanceledException) {
-        }
-      };
-      ws.OnClose += (_, args) => {
-        cts.Cancel();
-        ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect(args));
-      };
-      ws.OnError += (_, args) => {
-        ctx.ErrorTcs.TrySetResult(new WebSocketError(args));
-      };
-
-      var _ = Task.Run(() => {
+      var _ = Task.Run(async () => {
         while (!cts.Token.IsCancellationRequested) {
           try {
             var msg = ctx.SenderQ.Dequeue(cts.Token);
-            if (ws.ReadyState == WebSocketState.Open) {
-              switch (msg) {
-                case byte[] data:
-                  ws.Send(data);
-                  break;
-                case string text:
-                  ws.Send(text);
-                  break;
-              }
+            switch (msg) {
+              case byte[] data:
+                await ws.SendAsync(data, WebSocketMessageType.Text, true, cts.Token);
+                break;
+              case string text:
+                await ws.SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true, cts.Token);
+                break;
             }
           }
           catch (TaskCanceledException) {
@@ -90,18 +72,26 @@ namespace KDWebServer.Handlers.Websocket
       try {
         await Match.Endpoint.WsCallback(ctx);
 
-        ws.Close(CloseStatusCode.Normal);
+        try {
+          await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+        }
+        catch {
+          ws.Abort();
+        }
 
         Logger.Trace()
               .Message($"[{ClientId}] WS handler finished gracefully - {logSuffix}")
               .Properties(props)
               .Write();
       }
-      catch (WebSocketDisconnect e) {
+      catch (System.Net.WebSockets.WebSocketException e) {
         Logger.Trace()
-              .Message($"[{ClientId}] WS connection has been closed, code: {e.CloseEvent.Code}, reason: {e.CloseEvent.Reason}, clean: {e.CloseEvent.WasClean} - {logSuffix}")
+              .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
               .Properties(props)
               .Write();
+
+        cts.Cancel();
+        ctx.ErrorTcs.TrySetResult(new WebSocketError());
       }
       catch (Exception e) {
         Logger.Error()
@@ -110,7 +100,15 @@ namespace KDWebServer.Handlers.Websocket
               .Exception(e)
               .Write();
 
-        ws.Close(CloseStatusCode.Abnormal);
+        cts.Cancel();
+        ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect());
+
+        try {
+          await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+        }
+        catch {
+          ws.Abort();
+        }
       }
     }
   }
@@ -118,22 +116,22 @@ namespace KDWebServer.Handlers.Websocket
   [PublicAPI]
   public class WebSocketDisconnect : Exception
   {
-    public CloseEventArgs CloseEvent { get; }
-
-    public WebSocketDisconnect(CloseEventArgs closeEvent)
-    {
-      CloseEvent = closeEvent;
-    }
+    // public CloseEventArgs CloseEvent { get; }
+    //
+    // public WebSocketDisconnect(CloseEventArgs closeEvent)
+    // {
+    //   CloseEvent = closeEvent;
+    // }
   }
 
   [PublicAPI]
   public class WebSocketError : Exception
   {
-    public ErrorEventArgs ErrorEvent { get; }
-
-    public WebSocketError(ErrorEventArgs errorEvent)
-    {
-      ErrorEvent = errorEvent;
-    }
+    // public ErrorEventArgs ErrorEvent { get; }
+    //
+    // public WebSocketError(ErrorEventArgs errorEvent)
+    // {
+    //   ErrorEvent = errorEvent;
+    // }
   }
 }

@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
 
 namespace KDWebServer
 {
