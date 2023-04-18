@@ -66,6 +66,8 @@ namespace KDWebServer
     internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
     internal HashSet<IPAddress> TrustedProxies;
 
+    public int WebsocketSenderQueueLength = 10;
+
     public WebServer(NLog.LogFactory factory, [CanBeNull] WebServerLoggerConfig loggerConfig = null)
     {
       LogFactory = factory;

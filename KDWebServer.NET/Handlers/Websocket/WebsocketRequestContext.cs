@@ -37,11 +37,15 @@ namespace KDWebServer.Handlers.Websocket
     public QueryStringValuesCollection Headers { get; }
 
     // WebSocket
-    internal readonly AsyncProducerConsumerQueue<object> SenderQ = new(1);
+    internal readonly AsyncProducerConsumerQueue<object> SenderQ;
 
     internal readonly TaskCompletionSource<Exception> ErrorTcs = new();
 
-    internal WebsocketRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match, WebSocket webSocket)
+    internal WebsocketRequestContext(HttpListenerContext httpContext,
+                                     IPAddress remoteEndpoint,
+                                     RequestDispatcher.RouteEndpointMatch match,
+                                     WebSocket webSocket,
+                                     int senderQueueLength)
     {
       _webSocket = webSocket;
 
@@ -54,6 +58,8 @@ namespace KDWebServer.Handlers.Websocket
       Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
 
       RemoteEndpoint = remoteEndpoint;
+
+      SenderQ = new(senderQueueLength);
     }
 
     public async Task<WebsocketMessage> ReceiveMessageAsync(CancellationToken token)

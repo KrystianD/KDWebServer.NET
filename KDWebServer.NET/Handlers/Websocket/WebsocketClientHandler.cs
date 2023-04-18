@@ -40,7 +40,7 @@ namespace KDWebServer.Handlers.Websocket
       var wsCtx = await _httpContext.AcceptWebSocketAsync(null);
 
       var ws = wsCtx.WebSocket;
-      WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws);
+      WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength);
 
       var cts = new CancellationTokenSource();
 
