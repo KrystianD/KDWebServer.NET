@@ -36,20 +36,23 @@ namespace KDWebServer
 
     public static RouteDescriptor CompileRoute(string route)
     {
+      const string ParamRegex = "<(?<type>[a-z]+):(?<name>[a-zA-Z0-9_-]+)>";
+
       int score = 100;
 
+      string routeRegex;
       if (route == "*") {
-        route = "$";
+        routeRegex = "$";
         score = 50;
       }
       else {
-        route = $"^{Regex.Escape(route)}$";
+        routeRegex = $"^{Regex.Escape(route)}$";
       }
 
       var routeDesc = new RouteDescriptor();
 
       bool hasRegex = false;
-      string r = Regex.Replace(route, "<(?<type>[a-z]+):(?<name>[a-zA-Z0-9_-]+)>", match => {
+      string r = Regex.Replace(routeRegex, ParamRegex, match => {
         string type = match.Groups["type"].Value;
         string name = match.Groups["name"].Value;
 
