@@ -9,8 +9,18 @@ namespace KDWebServer
   {
     public class RouteDescriptor
     {
+      public class ParameterDescriptor
+      {
+        public readonly Func<string, object> Converter;
+
+        public ParameterDescriptor(Func<string, object> converter)
+        {
+          Converter = converter;
+        }
+      }
+
       public Regex Regex;
-      public readonly Dictionary<string, Func<string, object>> Params = new Dictionary<string, Func<string, object>>();
+      public readonly Dictionary<string, ParameterDescriptor> Params = new();
       public int Score;
       public HashSet<HttpMethod> Methods;
 
@@ -22,8 +32,8 @@ namespace KDWebServer
         if (!m.Success)
           return false;
 
-        foreach (var (name, converter) in Params)
-          match.Params.Add(name, converter(m.Groups[name].Value));
+        foreach (var (name, parameterDescriptor) in Params)
+          match.Params.Add(name, parameterDescriptor.Converter(m.Groups[name].Value));
 
         return true;
       }
@@ -31,7 +41,7 @@ namespace KDWebServer
 
     public class RouteMatch
     {
-      public readonly Dictionary<string, object> Params = new Dictionary<string, object>();
+      public readonly Dictionary<string, object> Params = new();
     }
 
     public static RouteDescriptor CompileRoute(string route)
@@ -58,29 +68,14 @@ namespace KDWebServer
 
         hasRegex = true;
 
-        switch (type) {
-          case "string":
-            routeDesc.Params.Add(name, s => s);
-            break;
-          case "int":
-            routeDesc.Params.Add(name, s => {
-              if (!int.TryParse(s, out var v))
-                throw new RouteInvalidValueProvidedException();
+        var parameterDescriptor = type switch {
+            "string" => new RouteDescriptor.ParameterDescriptor(s => s),
+            "int" => new RouteDescriptor.ParameterDescriptor(s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+            "long" => new RouteDescriptor.ParameterDescriptor(s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+            _ => throw new Exception("invalid route parameter type"),
+        };
 
-              return v;
-            });
-            break;
-          case "long":
-            routeDesc.Params.Add(name, s => {
-              if (!long.TryParse(s, out var v))
-                throw new RouteInvalidValueProvidedException();
-
-              return v;
-            });
-            break;
-          default:
-            throw new Exception("invalid route parameter type");
-        }
+        routeDesc.Params.Add(name, parameterDescriptor);
 
         return "(?<" + name + ">[^/]+)";
       });
