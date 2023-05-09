@@ -12,6 +12,7 @@ using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
 using NLog;
+using NSwag;
 
 namespace KDWebServer
 {
@@ -106,6 +107,31 @@ namespace KDWebServer
     public void AddGETEndpoint(string endpoint, AsyncEndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
     public void AddPOSTEndpoint(string endpoint, AsyncEndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
+
+    public void AddSwaggerEndpoint(string endpoint)
+    {
+      var openApiDocument = new OpenApiDocument();
+      foreach (var (route, definition) in Endpoints) {
+        var item = new OpenApiPathItem();
+        foreach (var method in route.Methods) {
+          var op = new OpenApiOperation();
+          foreach (var (_, parameterDescriptor) in route.Params) {
+            op.Parameters.Add(parameterDescriptor.OpenApiParameter);
+          }
+
+          if (definition.IsWebsocket) {
+            op.Summary = "websocket";
+          }
+
+          item.Add(method.Method, op);
+        }
+
+        openApiDocument.Paths[route.OpanApiPath] = item;
+      }
+
+      AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml(endpoint + "/openapi.json")));
+      AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(openApiDocument.ToJson()));
+    }
 
     public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
     {

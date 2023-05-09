@@ -97,6 +97,8 @@ namespace KDWebServer.Example
         }
       });
 
+      server.AddSwaggerEndpoint("/docs");
+
       server.RunSync("0.0.0.0", 8080);
     }
   }

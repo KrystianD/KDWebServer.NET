@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using NJsonSchema;
+using NSwag;
 
 namespace KDWebServer
 {
@@ -11,10 +13,12 @@ namespace KDWebServer
     {
       public class ParameterDescriptor
       {
+        public readonly OpenApiParameter OpenApiParameter;
         public readonly Func<string, object> Converter;
 
-        public ParameterDescriptor(Func<string, object> converter)
+        public ParameterDescriptor(OpenApiParameter openApiParameter, Func<string, object> converter)
         {
+          OpenApiParameter = openApiParameter;
           Converter = converter;
         }
       }
@@ -23,6 +27,7 @@ namespace KDWebServer
       public readonly Dictionary<string, ParameterDescriptor> Params = new();
       public int Score;
       public HashSet<HttpMethod> Methods;
+      public string OpanApiPath;
 
       public bool TryMatch(string path, out RouteMatch match)
       {
@@ -61,6 +66,8 @@ namespace KDWebServer
 
       var routeDesc = new RouteDescriptor();
 
+      routeDesc.OpanApiPath = Regex.Replace(route, ParamRegex, match => $"{{{match.Groups["name"].Value}}}");
+
       bool hasRegex = false;
       string r = Regex.Replace(routeRegex, ParamRegex, match => {
         string type = match.Groups["type"].Value;
@@ -68,14 +75,18 @@ namespace KDWebServer
 
         hasRegex = true;
 
-        var parameterDescriptor = type switch {
-            "string" => new RouteDescriptor.ParameterDescriptor(s => s),
-            "int" => new RouteDescriptor.ParameterDescriptor(s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
-            "long" => new RouteDescriptor.ParameterDescriptor(s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+        routeDesc.Params.Add(name, type switch {
+            "string" => new RouteDescriptor.ParameterDescriptor(
+                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.String },
+                s => s),
+            "int" => new RouteDescriptor.ParameterDescriptor(
+                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.Number, Format = "int32" },
+                s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+            "long" => new RouteDescriptor.ParameterDescriptor(
+                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.Number, Format = "int64" },
+                s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
             _ => throw new Exception("invalid route parameter type"),
-        };
-
-        routeDesc.Params.Add(name, parameterDescriptor);
+        });
 
         return "(?<" + name + ">[^/]+)";
       });

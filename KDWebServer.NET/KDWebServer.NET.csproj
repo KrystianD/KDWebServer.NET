@@ -16,6 +16,7 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="4.5.11" />
+        <PackageReference Include="NSwag.Core" Version="13.19.0" />
     </ItemGroup>
 
 </Project>
