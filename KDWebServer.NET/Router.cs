@@ -77,13 +77,22 @@ namespace KDWebServer
 
         routeDesc.Params.Add(name, type switch {
             "string" => new RouteDescriptor.ParameterDescriptor(
-                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.String },
+                new() {
+                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
+                    Type = JsonObjectType.String,
+                },
                 s => s),
             "int" => new RouteDescriptor.ParameterDescriptor(
-                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.Number, Format = "int32" },
+                new() {
+                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
+                    Type = JsonObjectType.Number, Format = "int32",
+                },
                 s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
             "long" => new RouteDescriptor.ParameterDescriptor(
-                new() { Name = name, Kind = OpenApiParameterKind.Path, Type = JsonObjectType.Number, Format = "int64" },
+                new() {
+                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
+                    Type = JsonObjectType.Number, Format = "int64",
+                },
                 s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
             _ => throw new Exception("invalid route parameter type"),
         });
