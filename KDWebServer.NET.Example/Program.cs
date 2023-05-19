@@ -87,7 +87,9 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
+#pragma warning disable CS1998
       server.AddGETEndpoint("/auth", async _ => throw new UnauthorizedException());
+#pragma warning restore CS1998
 
       server.AddWsEndpoint("/ws", async ctx => {
         while (true) {

@@ -84,7 +84,7 @@ namespace KDWebServer.Handlers.Websocket
               .Properties(props)
               .Write();
       }
-      catch (System.Net.WebSockets.WebSocketException e) {
+      catch (WebSocketException) {
         Logger.Trace()
               .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
               .Properties(props)
