@@ -47,9 +47,22 @@ namespace KDWebServer.Handlers.Http
 
       props.Add("content_type", _httpContext.Request.ContentType);
       props.Add("content_length", _httpContext.Request.ContentLength64);
-      if (_httpContext.Request.ContentType != null) {
-        var parsedContent = ProcessKnownTypes(ctx);
-        props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
+      try {
+        if (_httpContext.Request.ContentType != null) {
+          var parsedContent = ProcessKnownTypes(ctx);
+          props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
+        }
+      }
+      catch (Exception e) {
+        Logger.Error()
+              .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+              .Properties(props)
+              .Property("status_code", 400)
+              .Exception(e)
+              .Write();
+
+        _httpContext.Response.StatusCode = 400;
+        return;
       }
 
       var ep = Match.Endpoint;
