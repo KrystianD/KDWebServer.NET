@@ -48,14 +48,7 @@ namespace KDWebServer.Handlers.Websocket
         while (!cts.Token.IsCancellationRequested) {
           try {
             var msg = ctx.SenderQ.Dequeue(cts.Token);
-            switch (msg) {
-              case byte[] data:
-                await ws.SendAsync(data, WebSocketMessageType.Text, true, cts.Token);
-                break;
-              case string text:
-                await ws.SendAsync(Encoding.UTF8.GetBytes(text), WebSocketMessageType.Text, true, cts.Token);
-                break;
-            }
+            await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, cts.Token);
           }
           catch (TaskCanceledException) {
           }

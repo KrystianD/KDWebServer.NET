@@ -94,8 +94,10 @@ namespace KDWebServer.Example
       server.AddWsEndpoint("/ws", async ctx => {
         while (true) {
           var msg = await ctx.ReceiveMessageAsync(CancellationToken.None);
-          Console.WriteLine($"got ws message: {msg.Data}");
-          await ctx.SendMessageAsync(msg.Data, CancellationToken.None);
+          Console.WriteLine($"got ws message: {msg.Text}");
+          await ctx.SendTextPartialAsync(msg.Text, CancellationToken.None);
+          await ctx.SendTextPartialAsync("-part", CancellationToken.None);
+          await ctx.SendTextAsync("", CancellationToken.None);
         }
       });
 
