@@ -22,6 +22,7 @@ namespace KDWebServer.Handlers.Websocket
     public ReadOnlyMemory<byte> Buffer;
     public WebSocketMessageType MessageType;
     public bool EndOfMessage;
+    public Action OnSent;
   }
 
   [PublicAPI]
@@ -74,60 +75,64 @@ namespace KDWebServer.Handlers.Websocket
       return await ReceiveMessage(_webSocket, token);
     }
 
-    public void SendTextWait(string data, CancellationToken token) => Enqueue(data, true, true, token);
-    public void SendTextWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, true, true, token);
-    public void SendTextWait(string data, TimeSpan timeout) => Enqueue(data, true, true, new CancellationTokenSource(timeout).Token);
-    public void SendTextWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, true, true, new CancellationTokenSource(timeout).Token);
-    public async Task SendTextAsync(string data, CancellationToken token) => await EnqueueAsync(data, true, true, token);
-    public async Task SendTextAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, true, true, token);
-    public async Task SendTextAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, true, true, new CancellationTokenSource(timeout).Token);
-    public async Task SendTextAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, true, true, new CancellationTokenSource(timeout).Token);
+    public void SendTextWait(string data, CancellationToken token) => Enqueue(data, null, true, true, token);
+    public void SendTextWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, true, true, token);
+    public void SendTextWait(string data, TimeSpan timeout) => Enqueue(data, null, true, true, new CancellationTokenSource(timeout).Token);
+    public void SendTextWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, true, true, new CancellationTokenSource(timeout).Token);
+    public async Task SendTextAsync(string data, CancellationToken token) => await EnqueueAsync(data, null, true, true, token);
+    public async Task SendTextAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, true, true, token);
+    public async Task SendTextAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, null, true, true, new CancellationTokenSource(timeout).Token);
+    public async Task SendTextAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, true, true, new CancellationTokenSource(timeout).Token);
 
-    public void SendTextPartialWait(string data, CancellationToken token) => Enqueue(data, false, true, token);
-    public void SendTextPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, false, true, token);
-    public void SendTextPartialWait(string data, TimeSpan timeout) => Enqueue(data, false, true, new CancellationTokenSource(timeout).Token);
-    public void SendTextPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, false, true, new CancellationTokenSource(timeout).Token);
-    public async Task SendTextPartialAsync(string data, CancellationToken token) => await EnqueueAsync(data, false, true, token);
-    public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, false, true, token);
-    public async Task SendTextPartialAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, false, true, new CancellationTokenSource(timeout).Token);
-    public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, false, true, new CancellationTokenSource(timeout).Token);
+    public void SendTextPartialWait(string data, CancellationToken token) => Enqueue(data, null, false, true, token);
+    public void SendTextPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, false, true, token);
+    public void SendTextPartialWait(string data, TimeSpan timeout) => Enqueue(data, null, false, true, new CancellationTokenSource(timeout).Token);
+    public void SendTextPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, false, true, new CancellationTokenSource(timeout).Token);
+    public async Task SendTextPartialAsync(string data, CancellationToken token) => await EnqueueAsync(data, null, false, true, token);
+    public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, false, true, token);
+    public async Task SendTextPartialAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, null, false, true, new CancellationTokenSource(timeout).Token);
+    public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, false, true, new CancellationTokenSource(timeout).Token);
 
-    public void SendBinaryWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, true, false, token);
-    public void SendBinaryWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, true, false, new CancellationTokenSource(timeout).Token);
-    public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, true, false, token);
-    public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, true, false, new CancellationTokenSource(timeout).Token);
+    public void SendBinaryWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, true, false, token);
+    public void SendBinaryWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, true, false, new CancellationTokenSource(timeout).Token);
+    public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, true, false, token);
+    public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, true, false, new CancellationTokenSource(timeout).Token);
 
-    public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, false, false, token);
-    public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, false, false, new CancellationTokenSource(timeout).Token);
-    public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, false, false, token);
-    public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, false, false, new CancellationTokenSource(timeout).Token);
+    public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, false, false, token);
+    public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, false, false, new CancellationTokenSource(timeout).Token);
+    public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, false, false, token);
+    public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, false, false, new CancellationTokenSource(timeout).Token);
 
-    private void Enqueue(string data, bool isEnd, bool isText, CancellationToken token)
+    public void Enqueue(string data, Action onSent, bool isEnd, bool isText, CancellationToken token)
     {
-      Enqueue(Encoding.UTF8.GetBytes(data), isEnd, isText, token);
+      Enqueue(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText, token);
     }
 
-    private void Enqueue(ReadOnlyMemory<byte> data, bool isEnd, bool isText, CancellationToken token)
+    public void Enqueue(ReadOnlyMemory<byte> data, Action onSent, bool isEnd, bool isText, CancellationToken token)
     {
-      SenderQ.Enqueue(new WebsocketOutgoingMessage() {
+      var msg = new WebsocketOutgoingMessage() {
           Buffer = data,
           EndOfMessage = isEnd,
           MessageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary,
-      }, token);
+          OnSent = onSent,
+      };
+      SenderQ.Enqueue(msg, token);
     }
 
-    private async Task EnqueueAsync(string data, bool isEnd, bool isText, CancellationToken token)
+    public async Task EnqueueAsync(string data, Action onSent, bool isEnd, bool isText, CancellationToken token)
     {
-      await EnqueueAsync(Encoding.UTF8.GetBytes(data), isEnd, isText, token);
+      await EnqueueAsync(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText, token);
     }
 
-    private async Task EnqueueAsync(ReadOnlyMemory<byte> data, bool isEnd, bool isText, CancellationToken token)
+    public async Task EnqueueAsync(ReadOnlyMemory<byte> data, Action onSent, bool isEnd, bool isText, CancellationToken token)
     {
-      await SenderQ.EnqueueAsync(new WebsocketOutgoingMessage() {
+      var msg = new WebsocketOutgoingMessage() {
           Buffer = data,
           EndOfMessage = isEnd,
           MessageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary,
-      }, token);
+          OnSent = onSent,
+      };
+      await SenderQ.EnqueueAsync(msg, token);
     }
 
     public async Task Close() => await Close(WebSocketCloseStatus.NormalClosure);

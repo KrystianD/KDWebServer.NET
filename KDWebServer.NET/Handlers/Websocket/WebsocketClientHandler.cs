@@ -49,6 +49,7 @@ namespace KDWebServer.Handlers.Websocket
           try {
             var msg = ctx.SenderQ.Dequeue(cts.Token);
             await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, cts.Token);
+            msg.OnSent?.Invoke();
           }
           catch (TaskCanceledException) {
           }
