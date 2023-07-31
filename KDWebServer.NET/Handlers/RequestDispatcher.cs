@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using JetBrains.Annotations;
 using NLog;
 using NLog.Fluent;
 
@@ -41,11 +43,19 @@ namespace KDWebServer.Handlers
           ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
       };
 
-      void CloseStream(int? errorCode = null)
+      void CloseStream(int? errorCode = null, [CanBeNull] string errorMessage = null)
       {
         try {
-          if (errorCode.HasValue)
+          if (errorCode.HasValue) {
             response.StatusCode = errorCode.Value;
+          }
+
+          if (errorMessage != null) {
+            byte[] resp = Encoding.UTF8.GetBytes(errorMessage);
+            response.ContentType = "text/plain";
+            response.OutputStream.Write(resp, 0, resp.Length);
+          }
+
           response.OutputStream.Close();
         }
         catch { // ignored
