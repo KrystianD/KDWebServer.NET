@@ -69,6 +69,8 @@ namespace KDWebServer.Example
 
       server.AddPOSTEndpoint("/", _ => Response.Text("OK"));
 
+      server.AddGETEndpoint("/id/<int:id>", ctx => Response.Text($"id: {ctx.Params["id"]}"));
+
       server.AddGETEndpoint("/user/<string:name>", ctx => Response.Text($"user: {ctx.Params["name"]}"));
 
       server.AddGETEndpoint("/data", _ => Response.Json(new { a = 1, b = 2 }));

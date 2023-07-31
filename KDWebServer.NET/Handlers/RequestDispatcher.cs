@@ -78,14 +78,14 @@ namespace KDWebServer.Handlers
             return;
           }
         }
-        catch (RouteInvalidValueProvidedException) {
+        catch (RouteInvalidValueProvidedException e) {
           Logger.Info()
                 .Message($"[{clientId}] Invalid route parameters provided - {logSuffix}")
                 .Properties(loggingProps)
                 .Property("status_code", 400)
                 .Write();
 
-          CloseStream(400);
+          CloseStream(400, e.Message);
           return;
         }
 

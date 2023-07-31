@@ -32,23 +32,28 @@ namespace KDWebServer
       public bool TryMatch(string path, out RouteMatch match)
       {
         Match m = Regex.Match(path);
-        match = new RouteMatch() {
-            RegexMatch = m,
-        };
+        match = new RouteMatch(this, m);
         return m.Success;
       }
     }
 
     internal class RouteMatch
     {
-      public RouteDescriptor Descriptor;
-      public Match RegexMatch;
+      private readonly RouteDescriptor Descriptor;
+      private readonly Match RegexMatch;
+
+      public RouteMatch(RouteDescriptor descriptor, Match regexMatch)
+      {
+        Descriptor = descriptor;
+        RegexMatch = regexMatch;
+      }
 
       public void ParseParams(out Dictionary<string, object> routeParams)
       {
         routeParams = new Dictionary<string, object>();
-        foreach (var (name, parameterDescriptor) in Descriptor.Params)
+        foreach (var (name, parameterDescriptor) in Descriptor.Params) {
           routeParams.Add(name, parameterDescriptor.Converter(RegexMatch.Groups[name].Value));
+        }
       }
     }
 
@@ -90,13 +95,13 @@ namespace KDWebServer
                     Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
                     Type = JsonObjectType.Number, Format = "int32",
                 },
-                s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+                s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
             "long" => new RouteDescriptor.ParameterDescriptor(
                 new() {
                     Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
                     Type = JsonObjectType.Number, Format = "int64",
                 },
-                s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException()),
+                s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
             _ => throw new Exception("invalid route parameter type"),
         });
 
