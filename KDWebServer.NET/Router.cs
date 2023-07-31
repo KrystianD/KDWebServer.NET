@@ -102,6 +102,12 @@ namespace KDWebServer
                     Type = JsonObjectType.Number, Format = "int64",
                 },
                 s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
+            "guid" => new RouteDescriptor.ParameterDescriptor(
+                new() {
+                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
+                    Type = JsonObjectType.String, Format = "uuid",
+                },
+                s => Guid.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
             _ => throw new Exception("invalid route parameter type"),
         });
 
