@@ -39,7 +39,7 @@ namespace KDWebServer.Handlers.Http
 
       HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
 
-      Params = match.RouteMatch.Params;
+      Params = match.RouteParams;
 
       QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
 

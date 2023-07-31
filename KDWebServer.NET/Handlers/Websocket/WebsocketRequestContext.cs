@@ -59,7 +59,7 @@ namespace KDWebServer.Handlers.Websocket
 
       HttpContext = httpContext;
 
-      Params = match.RouteMatch.Params;
+      Params = match.RouteParams;
 
       QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
 

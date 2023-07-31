@@ -10,8 +10,8 @@ namespace KDWebServer.Handlers
   {
     internal class RouteEndpointMatch
     {
-      public Router.RouteMatch RouteMatch;
       public WebServer.EndpointDefinition Endpoint;
+      public Dictionary<string, object> RouteParams;
     }
 
     private WebServer WebServer { get; }
@@ -137,12 +137,17 @@ namespace KDWebServer.Handlers
         }
       }
 
-      return bestScore == -1
-          ? null
-          : new RouteEndpointMatch() {
-              RouteMatch = bestRoute,
-              Endpoint = bestEndpoint,
-          };
+      if (bestRoute == null) {
+        return null;
+      }
+      else {
+        bestRoute.ParseParams(out var routeParams);
+
+        return new RouteEndpointMatch() {
+            Endpoint = bestEndpoint,
+            RouteParams = routeParams,
+        };
+      }
     }
   }
 }

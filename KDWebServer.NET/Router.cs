@@ -31,22 +31,25 @@ namespace KDWebServer
 
       public bool TryMatch(string path, out RouteMatch match)
       {
-        match = new RouteMatch();
-
         Match m = Regex.Match(path);
-        if (!m.Success)
-          return false;
-
-        foreach (var (name, parameterDescriptor) in Params)
-          match.Params.Add(name, parameterDescriptor.Converter(m.Groups[name].Value));
-
-        return true;
+        match = new RouteMatch() {
+            RegexMatch = m,
+        };
+        return m.Success;
       }
     }
 
-    public class RouteMatch
+    internal class RouteMatch
     {
-      public readonly Dictionary<string, object> Params = new();
+      public RouteDescriptor Descriptor;
+      public Match RegexMatch;
+
+      public void ParseParams(out Dictionary<string, object> routeParams)
+      {
+        routeParams = new Dictionary<string, object>();
+        foreach (var (name, parameterDescriptor) in Descriptor.Params)
+          routeParams.Add(name, parameterDescriptor.Converter(RegexMatch.Groups[name].Value));
+      }
     }
 
     public static RouteDescriptor CompileRoute(string route)
