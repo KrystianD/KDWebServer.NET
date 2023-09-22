@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
@@ -15,10 +16,12 @@ namespace KDWebServer.HttpResponses
       _xml = xml;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                           Dictionary<string, object> loggingProps)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 30).Replace("\n", " ")})")
+             .Properties(loggingProps)
              .Property("xml", loggerConfig.LogPayloads ? Utils.LimitText(_xml, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();

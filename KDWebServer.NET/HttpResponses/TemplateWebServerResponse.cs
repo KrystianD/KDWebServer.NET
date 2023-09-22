@@ -20,7 +20,8 @@ namespace KDWebServer.HttpResponses
       _hash = hash;
     }
 
-    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                                 Dictionary<string, object> loggingProps)
     {
       var template = Template.Parse(_templateText);
       string html = template.Render(_hash);
@@ -29,6 +30,7 @@ namespace KDWebServer.HttpResponses
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
+             .Properties(loggingProps)
              .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(logText, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();

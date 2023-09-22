@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
@@ -27,7 +28,8 @@ namespace KDWebServer.HttpResponses
       StatusCode = 404;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                           Dictionary<string, object> loggingProps)
     {
       var logMsg = handler.Logger.Trace()
                           .Property("status_code", StatusCode);
@@ -35,6 +37,7 @@ namespace KDWebServer.HttpResponses
       byte[] resp = null;
       if (_text != null) {
         logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")
+              .Properties(loggingProps)
               .Property("text", Utils.LimitText(_text, 1000));
 
         resp = Encoding.UTF8.GetBytes(_text);
@@ -42,6 +45,7 @@ namespace KDWebServer.HttpResponses
       }
       else if (_json != null) {
         logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.ProcessingTime}ms)")
+              .Properties(loggingProps)
               .Property("data", Utils.LimitText(_json, 1000));
 
         resp = Encoding.UTF8.GetBytes(_json);
@@ -51,6 +55,7 @@ namespace KDWebServer.HttpResponses
         var text = Utils.ExtractSimpleHtmlText(_html);
 
         logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
+              .Properties(loggingProps)
               .Property("body", Utils.LimitText(text, 1000));
 
         resp = Encoding.UTF8.GetBytes(_html);

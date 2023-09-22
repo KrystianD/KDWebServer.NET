@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using NLog.Fluent;
@@ -16,10 +17,12 @@ namespace KDWebServer.HttpResponses
       _mimeType = mimeType;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                           Dictionary<string, object> loggingProps)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending binary response ({handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")
+             .Properties(loggingProps)
              .Property("data_length", _data.Length)
              .Property("status_code", StatusCode)
              .Write();

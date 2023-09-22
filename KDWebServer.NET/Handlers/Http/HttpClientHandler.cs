@@ -37,7 +37,7 @@ namespace KDWebServer.Handlers.Http
       Match = match;
     }
 
-    public async Task Handle(Dictionary<string, object> props)
+    public async Task Handle(Dictionary<string, object> loggingProps)
     {
       HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match);
 
@@ -45,6 +45,7 @@ namespace KDWebServer.Handlers.Http
 
       await ReadPayload(ctx);
 
+      var props = new Dictionary<string, object>(loggingProps);
       props.Add("content_type", _httpContext.Request.ContentType);
       props.Add("content_length", _httpContext.Request.ContentLength64);
       try {
@@ -93,7 +94,7 @@ namespace KDWebServer.Handlers.Http
           foreach (string responseHeader in response._headers)
             _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
 
-          await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig);
+          await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig, loggingProps);
         }
       }
       catch (Exception e) {

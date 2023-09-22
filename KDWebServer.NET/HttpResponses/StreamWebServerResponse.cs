@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
@@ -19,7 +20,8 @@ namespace KDWebServer.HttpResponses
       _mimeType = mimeType;
     }
 
-    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                                 Dictionary<string, object> loggingProps)
     {
       long lengthToSend = -1;
       var lengthToSendStr = "unknown length";
@@ -33,6 +35,7 @@ namespace KDWebServer.HttpResponses
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending stream response ({handler.ProcessingTime}ms) ({lengthToSendStr})")
+             .Properties(loggingProps)
              .Property("status_code", StatusCode)
              .Write();
 

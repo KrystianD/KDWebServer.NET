@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
@@ -16,7 +17,8 @@ namespace KDWebServer.HttpResponses
       StatusCode = code;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                           Dictionary<string, object> loggingProps)
     {
       HttpStatusCode code = (HttpStatusCode)StatusCode;
 
@@ -26,6 +28,7 @@ namespace KDWebServer.HttpResponses
 
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.ProcessingTime}ms)")
+             .Properties(loggingProps)
              .Property("text", _text)
              .Property("status_code", StatusCode)
              .Write();

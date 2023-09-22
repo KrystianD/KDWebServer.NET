@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
@@ -17,10 +18,12 @@ namespace KDWebServer.HttpResponses
       _json = json;
     }
 
-    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig)
+    internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                           Dictionary<string, object> loggingProps)
     {
       handler.Logger.Trace()
              .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")
+             .Properties(loggingProps)
              .Property("data", loggerConfig.LogPayloads ? Utils.LimitText(_json, 1000) : "<skipped>")
              .Property("status_code", StatusCode)
              .Write();
