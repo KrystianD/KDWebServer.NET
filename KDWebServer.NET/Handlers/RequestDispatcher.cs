@@ -38,8 +38,6 @@ namespace KDWebServer.Handlers
       var logSuffix = $"{request.HttpMethod} {request.Url.AbsolutePath}";
 
       var loggingProps = new Dictionary<string, object>() {
-          ["method"] = request.HttpMethod,
-          ["path"] = request.Url.AbsolutePath,
           ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
       };
 
@@ -62,6 +60,8 @@ namespace KDWebServer.Handlers
         }
       }
 
+      using (MappedDiagnosticsLogicalContext.SetScoped("method", request.HttpMethod))
+      using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url.AbsolutePath))
       using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
       using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", remoteEndpoint)) {
         RouteEndpointMatch match;
