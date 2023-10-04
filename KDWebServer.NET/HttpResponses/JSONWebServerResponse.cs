@@ -38,7 +38,7 @@ namespace KDWebServer.HttpResponses
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }
 
-    internal static JSONWebServerResponse FromData(JToken data) => new JSONWebServerResponse(data.ToString(Formatting.None));
-    internal static JSONWebServerResponse FromData(object data) => FromData(JToken.FromObject(data));
+    internal static JSONWebServerResponse FromData(JToken data, bool indented) => new JSONWebServerResponse(data.ToString(indented ? Formatting.Indented : Formatting.None));
+    internal static JSONWebServerResponse FromData(object data, bool indented) => FromData(JToken.FromObject(data), indented);
   }
 }
