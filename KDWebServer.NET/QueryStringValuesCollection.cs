@@ -53,6 +53,11 @@ namespace KDWebServer
         return long.Parse(val);
       }
 
+      public bool IsNull(int index = 0)
+      {
+        return _values[index].IsNull;
+      }
+
       public Value GetSingleValue()
       {
         if (_values.Count > 1)
@@ -138,7 +143,7 @@ namespace KDWebServer
     {
       value = default;
 
-      if (!_valuesCollections.TryGetValue(name, out var v))
+      if (!_valuesCollections.TryGetValue(name, out var v) || v.IsNull())
         return false;
 
       value = v.GetString();
@@ -152,7 +157,7 @@ namespace KDWebServer
     {
       value = default;
 
-      if (!_valuesCollections.TryGetValue(name, out var v))
+      if (!_valuesCollections.TryGetValue(name, out var v) || v.IsNull())
         return false;
 
       value = v.GetInt();
@@ -166,7 +171,7 @@ namespace KDWebServer
     {
       value = default;
 
-      if (!_valuesCollections.TryGetValue(name, out var v))
+      if (!_valuesCollections.TryGetValue(name, out var v) || v.IsNull())
         return false;
 
       value = v.GetLong();
