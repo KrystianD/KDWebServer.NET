@@ -48,14 +48,16 @@ namespace KDWebServer
       public readonly string Endpoint;
       public readonly AsyncEndpointHandler HttpCallback;
       public readonly AsyncWebsocketEndpointHandler WsCallback;
+      public readonly bool SkipDocs;
 
       public bool IsWebsocket => WsCallback != null;
 
-      public EndpointDefinition(string endpoint, AsyncEndpointHandler httpCallback, AsyncWebsocketEndpointHandler wsCallback)
+      public EndpointDefinition(string endpoint, AsyncEndpointHandler httpCallback, AsyncWebsocketEndpointHandler wsCallback, bool skipDocs)
       {
         Endpoint = endpoint;
         HttpCallback = httpCallback;
         WsCallback = wsCallback;
+        SkipDocs = skipDocs;
       }
     }
 
@@ -83,16 +85,16 @@ namespace KDWebServer
       TrustedProxies = trustedProxies.ToHashSet();
     }
 
-    public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods) => AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods);
+    public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false) => AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods, skipDocs);
 
-    public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods)
+    public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false)
     {
       if (!(endpoint.StartsWith("/") || endpoint == "*"))
         throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
 
       var route = Router.CompileRoute(endpoint);
       route.Methods = methods;
-      Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null));
+      Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null, skipDocs));
     }
 
     public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
@@ -102,7 +104,7 @@ namespace KDWebServer
 
       var route = Router.CompileRoute(endpoint);
       route.Methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-      Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback));
+      Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback, false));
     }
 
     public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
@@ -118,6 +120,9 @@ namespace KDWebServer
         openApiDocument.Info.Title = Name;
 
       foreach (var (route, definition) in Endpoints) {
+        if (definition.SkipDocs)
+          continue;
+
         var item = new OpenApiPathItem();
         foreach (var method in route.Methods) {
           var op = new OpenApiOperation();
