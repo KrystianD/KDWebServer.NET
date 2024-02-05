@@ -123,7 +123,12 @@ namespace KDWebServer
         if (definition.SkipDocs)
           continue;
 
-        var item = new OpenApiPathItem();
+        OpenApiPathItem item;
+        if (!openApiDocument.Paths.TryGetValue(route.OpanApiPath, out item)) {
+          item = new OpenApiPathItem();
+          openApiDocument.Paths[route.OpanApiPath] = item;
+        }
+
         foreach (var method in route.Methods) {
           var op = new OpenApiOperation();
           foreach (var (_, parameterDescriptor) in route.Params) {
@@ -136,8 +141,6 @@ namespace KDWebServer
 
           item.Add(method.Method, op);
         }
-
-        openApiDocument.Paths[route.OpanApiPath] = item;
       }
 
       var schemaJson = openApiDocument.ToJson();
