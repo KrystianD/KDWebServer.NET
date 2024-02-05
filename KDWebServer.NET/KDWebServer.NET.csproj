@@ -12,11 +12,11 @@
     <ItemGroup>
         <PackageReference Include="DotLiquid" Version="2.0.298" />
         <PackageReference Include="HtmlAgilityPack" Version="1.8.14" />
-        <PackageReference Include="JetBrains.Annotations" Version="2021.1.0-eap01" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="4.5.11" />
-        <PackageReference Include="NSwag.Core" Version="13.19.0" />
+        <PackageReference Include="NSwag.Core" Version="14.0.3" />
     </ItemGroup>
 
 </Project>
