@@ -24,11 +24,9 @@ namespace KDWebServer
     public static TemplateWebServerResponse TemplateFile(string templatePath, Dictionary<string, object> data) => TemplateWebServerResponse.FromFile(templatePath, data);
     public static TemplateWebServerResponse TemplateFile(string templatePath, object data) => TemplateWebServerResponse.FromFile(templatePath, data);
 
-#if NETCOREAPP
     public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath) => TemplateWebServerResponse.FromFileAsync(templatePath);
     public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath, Dictionary<string, object> data) => TemplateWebServerResponse.FromFileAsync(templatePath, data);
     public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath, object data) => TemplateWebServerResponse.FromFileAsync(templatePath, data);
-#endif
 
     public static TemplateWebServerResponse TemplateString(string templateText) => TemplateWebServerResponse.FromString(templateText);
     public static TemplateWebServerResponse TemplateString(string templateText, Dictionary<string, object> data) => TemplateWebServerResponse.FromString(templateText, data);

@@ -56,13 +56,11 @@ namespace KDWebServer.HttpResponses
       return new TemplateWebServerResponse(templateText, hash);
     }
 
-#if NETCOREAPP
     private static async Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Hash hash)
     {
       string templateText = await File.ReadAllTextAsync(templatePath);
       return new TemplateWebServerResponse(templateText, hash);
     }
-#endif
 
     internal static TemplateWebServerResponse FromString(string templateString) => FromString(templateString, (Hash)null);
     internal static TemplateWebServerResponse FromString(string templateString, Dictionary<string, object> data) => FromString(templateString, Hash.FromDictionary(data));
@@ -72,10 +70,8 @@ namespace KDWebServer.HttpResponses
     internal static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data) => FromFile(templatePath, Hash.FromDictionary(data));
     internal static TemplateWebServerResponse FromFile(string templatePath, object data) => FromFile(templatePath, Hash.FromAnonymousObject(data));
 
-#if NETCOREAPP
     internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath) => FromFileAsync(templatePath, (Hash)null);
     internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data) => FromFileAsync(templatePath, Hash.FromDictionary(data));
     internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
-#endif
   }
 }
