@@ -12,6 +12,8 @@ namespace KDWebServer
 {
   internal static class Utils
   {
+    public static R Let<T, R>(this T value, Func<T, R> f) => f(value);
+
     public static HttpMethod StringToHttpMethod(string method)
     {
       switch (method.ToUpper()) {

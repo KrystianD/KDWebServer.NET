@@ -59,6 +59,8 @@ namespace KDWebServer
       }
     }
 
+    public string? Name { get; set; }
+
     internal NLog.LogFactory LogFactory { get; }
     internal WebServerLoggerConfig LoggerConfig { get; }
 
@@ -111,6 +113,10 @@ namespace KDWebServer
     public void AddSwaggerEndpoint(string endpoint)
     {
       var openApiDocument = new OpenApiDocument();
+      
+      if (Name != null)
+        openApiDocument.Info.Title = Name;
+
       foreach (var (route, definition) in Endpoints) {
         var item = new OpenApiPathItem();
         foreach (var method in route.Methods) {
@@ -129,8 +135,10 @@ namespace KDWebServer
         openApiDocument.Paths[route.OpanApiPath] = item;
       }
 
-      AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml(endpoint + "/openapi.json")));
-      AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(openApiDocument.ToJson()));
+      var schemaJson = openApiDocument.ToJson();
+
+      AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml(endpoint + "/openapi.json", name: Name)));
+      AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(schemaJson));
     }
 
     public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
