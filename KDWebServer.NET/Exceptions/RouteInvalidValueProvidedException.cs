@@ -1,6 +1,6 @@
 using System;
 
-namespace KDWebServer
+namespace KDWebServer.Exceptions
 {
   public class RouteInvalidValueProvidedException : Exception
   {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using KDWebServer.Exceptions;
 using NJsonSchema;
 using NSwag;
 
