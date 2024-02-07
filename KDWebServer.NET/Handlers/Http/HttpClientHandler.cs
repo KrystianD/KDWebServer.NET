@@ -110,7 +110,7 @@ public class HttpClientHandler
 
     using var ms = new MemoryStream();
 
-    await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
+    await httpContext.Request.InputStream.CopyToAsync(ms);
 
     return ms.ToArray();
   }
