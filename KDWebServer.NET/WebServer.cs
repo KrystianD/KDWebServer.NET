@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
+using NJsonSchema;
 using NLog;
 using NSwag;
 
@@ -73,6 +74,10 @@ namespace KDWebServer
 
     public int WebsocketSenderQueueLength = 10;
 
+    private OpenApiDocument _openApiDocument = new() {
+        SchemaType = SchemaType.OpenApi3,
+    };
+
     public WebServer(NLog.LogFactory factory, [CanBeNull] WebServerLoggerConfig loggerConfig = null)
     {
       LogFactory = factory;
@@ -112,21 +117,27 @@ namespace KDWebServer
     public void AddPOSTEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
     public void AddPOSTEndpoint(string endpoint, AsyncEndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Post });
 
+    public void AppendSwaggerDocument(OpenApiDocument doc)
+    {
+      foreach (var (key, value) in doc.Definitions)
+        _openApiDocument.Definitions[key] = value;
+      foreach (var (key, value) in doc.Paths)
+        _openApiDocument.Paths[key] = value;
+    }
+
     public void AddSwaggerEndpoint(string endpoint)
     {
-      var openApiDocument = new OpenApiDocument();
-      
       if (Name != null)
-        openApiDocument.Info.Title = Name;
+        _openApiDocument.Info.Title = Name;
 
       foreach (var (route, definition) in Endpoints) {
         if (definition.SkipDocs)
           continue;
 
         OpenApiPathItem item;
-        if (!openApiDocument.Paths.TryGetValue(route.OpanApiPath, out item)) {
+        if (!_openApiDocument.Paths.TryGetValue(route.OpanApiPath, out item)) {
           item = new OpenApiPathItem();
-          openApiDocument.Paths[route.OpanApiPath] = item;
+          _openApiDocument.Paths[route.OpanApiPath] = item;
         }
 
         foreach (var method in route.Methods) {
@@ -149,7 +160,7 @@ namespace KDWebServer
         }
       }
 
-      var schemaJson = openApiDocument.ToJson();
+      var schemaJson = _openApiDocument.ToJson();
 
       AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml(endpoint + "/openapi.json", name: Name)));
       AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(schemaJson));
