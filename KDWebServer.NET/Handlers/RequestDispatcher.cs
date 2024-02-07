@@ -32,7 +32,7 @@ public class RequestDispatcher
     var response = httpContext.Response;
 
     var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
-    var logSuffix = $"{request.HttpMethod} {request.Url.AbsolutePath}";
+    var logSuffix = $"{request.HttpMethod} {request.Url?.AbsolutePath}";
 
     var loggingProps = new Dictionary<string, object?>() {
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
@@ -58,9 +58,20 @@ public class RequestDispatcher
     }
 
     using (MappedDiagnosticsLogicalContext.SetScoped("method", request.HttpMethod))
-    using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url.AbsolutePath))
+    using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url?.AbsolutePath))
     using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
     using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", remoteEndpoint)) {
+      if (remoteEndpoint == null || request.Url is null) {
+        Logger.Info()
+              .Message($"[{clientId}] Invalid request - {logSuffix}")
+              .Properties(loggingProps)
+              .Property("status_code", 400)
+              .Write();
+
+        CloseStream(400, "invalid request");
+        return;
+      }
+
       RouteEndpointMatch? match;
       try {
         match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
