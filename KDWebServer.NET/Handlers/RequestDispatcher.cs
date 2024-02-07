@@ -38,25 +38,6 @@ public class RequestDispatcher
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
-    void CloseStream(int? errorCode = null, string? errorMessage = null)
-    {
-      try {
-        if (errorCode.HasValue) {
-          response.StatusCode = errorCode.Value;
-        }
-
-        if (errorMessage != null) {
-          byte[] resp = Encoding.UTF8.GetBytes(errorMessage);
-          response.ContentType = "text/plain";
-          response.OutputStream.Write(resp, 0, resp.Length);
-        }
-
-        response.OutputStream.Close();
-      }
-      catch { // ignored
-      }
-    }
-
     using (MappedDiagnosticsLogicalContext.SetScoped("method", request.HttpMethod))
     using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url?.AbsolutePath))
     using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
@@ -68,7 +49,7 @@ public class RequestDispatcher
               .Property("status_code", 400)
               .Write();
 
-        CloseStream(400, "invalid request");
+        Helpers.CloseStream(response, 400, "invalid request");
         return;
       }
 
@@ -82,7 +63,7 @@ public class RequestDispatcher
                 .Property("status_code", 404)
                 .Write();
 
-          CloseStream(404);
+          Helpers.CloseStream(response, 404);
           return;
         }
       }
@@ -93,7 +74,7 @@ public class RequestDispatcher
               .Property("status_code", 400)
               .Write();
 
-        CloseStream(400, e.Message);
+        Helpers.CloseStream(response, 400, e.Message);
         return;
       }
 
@@ -101,7 +82,7 @@ public class RequestDispatcher
         if (request.IsWebSocketRequest) {
           var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
           await wsHandler.Handle(loggingProps);
-          CloseStream();
+          Helpers.CloseStream(response);
         }
         else { // HTTP request to WS endpoint
           Logger.Info()
@@ -110,7 +91,7 @@ public class RequestDispatcher
                 .Property("status_code", 426)
                 .Write();
 
-          CloseStream(426);
+          Helpers.CloseStream(response, 426);
         }
       }
       else {
@@ -121,12 +102,12 @@ public class RequestDispatcher
                 .Property("status_code", 405)
                 .Write();
 
-          CloseStream(405);
+          Helpers.CloseStream(response, 405);
         }
         else {
           var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
           await httpHandler.Handle(loggingProps);
-          CloseStream();
+          Helpers.CloseStream(response);
         }
       }
     }
