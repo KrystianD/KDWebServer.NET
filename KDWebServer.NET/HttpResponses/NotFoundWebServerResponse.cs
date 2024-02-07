@@ -75,5 +75,5 @@ public class NotFoundWebServerResponse : WebServerResponse
     }
   }
 
-  internal static NotFoundWebServerResponse Create(string? text = null, JToken? json = null, string? html = null) => new(text, json?.ToString(), html);
+  internal static NotFoundWebServerResponse Create(string? text = null, JToken? json = null, string? html = null) => new(text, json?.ToString(Formatting.None), html);
 }
