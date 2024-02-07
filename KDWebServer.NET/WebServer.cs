@@ -46,7 +46,6 @@ public class WebServer
 
   internal class EndpointDefinition
   {
-    public readonly string Endpoint;
     public readonly AsyncEndpointHandler? HttpCallback;
     public readonly AsyncWebsocketEndpointHandler? WsCallback;
     public readonly HashSet<HttpMethod> Methods;
@@ -54,9 +53,8 @@ public class WebServer
 
     public bool IsWebsocket => WsCallback != null;
 
-    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs)
+    public EndpointDefinition(AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs)
     {
-      Endpoint = endpoint;
       HttpCallback = httpCallback;
       WsCallback = wsCallback;
       Methods = methods;
@@ -100,7 +98,7 @@ public class WebServer
       throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
-    Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs));
+    Endpoints.Add(route, new EndpointDefinition(callback, null, methods, skipDocs));
   }
 
   public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
@@ -110,7 +108,7 @@ public class WebServer
 
     var route = Router.CompileRoute(endpoint);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback, methods, false));
+    Endpoints.Add(route, new EndpointDefinition(null, callback, methods, false));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
