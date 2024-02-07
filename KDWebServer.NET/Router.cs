@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using KDWebServer.Exceptions;
-using NJsonSchema;
-using NSwag;
 
 namespace KDWebServer
 {
@@ -12,20 +10,8 @@ namespace KDWebServer
   {
     public class RouteDescriptor
     {
-      public class ParameterDescriptor
-      {
-        public readonly OpenApiParameter OpenApiParameter;
-        public readonly Func<string, object> Converter;
-
-        public ParameterDescriptor(OpenApiParameter openApiParameter, Func<string, object> converter)
-        {
-          OpenApiParameter = openApiParameter;
-          Converter = converter;
-        }
-      }
-
       public Regex Regex;
-      public readonly Dictionary<string, ParameterDescriptor> Params = new();
+      public readonly Dictionary<string, SimpleTypeConverters.TypeConverter> Params = new();
       public int Score;
       public HashSet<HttpMethod> Methods;
       public string OpanApiPath;
@@ -53,7 +39,14 @@ namespace KDWebServer
       {
         routeParams = new Dictionary<string, object>();
         foreach (var (name, parameterDescriptor) in Descriptor.Params) {
-          routeParams.Add(name, parameterDescriptor.Converter(RegexMatch.Groups[name].Value));
+          var valueStr = RegexMatch.Groups[name].Value;
+          try {
+            var value = parameterDescriptor.FromStringConverter(valueStr);
+            routeParams.Add(name, value);
+          }
+          catch {
+            throw new RouteInvalidValueProvidedException(name, parameterDescriptor.RouterTypeName, valueStr);
+          }
         }
       }
     }
@@ -84,33 +77,11 @@ namespace KDWebServer
 
         hasRegex = true;
 
-        routeDesc.Params.Add(name, type switch {
-            "string" => new RouteDescriptor.ParameterDescriptor(
-                new() {
-                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
-                    Type = JsonObjectType.String,
-                },
-                s => s),
-            "int" => new RouteDescriptor.ParameterDescriptor(
-                new() {
-                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
-                    Type = JsonObjectType.Number, Format = "int32",
-                },
-                s => int.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
-            "long" => new RouteDescriptor.ParameterDescriptor(
-                new() {
-                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
-                    Type = JsonObjectType.Number, Format = "int64",
-                },
-                s => long.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
-            "guid" => new RouteDescriptor.ParameterDescriptor(
-                new() {
-                    Name = name, Kind = OpenApiParameterKind.Path, IsRequired = true,
-                    Type = JsonObjectType.String, Format = "uuid",
-                },
-                s => Guid.TryParse(s, out var v) ? v : throw new RouteInvalidValueProvidedException(name, type, s)),
-            _ => throw new Exception("invalid route parameter type"),
-        });
+        var knownTypeConverter = SimpleTypeConverters.GetConverterByRouterTypeName(type);
+        if (knownTypeConverter == null)
+          throw new Exception("invalid route parameter type");
+
+        routeDesc.Params.Add(name, knownTypeConverter);
 
         return "(?<" + name + ">[^/]+)";
       });

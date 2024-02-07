@@ -131,8 +131,14 @@ namespace KDWebServer
 
         foreach (var method in route.Methods) {
           var op = new OpenApiOperation();
-          foreach (var (_, parameterDescriptor) in route.Params) {
-            op.Parameters.Add(parameterDescriptor.OpenApiParameter);
+          foreach (var (name, typeConverter) in route.Params) {
+            var openApiParameter = new OpenApiParameter {
+                Name = name,
+                Kind = OpenApiParameterKind.Path,
+                IsRequired = true,
+            };
+            typeConverter.ApplyToJsonSchema(openApiParameter);
+            op.Parameters.Add(openApiParameter);
           }
 
           if (definition.IsWebsocket) {
