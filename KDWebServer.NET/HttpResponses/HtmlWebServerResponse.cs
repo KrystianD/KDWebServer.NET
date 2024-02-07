@@ -7,7 +7,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class HtmlWebServerResponse : IWebServerResponse
+public class HtmlWebServerResponse : WebServerResponse
 {
   private readonly string _html;
 

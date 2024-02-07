@@ -36,9 +36,9 @@ public class WebServerLoggerConfig
 [PublicAPI]
 public class WebServer
 {
-  public delegate Task<IWebServerResponse> AsyncEndpointHandler(HttpRequestContext ctx);
+  public delegate Task<WebServerResponse> AsyncEndpointHandler(HttpRequestContext ctx);
 
-  public delegate IWebServerResponse EndpointHandler(HttpRequestContext ctx);
+  public delegate WebServerResponse EndpointHandler(HttpRequestContext ctx);
 
   public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx);
 

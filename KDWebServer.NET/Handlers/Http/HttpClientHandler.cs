@@ -76,11 +76,11 @@ public class HttpClientHandler
     Stopwatch timer = new Stopwatch();
     timer.Start();
     try {
-      IWebServerResponse response;
+      WebServerResponse response;
       try {
         response = await ep.HttpCallback!(ctx);
       }
-      catch (IWebServerResponse r) {
+      catch (WebServerResponse r) {
         response = r;
       }
 

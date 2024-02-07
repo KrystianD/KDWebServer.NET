@@ -9,7 +9,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class TemplateWebServerResponse : IWebServerResponse
+public class TemplateWebServerResponse : WebServerResponse
 {
   private readonly string _templateText;
   private readonly Hash? _hash;

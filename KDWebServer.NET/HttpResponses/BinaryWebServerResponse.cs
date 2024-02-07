@@ -6,7 +6,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class BinaryWebServerResponse : IWebServerResponse
+public class BinaryWebServerResponse : WebServerResponse
 {
   private readonly byte[] _data;
   private readonly string _mimeType;

@@ -7,7 +7,7 @@ using KDWebServer.Handlers.Http;
 namespace KDWebServer;
 
 [PublicAPI]
-public abstract class IWebServerResponse : System.Exception
+public abstract class WebServerResponse : System.Exception
 {
   public int StatusCode { get; set; } = 200;
 

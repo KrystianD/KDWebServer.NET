@@ -7,7 +7,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class StreamWebServerResponse : IWebServerResponse
+public class StreamWebServerResponse : WebServerResponse
 {
   private readonly Stream _stream;
   private readonly bool _closeAfter;

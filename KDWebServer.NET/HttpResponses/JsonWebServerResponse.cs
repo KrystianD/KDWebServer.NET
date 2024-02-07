@@ -9,7 +9,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class JsonWebServerResponse : IWebServerResponse
+public class JsonWebServerResponse : WebServerResponse
 {
   private readonly string _json;
 

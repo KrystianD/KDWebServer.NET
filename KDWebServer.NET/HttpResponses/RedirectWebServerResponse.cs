@@ -6,7 +6,7 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class RedirectWebServerResponse : IWebServerResponse
+public class RedirectWebServerResponse : WebServerResponse
 {
   private readonly string _location;
 
