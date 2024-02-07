@@ -11,160 +11,159 @@ using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Fluent;
 
-namespace KDWebServer.Handlers.Http
+namespace KDWebServer.Handlers.Http;
+
+public class HttpClientHandler
 {
-  public class HttpClientHandler
+  private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
+
+  private readonly HttpListenerContext _httpContext;
+  private readonly RequestDispatcher.RouteEndpointMatch Match;
+  public long ProcessingTime;
+
+  private WebServer WebServer { get; }
+  public ILogger Logger { get; }
+  public string ClientId { get; }
+  private IPAddress RemoteEndpoint { get; }
+
+  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, RequestDispatcher.RouteEndpointMatch match)
   {
-    private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
+    _httpContext = httpContext;
+    WebServer = webServer;
+    Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
 
-    private readonly HttpListenerContext _httpContext;
-    private readonly RequestDispatcher.RouteEndpointMatch Match;
-    public long ProcessingTime;
+    RemoteEndpoint = remoteEndpoint;
+    ClientId = clientId;
+    Match = match;
+  }
 
-    private WebServer WebServer { get; }
-    public ILogger Logger { get; }
-    public string ClientId { get; }
-    private IPAddress RemoteEndpoint { get; }
+  public async Task Handle(Dictionary<string, object> loggingProps)
+  {
+    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match);
 
-    internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, RequestDispatcher.RouteEndpointMatch match)
-    {
-      _httpContext = httpContext;
-      WebServer = webServer;
-      Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
+    _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
-      RemoteEndpoint = remoteEndpoint;
-      ClientId = clientId;
-      Match = match;
+    await ReadPayload(ctx);
+
+    var props = new Dictionary<string, object>(loggingProps);
+    props.Add("content_type", _httpContext.Request.ContentType);
+    props.Add("content_length", _httpContext.Request.ContentLength64);
+    try {
+      if (_httpContext.Request.ContentType != null) {
+        var parsedContent = ProcessKnownTypes(ctx);
+        props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
+      }
     }
-
-    public async Task Handle(Dictionary<string, object> loggingProps)
-    {
-      HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match);
-
-      _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
-
-      await ReadPayload(ctx);
-
-      var props = new Dictionary<string, object>(loggingProps);
-      props.Add("content_type", _httpContext.Request.ContentType);
-      props.Add("content_length", _httpContext.Request.ContentLength64);
-      try {
-        if (_httpContext.Request.ContentType != null) {
-          var parsedContent = ProcessKnownTypes(ctx);
-          props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
-        }
-      }
-      catch (Exception e) {
-        Logger.Error()
-              .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
-              .Properties(props)
-              .Property("status_code", 400)
-              .Exception(e)
-              .Write();
-
-        _httpContext.Response.StatusCode = 400;
-        return;
-      }
-
-      var ep = Match.Endpoint;
-
-      Logger.Trace()
-            .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+    catch (Exception e) {
+      Logger.Error()
+            .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
             .Properties(props)
+            .Property("status_code", 400)
+            .Exception(e)
             .Write();
 
-      Stopwatch timer = new Stopwatch();
-      timer.Start();
+      _httpContext.Response.StatusCode = 400;
+      return;
+    }
+
+    var ep = Match.Endpoint;
+
+    Logger.Trace()
+          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+          .Properties(props)
+          .Write();
+
+    Stopwatch timer = new Stopwatch();
+    timer.Start();
+    try {
+      IWebServerResponse response;
       try {
-        IWebServerResponse response;
-        try {
-          response = await ep.HttpCallback(ctx);
-        }
-        catch (IWebServerResponse r) {
-          response = r;
-        }
-
-        ProcessingTime = timer.ElapsedMilliseconds;
-
-        if (response == null) {
-          _httpContext.Response.StatusCode = 200;
-          _httpContext.Response.ContentLength64 = 0;
-        }
-        else {
-          foreach (string responseHeader in response._headers)
-            _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
-
-          await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig, loggingProps);
-        }
+        response = await ep.HttpCallback(ctx);
       }
-      catch (Exception e) {
-        Logger.Error()
-              .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
-              .Properties(props)
-              .Property("status_code", 500)
-              .Exception(e)
-              .Write();
+      catch (IWebServerResponse r) {
+        response = r;
+      }
 
-        _httpContext.Response.StatusCode = 500;
+      ProcessingTime = timer.ElapsedMilliseconds;
+
+      if (response == null) {
+        _httpContext.Response.StatusCode = 200;
+        _httpContext.Response.ContentLength64 = 0;
+      }
+      else {
+        foreach (string responseHeader in response._headers)
+          _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
+
+        await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig, loggingProps);
       }
     }
+    catch (Exception e) {
+      Logger.Error()
+            .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+            .Properties(props)
+            .Property("status_code", 500)
+            .Exception(e)
+            .Write();
 
-    private static async Task ReadPayload(HttpRequestContext ctx)
-    {
-      var httpContext = ctx.HttpContext;
-
-      if (!httpContext.Request.HasEntityBody)
-        return;
-
-      using var ms = new MemoryStream();
-
-      await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
-
-      ctx.RawData = ms.ToArray();
+      _httpContext.Response.StatusCode = 500;
     }
+  }
 
-    private static object ProcessKnownTypes(HttpRequestContext ctx)
-    {
-      ContentType ct;
+  private static async Task ReadPayload(HttpRequestContext ctx)
+  {
+    var httpContext = ctx.HttpContext;
 
-      var httpContext = ctx.HttpContext;
+    if (!httpContext.Request.HasEntityBody)
+      return;
 
-      try { ct = new ContentType(httpContext.Request.ContentType); }
-      catch (FormatException) { return null; }
+    using var ms = new MemoryStream();
 
-      string payload;
+    await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
 
-      switch (ct.MediaType) {
-        case "application/x-www-form-urlencoded":
-          if (!httpContext.Request.HasEntityBody)
-            return "(empty)";
+    ctx.RawData = ms.ToArray();
+  }
 
-          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+  private static object ProcessKnownTypes(HttpRequestContext ctx)
+  {
+    ContentType ct;
 
-          ctx.FormData = QueryStringValuesCollection.Parse(payload);
-          return ctx.FormData;
+    var httpContext = ctx.HttpContext;
 
-        case "application/json":
-          if (!httpContext.Request.HasEntityBody)
-            return "(empty)";
+    try { ct = new ContentType(httpContext.Request.ContentType); }
+    catch (FormatException) { return null; }
 
-          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+    string payload;
 
-          ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings);
-          return ctx.JsonData;
+    switch (ct.MediaType) {
+      case "application/x-www-form-urlencoded":
+        if (!httpContext.Request.HasEntityBody)
+          return "(empty)";
 
-        case "text/xml":
-          if (!httpContext.Request.HasEntityBody)
-            return "(empty)";
+        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
-          payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+        ctx.FormData = QueryStringValuesCollection.Parse(payload);
+        return ctx.FormData;
 
-          ctx.XmlData = XDocument.Parse(payload);
-          return ctx.XmlData;
+      case "application/json":
+        if (!httpContext.Request.HasEntityBody)
+          return "(empty)";
 
-        default:
-          return "(unknown-type)";
-      }
+        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+
+        ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings);
+        return ctx.JsonData;
+
+      case "text/xml":
+        if (!httpContext.Request.HasEntityBody)
+          return "(empty)";
+
+        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+
+        ctx.XmlData = XDocument.Parse(payload);
+        return ctx.XmlData;
+
+      default:
+        return "(unknown-type)";
     }
   }
 }
