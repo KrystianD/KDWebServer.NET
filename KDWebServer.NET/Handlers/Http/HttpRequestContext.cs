@@ -12,9 +12,9 @@ public class HttpRequestContext
 {
   public readonly HttpListenerContext HttpContext;
 
-  public string Path => HttpContext.Request.Url.AbsolutePath;
-  public string ForwardedUri => Headers.GetStringOrDefault("X-Forwarded-Uri", null);
-  public System.Net.IPAddress RemoteEndpoint { get; }
+  public string Path => HttpContext.Request.Url!.AbsolutePath;
+  public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
+  public IPAddress RemoteEndpoint { get; }
 
   public HttpMethod HttpMethod { get; }
 
@@ -29,11 +29,11 @@ public class HttpRequestContext
 
   // Content
   public byte[] RawData { get; set; }
-  public QueryStringValuesCollection FormData { get; set; }
-  public JToken JsonData { get; set; }
-  public XDocument XmlData { get; set; }
+  public QueryStringValuesCollection? FormData { get; set; }
+  public JToken? JsonData { get; set; }
+  public XDocument? XmlData { get; set; }
 
-  internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match)
+  internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match, byte[] rawData)
   {
     HttpContext = httpContext;
 
@@ -46,7 +46,9 @@ public class HttpRequestContext
     Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
 
     RemoteEndpoint = remoteEndpoint;
+
+    RawData = rawData;
   }
 
-  public string ReadAsString() => RawData == null ? null : HttpContext.Request.ContentEncoding.GetString(RawData);
+  public string ReadAsString() => HttpContext.Request.ContentEncoding.GetString(RawData);
 }

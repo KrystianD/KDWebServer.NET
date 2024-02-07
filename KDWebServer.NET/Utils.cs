@@ -12,22 +12,7 @@ namespace KDWebServer;
 
 internal static class Utils
 {
-  public static R Let<T, R>(this T value, Func<T, R> f) => f(value);
-
-  public static HttpMethod StringToHttpMethod(string method)
-  {
-    switch (method.ToUpper()) {
-      case "GET": return HttpMethod.Get;
-      case "PUT": return HttpMethod.Put;
-      case "POST": return HttpMethod.Post;
-      case "DELETE": return HttpMethod.Delete;
-      case "HEAD": return HttpMethod.Head;
-      case "OPTIONS": return HttpMethod.Options;
-      case "TRACE": return HttpMethod.Trace;
-      default:
-        throw new Exception($"invalid method: {method}");
-    }
-  }
+  public static TOut Let<TIn, TOut>(this TIn value, Func<TIn, TOut> f) => f(value);
 
   public static string ExtractSimpleHtmlText(string html)
   {
@@ -37,9 +22,9 @@ internal static class Utils
     HtmlNode node = e.DocumentNode.SelectSingleNode("//body") ?? e.DocumentNode;
 
     var text = node.InnerText;
-    if (string.IsNullOrWhiteSpace(text))
-      return "<no-text>";
-    return Regex.Replace(text, @"[ \t\n\r]+", " ").Trim();
+    return string.IsNullOrWhiteSpace(text)
+        ? "<no-text>"
+        : Regex.Replace(text, @"[ \t\n\r]+", " ").Trim();
   }
 
 
@@ -69,7 +54,7 @@ internal static class Utils
     if (text == null)
       return "(null)";
     if (text.Length > maxLength - 3)
-      text = text.Substring(0, maxLength - 3) + "...";
+      text = text[..(maxLength - 3)] + "...";
     return text;
   }
 

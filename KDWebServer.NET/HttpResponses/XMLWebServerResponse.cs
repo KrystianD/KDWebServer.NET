@@ -17,7 +17,7 @@ public class XMLWebServerResponse : IWebServerResponse
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object> loggingProps)
+                                         Dictionary<string, object?> loggingProps)
   {
     handler.Logger.Trace()
            .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 30).Replace("\n", " ")})")

@@ -21,10 +21,10 @@ namespace KDWebServer;
 public class WebServerSslConfig
 {
   public SslProtocols EnabledSslProtocols { get; set; } = SslProtocols.Tls12;
-  public string CertificatePath { get; set; }
-  public string KeyPath { get; set; }
+  public string? CertificatePath { get; set; }
+  public string? KeyPath { get; set; }
   public bool ClientCertificateRequired { get; set; } = false;
-  public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (sender, certificate, chain, sslPolicyErrors) => true;
+  public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (_, _, _, _) => true;
 }
 
 [PublicAPI]
@@ -42,18 +42,18 @@ public class WebServer
 
   public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx);
 
-  private HttpListener _listener;
+  private HttpListener? _listener;
 
   internal class EndpointDefinition
   {
     public readonly string Endpoint;
-    public readonly AsyncEndpointHandler HttpCallback;
-    public readonly AsyncWebsocketEndpointHandler WsCallback;
+    public readonly AsyncEndpointHandler? HttpCallback;
+    public readonly AsyncWebsocketEndpointHandler? WsCallback;
     public readonly bool SkipDocs;
 
     public bool IsWebsocket => WsCallback != null;
 
-    public EndpointDefinition(string endpoint, AsyncEndpointHandler httpCallback, AsyncWebsocketEndpointHandler wsCallback, bool skipDocs)
+    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, bool skipDocs)
     {
       Endpoint = endpoint;
       HttpCallback = httpCallback;
@@ -64,13 +64,13 @@ public class WebServer
 
   public string? Name { get; set; }
 
-  internal NLog.LogFactory LogFactory { get; }
+  internal LogFactory? LogFactory { get; }
   internal WebServerLoggerConfig LoggerConfig { get; }
 
-  private readonly NLog.ILogger _logger;
+  private readonly ILogger _logger;
 
   internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new();
-  internal HashSet<IPAddress> TrustedProxies;
+  internal HashSet<IPAddress>? TrustedProxies;
 
   public int WebsocketSenderQueueLength = 10;
 
@@ -78,7 +78,7 @@ public class WebServer
       SchemaType = SchemaType.OpenApi3,
   };
 
-  public WebServer(NLog.LogFactory factory, [CanBeNull] WebServerLoggerConfig loggerConfig = null)
+  public WebServer(LogFactory? factory, WebServerLoggerConfig? loggerConfig = null)
   {
     LogFactory = factory;
     LoggerConfig = loggerConfig ?? new WebServerLoggerConfig();
@@ -134,7 +134,7 @@ public class WebServer
       if (definition.SkipDocs)
         continue;
 
-      OpenApiPathItem item;
+      OpenApiPathItem? item;
       if (!_openApiDocument.Paths.TryGetValue(route.OpanApiPath, out item)) {
         item = new OpenApiPathItem();
         _openApiDocument.Paths[route.OpanApiPath] = item;
@@ -166,19 +166,19 @@ public class WebServer
     AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(schemaJson));
   }
 
-  public void RunSync(string host, int port, WebServerSslConfig sslConfig = null)
+  public void RunSync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
     Start(host, port, sslConfig);
     InternalRun().Wait();
   }
 
-  public void RunAsync(string host, int port, WebServerSslConfig sslConfig = null)
+  public void RunAsync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
     Start(host, port, sslConfig);
-    var _ = InternalRun();
+    _ = InternalRun();
   }
 
-  private void Start(string host, int port, WebServerSslConfig sslConfig)
+  private void Start(string host, int port, WebServerSslConfig? sslConfig)
   {
     _listener = new HttpListener();
 
@@ -197,9 +197,9 @@ public class WebServer
   private async Task InternalRun()
   {
     while (true) {
-      HttpListenerContext httpContext = null;
+      HttpListenerContext? httpContext = null;
       try {
-        httpContext = await Task.Factory.FromAsync(_listener.BeginGetContext, _listener.EndGetContext, null);
+        httpContext = await Task.Factory.FromAsync(_listener!.BeginGetContext, _listener.EndGetContext, null);
 
         var rq = new RequestDispatcher(this);
         rq.DispatchRequest(httpContext);

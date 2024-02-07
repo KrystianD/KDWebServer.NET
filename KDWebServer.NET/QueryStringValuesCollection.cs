@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Web;
 using JetBrains.Annotations;
@@ -22,9 +23,9 @@ public class QueryStringValuesCollection
 
     public bool IsNull => _value == null;
     public bool IsEmpty => AsString == "";
-    public string AsString => _value;
-    public int AsInt => int.Parse(_value);
-    public JToken AsJson => JToken.Parse(_value);
+    public string AsString => _value!;
+    public int AsInt => int.Parse(_value!);
+    public JToken AsJson => JToken.Parse(_value!);
   }
 
   public class ValuesCollection
@@ -86,9 +87,10 @@ public class QueryStringValuesCollection
 
       if (key == null) {
         var value = values[0];
-        string _key = value;
+        // ReSharper disable once InlineTemporaryVariable
+        string actualKey = value;
         valuesCollection.AddValue(new Value(null));
-        col._valuesCollections[_key] = valuesCollection;
+        col._valuesCollections[actualKey] = valuesCollection;
       }
       else {
         foreach (var value in values)
@@ -137,9 +139,9 @@ public class QueryStringValuesCollection
   }
 
   public string GetString(string name) => TryGetString(name, out var value) ? value : throw new IndexOutOfRangeException();
-  public string GetStringOrDefault(string name, string @default = default) => TryGetString(name, out var value) ? value : @default;
+  public string? GetStringOrDefault(string name, string? @default = default) => TryGetString(name, out var value) ? value : @default;
 
-  public bool TryGetString(string name, out string value)
+  public bool TryGetString(string name, [NotNullWhen(true)] out string? value)
   {
     value = default;
 
@@ -150,10 +152,10 @@ public class QueryStringValuesCollection
     return true;
   }
 
-  public int GetInt(string name) => TryGetInt(name, out var value) ? value : throw new IndexOutOfRangeException();
-  public int GetIntOrDefault(string name, int @default = default) => TryGetInt(name, out var value) ? value : @default;
+  public int GetInt(string name) => TryGetInt(name, out var value) ? value.Value : throw new IndexOutOfRangeException();
+  public int? GetIntOrDefault(string name, int? @default = default) => TryGetInt(name, out var value) ? value.Value : @default;
 
-  public bool TryGetInt(string name, out int value)
+  public bool TryGetInt(string name, [NotNullWhen(true)] out int? value)
   {
     value = default;
 
@@ -164,10 +166,10 @@ public class QueryStringValuesCollection
     return true;
   }
 
-  public long GetLong(string name) => TryGetLong(name, out var value) ? value : throw new IndexOutOfRangeException();
-  public long GetLongOrDefault(string name, long @default = default) => TryGetLong(name, out var value) ? value : @default;
+  public long GetLong(string name) => TryGetLong(name, out var value) ? value.Value : throw new IndexOutOfRangeException();
+  public long? GetLongOrDefault(string name, long? @default = default) => TryGetLong(name, out var value) ? value.Value : @default;
 
-  public bool TryGetLong(string name, out long value)
+  public bool TryGetLong(string name, [NotNullWhen(true)] out long? value)
   {
     value = default;
 

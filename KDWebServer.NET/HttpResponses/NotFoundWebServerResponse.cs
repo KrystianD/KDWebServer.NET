@@ -29,7 +29,7 @@ public class NotFoundWebServerResponse : IWebServerResponse
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object> loggingProps)
+                                         Dictionary<string, object?> loggingProps)
   {
     var logMsg = handler.Logger.Trace()
                         .Property("status_code", StatusCode);

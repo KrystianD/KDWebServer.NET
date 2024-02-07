@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -35,16 +34,16 @@ public class WebsocketClientHandler
     Match = match;
   }
 
-  public async Task Handle(Dictionary<string, object> props)
+  public async Task Handle(Dictionary<string, object?> props)
   {
-    var wsCtx = await _httpContext.AcceptWebSocketAsync(null);
+    var wsCtx = await _httpContext.AcceptWebSocketAsync(null!);
 
     var ws = wsCtx.WebSocket;
     WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength);
 
     var cts = new CancellationTokenSource();
 
-    var _ = Task.Run(async () => {
+    _ = Task.Run(async () => {
       while (!cts.Token.IsCancellationRequested) {
         try {
           var msg = ctx.SenderQ.Dequeue(cts.Token);
@@ -56,7 +55,7 @@ public class WebsocketClientHandler
       }
     }, cts.Token);
 
-    var logSuffix = $"{_httpContext.Request.Url.AbsolutePath}";
+    var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
 
     Logger.Trace()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
@@ -64,7 +63,7 @@ public class WebsocketClientHandler
           .Write();
 
     try {
-      await Match.Endpoint.WsCallback(ctx);
+      await Match.Endpoint.WsCallback!(ctx);
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);

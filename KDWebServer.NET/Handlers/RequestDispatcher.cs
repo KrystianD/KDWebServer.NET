@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
-using JetBrains.Annotations;
 using KDWebServer.Exceptions;
 using NLog;
 using NLog.Fluent;
@@ -11,11 +9,9 @@ namespace KDWebServer.Handlers;
 
 public class RequestDispatcher
 {
-  internal class RouteEndpointMatch
-  {
-    public WebServer.EndpointDefinition Endpoint;
-    public Dictionary<string, object> RouteParams;
-  }
+  internal record RouteEndpointMatch(
+      WebServer.EndpointDefinition Endpoint,
+      Dictionary<string, object> RouteParams);
 
   private WebServer WebServer { get; }
   private ILogger Logger { get; }
@@ -38,11 +34,11 @@ public class RequestDispatcher
     var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
     var logSuffix = $"{request.HttpMethod} {request.Url.AbsolutePath}";
 
-    var loggingProps = new Dictionary<string, object>() {
+    var loggingProps = new Dictionary<string, object?>() {
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
-    void CloseStream(int? errorCode = null, [CanBeNull] string errorMessage = null)
+    void CloseStream(int? errorCode = null, string? errorMessage = null)
     {
       try {
         if (errorCode.HasValue) {
@@ -65,7 +61,7 @@ public class RequestDispatcher
     using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url.AbsolutePath))
     using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
     using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", remoteEndpoint)) {
-      RouteEndpointMatch match;
+      RouteEndpointMatch? match;
       try {
         match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
         if (match == null) {
@@ -125,11 +121,11 @@ public class RequestDispatcher
     }
   }
 
-  private RouteEndpointMatch MatchRoutes(string path, HttpMethod method)
+  private record RouteMatch(int Score, Router.RouteMatch Route, WebServer.EndpointDefinition Endpoint);
+
+  private RouteEndpointMatch? MatchRoutes(string path, HttpMethod method)
   {
-    int bestScore = -1;
-    Router.RouteMatch bestRoute = null;
-    WebServer.EndpointDefinition bestEndpoint = null;
+    RouteMatch? bestMatch = null;
 
     foreach (var pair in WebServer.Endpoints) {
       var route = pair.Key;
@@ -138,26 +134,17 @@ public class RequestDispatcher
       if (!route.Methods.Contains(method))
         continue;
 
-      Router.RouteMatch m;
-      if (route.TryMatch(path, out m)) {
-        if (bestScore == -1 || route.Score > bestScore) {
-          bestScore = route.Score;
-          bestRoute = m;
-          bestEndpoint = endpointDefinition;
-        }
-      }
+      if (route.TryMatch(path, out var m) && (bestMatch is null || route.Score > bestMatch.Score))
+        bestMatch = new RouteMatch(route.Score, m, endpointDefinition);
     }
 
-    if (bestRoute == null) {
+    if (bestMatch == null) {
       return null;
     }
     else {
-      bestRoute.ParseParams(out var routeParams);
+      bestMatch.Route.ParseParams(out var routeParams);
 
-      return new RouteEndpointMatch() {
-          Endpoint = bestEndpoint,
-          RouteParams = routeParams,
-      };
+      return new RouteEndpointMatch(bestMatch.Endpoint, routeParams);
     }
   }
 }

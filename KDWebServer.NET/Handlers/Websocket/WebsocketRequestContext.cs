@@ -13,8 +13,8 @@ namespace KDWebServer.Handlers.Websocket;
 
 public class WebsocketMessage
 {
-  public byte[] Data;
-  public string Text;
+  public byte[]? Data;
+  public string? Text;
 }
 
 internal struct WebsocketOutgoingMessage
@@ -22,7 +22,7 @@ internal struct WebsocketOutgoingMessage
   public ReadOnlyMemory<byte> Buffer;
   public WebSocketMessageType MessageType;
   public bool EndOfMessage;
-  public Action OnSent;
+  public Action? OnSent;
 }
 
 [PublicAPI]
@@ -31,9 +31,9 @@ public class WebsocketRequestContext
   public readonly HttpListenerContext HttpContext;
   private readonly WebSocket _webSocket;
 
-  public string Path => HttpContext.Request.Url.AbsolutePath;
-  public string ForwardedUri => Headers.GetStringOrDefault("X-Forwarded-Uri", null);
-  public System.Net.IPAddress RemoteEndpoint { get; }
+  public string Path => HttpContext.Request.Url!.AbsolutePath;
+  public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
+  public IPAddress RemoteEndpoint { get; }
 
   // Routing
   public Dictionary<string, object> Params { get; set; }
@@ -103,12 +103,12 @@ public class WebsocketRequestContext
   public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, false, false, token);
   public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, false, false, new CancellationTokenSource(timeout).Token);
 
-  public void Enqueue(string data, Action onSent, bool isEnd, bool isText, CancellationToken token)
+  public void Enqueue(string data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
   {
     Enqueue(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText, token);
   }
 
-  public void Enqueue(ReadOnlyMemory<byte> data, Action onSent, bool isEnd, bool isText, CancellationToken token)
+  public void Enqueue(ReadOnlyMemory<byte> data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
   {
     var msg = new WebsocketOutgoingMessage() {
         Buffer = data,
@@ -119,12 +119,12 @@ public class WebsocketRequestContext
     SenderQ.Enqueue(msg, token);
   }
 
-  public async Task EnqueueAsync(string data, Action onSent, bool isEnd, bool isText, CancellationToken token)
+  public async Task EnqueueAsync(string data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
   {
     await EnqueueAsync(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText, token);
   }
 
-  public async Task EnqueueAsync(ReadOnlyMemory<byte> data, Action onSent, bool isEnd, bool isText, CancellationToken token)
+  public async Task EnqueueAsync(ReadOnlyMemory<byte> data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
   {
     var msg = new WebsocketOutgoingMessage() {
         Buffer = data,

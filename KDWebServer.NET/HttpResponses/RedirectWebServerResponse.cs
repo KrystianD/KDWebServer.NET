@@ -17,7 +17,7 @@ public class RedirectWebServerResponse : IWebServerResponse
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object> loggingProps)
+                                         Dictionary<string, object?> loggingProps)
   {
     handler.Logger.Trace()
            .Message($"[{handler.ClientId}] sending Redirect response ({handler.ProcessingTime}ms) (to {_location})")

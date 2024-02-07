@@ -37,15 +37,15 @@ public class HttpClientHandler
     Match = match;
   }
 
-  public async Task Handle(Dictionary<string, object> loggingProps)
+  public async Task Handle(Dictionary<string, object?> loggingProps)
   {
-    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match);
+    var rawData = await ReadPayload(_httpContext);
 
     _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
-    await ReadPayload(ctx);
+    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData);
 
-    var props = new Dictionary<string, object>(loggingProps);
+    var props = new Dictionary<string, object?>(loggingProps);
     props.Add("content_type", _httpContext.Request.ContentType);
     props.Add("content_length", _httpContext.Request.ContentLength64);
     try {
@@ -56,7 +56,7 @@ public class HttpClientHandler
     }
     catch (Exception e) {
       Logger.Error()
-            .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+            .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 400)
             .Exception(e)
@@ -69,7 +69,7 @@ public class HttpClientHandler
     var ep = Match.Endpoint;
 
     Logger.Trace()
-          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
           .Properties(props)
           .Write();
 
@@ -78,7 +78,7 @@ public class HttpClientHandler
     try {
       IWebServerResponse response;
       try {
-        response = await ep.HttpCallback(ctx);
+        response = await ep.HttpCallback!(ctx);
       }
       catch (IWebServerResponse r) {
         response = r;
@@ -91,8 +91,8 @@ public class HttpClientHandler
         _httpContext.Response.ContentLength64 = 0;
       }
       else {
-        foreach (string responseHeader in response._headers)
-          _httpContext.Response.Headers.Add(responseHeader, response._headers[responseHeader]);
+        foreach (string responseHeader in response.Headers)
+          _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
 
         await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig, loggingProps);
       }
@@ -109,18 +109,16 @@ public class HttpClientHandler
     }
   }
 
-  private static async Task ReadPayload(HttpRequestContext ctx)
+  private static async Task<byte[]> ReadPayload(HttpListenerContext httpContext)
   {
-    var httpContext = ctx.HttpContext;
-
     if (!httpContext.Request.HasEntityBody)
-      return;
+      return Array.Empty<byte>();
 
     using var ms = new MemoryStream();
 
     await Task.Run(() => httpContext.Request.InputStream.CopyTo(ms)); // CopyToAsync doesn't work properly in WebSocketSharp (PlatformNotSupportedException)
 
-    ctx.RawData = ms.ToArray();
+    return ms.ToArray();
   }
 
   private static object ProcessKnownTypes(HttpRequestContext ctx)
@@ -150,7 +148,7 @@ public class HttpClientHandler
 
         payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
 
-        ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings);
+        ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings)!;
         return ctx.JsonData;
 
       case "text/xml":

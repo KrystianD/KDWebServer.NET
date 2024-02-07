@@ -18,7 +18,7 @@ public class StatusCodeWebServerResponse : IWebServerResponse
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object> loggingProps)
+                                         Dictionary<string, object?> loggingProps)
   {
     HttpStatusCode code = (HttpStatusCode)StatusCode;
 
@@ -34,7 +34,7 @@ public class StatusCodeWebServerResponse : IWebServerResponse
            .Write();
 
     response.StatusCode = StatusCode;
-    if (_text == null) {
+    if (_text == "") {
       return Task.CompletedTask;
     }
     else {
@@ -49,5 +49,5 @@ public class StatusCodeWebServerResponse : IWebServerResponse
 
 
   internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new(statusCode, text);
-  internal static StatusCodeWebServerResponse FromStatusCode(System.Net.HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
+  internal static StatusCodeWebServerResponse FromStatusCode(HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
 }

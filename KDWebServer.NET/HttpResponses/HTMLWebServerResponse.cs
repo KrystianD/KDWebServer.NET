@@ -17,7 +17,7 @@ public class HTMLWebServerResponse : IWebServerResponse
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object> loggingProps)
+                                         Dictionary<string, object?> loggingProps)
   {
     var text = Utils.ExtractSimpleHtmlText(_html);
 
