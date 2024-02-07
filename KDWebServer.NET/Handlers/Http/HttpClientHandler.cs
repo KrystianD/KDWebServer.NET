@@ -86,16 +86,10 @@ public class HttpClientHandler
 
       ProcessingTime = timer.ElapsedMilliseconds;
 
-      if (response == null) {
-        _httpContext.Response.StatusCode = 200;
-        _httpContext.Response.ContentLength64 = 0;
-      }
-      else {
-        foreach (string responseHeader in response.Headers)
-          _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
+      foreach (string responseHeader in response.Headers)
+        _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
 
-        await response.WriteToResponse(this, _httpContext.Response, this.WebServer.LoggerConfig, loggingProps);
-      }
+      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, loggingProps);
     }
     catch (Exception e) {
       Logger.Error()
