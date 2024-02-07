@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using KDWebServer.Exceptions;
 
@@ -13,7 +12,6 @@ internal static class Router
     public Regex Regex;
     public readonly Dictionary<string, SimpleTypeConverters.TypeConverter> Params = new();
     public int Score;
-    public HashSet<HttpMethod> Methods;
     public string OpanApiPath;
 
     public bool TryMatch(string path, out RouteMatch match)

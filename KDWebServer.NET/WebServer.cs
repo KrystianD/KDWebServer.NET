@@ -49,15 +49,17 @@ public class WebServer
     public readonly string Endpoint;
     public readonly AsyncEndpointHandler? HttpCallback;
     public readonly AsyncWebsocketEndpointHandler? WsCallback;
+    public readonly HashSet<HttpMethod> Methods;
     public readonly bool SkipDocs;
 
     public bool IsWebsocket => WsCallback != null;
 
-    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, bool skipDocs)
+    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs)
     {
       Endpoint = endpoint;
       HttpCallback = httpCallback;
       WsCallback = wsCallback;
+      Methods = methods;
       SkipDocs = skipDocs;
     }
   }
@@ -98,8 +100,7 @@ public class WebServer
       throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
-    route.Methods = methods;
-    Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null, skipDocs));
+    Endpoints.Add(route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs));
   }
 
   public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
@@ -108,8 +109,8 @@ public class WebServer
       throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
-    route.Methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback, false));
+    var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
+    Endpoints.Add(route, new EndpointDefinition(endpoint, null, callback, methods, false));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
@@ -140,7 +141,7 @@ public class WebServer
         _openApiDocument.Paths[route.OpanApiPath] = item;
       }
 
-      foreach (var method in route.Methods) {
+      foreach (var method in definition.Methods) {
         var op = new OpenApiOperation();
         foreach (var (name, typeConverter) in route.Params) {
           var openApiParameter = new OpenApiParameter {
