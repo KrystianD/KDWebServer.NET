@@ -198,7 +198,7 @@ public class WebServer
     while (true) {
       HttpListenerContext? httpContext = null;
       try {
-        httpContext = await Task.Factory.FromAsync(_listener!.BeginGetContext, _listener.EndGetContext, null);
+        httpContext = await _listener!.GetContextAsync();
 
         var rq = new RequestDispatcher(this);
         rq.DispatchRequest(httpContext);
