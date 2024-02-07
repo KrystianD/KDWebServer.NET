@@ -12,6 +12,7 @@ namespace KDWebServer;
 [PublicAPI]
 public class QueryStringValuesCollection
 {
+  [PublicAPI]
   public class Value
   {
     private readonly string? _value;

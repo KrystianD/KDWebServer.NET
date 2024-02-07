@@ -11,6 +11,7 @@ using Nito.AsyncEx;
 
 namespace KDWebServer.Handlers.Websocket;
 
+[PublicAPI]
 public class WebsocketMessage
 {
   public byte[]? Data;
