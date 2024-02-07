@@ -68,7 +68,7 @@ namespace KDWebServer
 
     private readonly NLog.ILogger _logger;
 
-    internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new Dictionary<Router.RouteDescriptor, EndpointDefinition>();
+    internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new();
     internal HashSet<IPAddress> TrustedProxies;
 
     public int WebsocketSenderQueueLength = 10;

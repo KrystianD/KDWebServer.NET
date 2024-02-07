@@ -35,6 +35,6 @@ namespace KDWebServer.HttpResponses
       return response.OutputStream.WriteAsync(_data, 0, _data.Length);
     }
 
-    internal static BinaryWebServerResponse FromBytes(byte[] data, string mimeType = "application/octet-stream") => new BinaryWebServerResponse(data, mimeType);
+    internal static BinaryWebServerResponse FromBytes(byte[] data, string mimeType = "application/octet-stream") => new(data, mimeType);
   }
 }

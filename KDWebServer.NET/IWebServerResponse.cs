@@ -9,7 +9,7 @@ namespace KDWebServer
   {
     public int StatusCode { get; set; } = 200;
 
-    internal readonly WebHeaderCollection _headers = new WebHeaderCollection();
+    internal readonly WebHeaderCollection _headers = new();
 
     internal abstract Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                            Dictionary<string, object> loggingProps);

@@ -11,11 +11,11 @@ namespace KDWebServer.HttpResponses
 {
   public class NotFoundWebServerResponse : IWebServerResponse
   {
-    private readonly string _text;
-    private readonly string _json;
-    private readonly string _html;
+    private readonly string? _text;
+    private readonly string? _json;
+    private readonly string? _html;
 
-    public NotFoundWebServerResponse(string text = null, string json = null, string html = null)
+    private NotFoundWebServerResponse(string? text = null, string? json = null, string? html = null)
     {
       _text = text;
       _json = json;
@@ -34,7 +34,7 @@ namespace KDWebServer.HttpResponses
       var logMsg = handler.Logger.Trace()
                           .Property("status_code", StatusCode);
 
-      byte[] resp = null;
+      byte[]? resp = null;
       if (_text != null) {
         logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")
               .Properties(loggingProps)
@@ -75,6 +75,6 @@ namespace KDWebServer.HttpResponses
       }
     }
 
-    internal static NotFoundWebServerResponse Create(string text = null, JToken json = null, string html = null) => new NotFoundWebServerResponse(text, json?.ToString(), html);
+    internal static NotFoundWebServerResponse Create(string? text = null, JToken? json = null, string? html = null) => new(text, json?.ToString(), html);
   }
 }

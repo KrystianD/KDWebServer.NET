@@ -48,7 +48,7 @@ namespace KDWebServer.HttpResponses
     }
 
 
-    internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new StatusCodeWebServerResponse(statusCode, text);
+    internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new(statusCode, text);
     internal static StatusCodeWebServerResponse FromStatusCode(System.Net.HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
   }
 }

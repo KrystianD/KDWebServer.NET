@@ -15,7 +15,7 @@ namespace KDWebServer.Handlers.Http
 {
   public class HttpClientHandler
   {
-    private static readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings { DateParseHandling = DateParseHandling.None };
+    private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
 
     private readonly HttpListenerContext _httpContext;
     private readonly RequestDispatcher.RouteEndpointMatch Match;

@@ -51,6 +51,6 @@ namespace KDWebServer.HttpResponses
         _stream.Close();
     }
 
-    internal static StreamWebServerResponse FromStream(Stream stream, bool closeAfter, string mimeType = "application/octet-stream") => new StreamWebServerResponse(stream, closeAfter, mimeType);
+    internal static StreamWebServerResponse FromStream(Stream stream, bool closeAfter, string mimeType = "application/octet-stream") => new(stream, closeAfter, mimeType);
   }
 }

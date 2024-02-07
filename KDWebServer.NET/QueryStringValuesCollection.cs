@@ -13,9 +13,9 @@ namespace KDWebServer
   {
     public class Value
     {
-      private readonly string _value;
+      private readonly string? _value;
 
-      public Value(string value)
+      public Value(string? value)
       {
         _value = value;
       }
@@ -29,7 +29,7 @@ namespace KDWebServer
 
     public class ValuesCollection
     {
-      private readonly List<Value> _values = new List<Value>();
+      private readonly List<Value> _values = new();
 
       public void AddValue(Value v)
       {
@@ -72,7 +72,7 @@ namespace KDWebServer
       }
     }
 
-    private readonly Dictionary<string, ValuesCollection> _valuesCollections = new Dictionary<string, ValuesCollection>();
+    private readonly Dictionary<string, ValuesCollection> _valuesCollections = new();
 
     public static QueryStringValuesCollection FromNameValueCollection(NameValueCollection d)
     {

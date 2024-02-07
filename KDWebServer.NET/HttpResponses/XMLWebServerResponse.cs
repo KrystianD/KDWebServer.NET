@@ -36,6 +36,6 @@ namespace KDWebServer.HttpResponses
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }
 
-    internal static XMLWebServerResponse FromString(string xml) => new XMLWebServerResponse(xml);
+    internal static XMLWebServerResponse FromString(string xml) => new(xml);
   }
 }

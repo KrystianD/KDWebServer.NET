@@ -32,6 +32,6 @@ namespace KDWebServer.HttpResponses
       return Task.CompletedTask;
     }
 
-    internal static RedirectWebServerResponse FromLocation(string location) => new RedirectWebServerResponse(location);
+    internal static RedirectWebServerResponse FromLocation(string location) => new(location);
   }
 }

@@ -38,6 +38,6 @@ namespace KDWebServer.HttpResponses
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }
 
-    internal static HTMLWebServerResponse FromString(string html) => new HTMLWebServerResponse(html);
+    internal static HTMLWebServerResponse FromString(string html) => new(html);
   }
 }

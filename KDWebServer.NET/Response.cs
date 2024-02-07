@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using JetBrains.Annotations;
 using KDWebServer.HttpResponses;
 
 namespace KDWebServer
 {
+  [PublicAPI]
   public static class Response
   {
     public static HTMLWebServerResponse Html(string html) => HTMLWebServerResponse.FromString(html);
@@ -13,7 +15,7 @@ namespace KDWebServer
     public static JSONWebServerResponse Json(JToken data, bool indented = false) => JSONWebServerResponse.FromData(data, indented);
     public static JSONWebServerResponse Json(object data, bool indented = false) => JSONWebServerResponse.FromData(data, indented);
 
-    public static NotFoundWebServerResponse NotFound(string text = null, JToken json = null, string html = null) => NotFoundWebServerResponse.Create(text, json, html);
+    public static NotFoundWebServerResponse NotFound(string? text = null, JToken? json = null, string? html = null) => NotFoundWebServerResponse.Create(text, json, html);
 
     public static RedirectWebServerResponse Redirect(string location) => RedirectWebServerResponse.FromLocation(location);
 
