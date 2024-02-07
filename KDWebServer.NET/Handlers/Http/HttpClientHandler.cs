@@ -121,8 +121,15 @@ public class HttpClientHandler
 
     var httpContext = ctx.HttpContext;
 
-    try { ct = new ContentType(httpContext.Request.ContentType); }
-    catch (FormatException) { return null; }
+    if (httpContext.Request.ContentType == null)
+      return "(no-type)";
+
+    try {
+      ct = new ContentType(httpContext.Request.ContentType);
+    }
+    catch (FormatException) {
+      return "(invalid-type)";
+    }
 
     string payload;
 
