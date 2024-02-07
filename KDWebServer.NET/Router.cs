@@ -9,10 +9,18 @@ internal static class Router
 {
   public class RouteDescriptor
   {
-    public Regex Regex;
-    public readonly Dictionary<string, SimpleTypeConverters.TypeConverter> Params = new();
-    public int Score;
-    public string OpanApiPath;
+    private readonly Regex Regex;
+    public readonly Dictionary<string, SimpleTypeConverters.TypeConverter> Params;
+    public readonly int Score;
+    public readonly string OpanApiPath;
+
+    public RouteDescriptor(Regex regex, Dictionary<string, SimpleTypeConverters.TypeConverter> @params, int score, string opanApiPath)
+    {
+      Regex = regex;
+      Params = @params;
+      Score = score;
+      OpanApiPath = opanApiPath;
+    }
 
     public bool TryMatch(string path, out RouteMatch match)
     {
@@ -64,10 +72,7 @@ internal static class Router
       routeRegex = $"^{Regex.Escape(route)}$";
     }
 
-    var routeDesc = new RouteDescriptor();
-
-    routeDesc.OpanApiPath = Regex.Replace(route, ParamRegex, match => $"{{{match.Groups["name"].Value}}}");
-
+    var paramsDict = new Dictionary<string, SimpleTypeConverters.TypeConverter>();
     bool hasRegex = false;
     string r = Regex.Replace(routeRegex, ParamRegex, match => {
       string type = match.Groups["type"].Value;
@@ -79,7 +84,7 @@ internal static class Router
       if (knownTypeConverter == null)
         throw new Exception("invalid route parameter type");
 
-      routeDesc.Params.Add(name, knownTypeConverter);
+      paramsDict.Add(name, knownTypeConverter);
 
       return "(?<" + name + ">[^/]+)";
     });
@@ -87,9 +92,10 @@ internal static class Router
     if (hasRegex)
       score -= 10;
 
-    routeDesc.Regex = new Regex(r);
-    routeDesc.Score = score;
-
-    return routeDesc;
+    return new RouteDescriptor(
+        regex: new Regex(r),
+        @params: paramsDict,
+        score: score,
+        opanApiPath: Regex.Replace(route, ParamRegex, match => $"{{{match.Groups["name"].Value}}}"));
   }
 }

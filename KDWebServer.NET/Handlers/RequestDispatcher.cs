@@ -127,11 +127,8 @@ public class RequestDispatcher
   {
     RouteMatch? bestMatch = null;
 
-    foreach (var pair in WebServer.Endpoints) {
-      var route = pair.Key;
-      var endpointDefinition = pair.Value;
-
-      if (!route.Methods.Contains(method))
+    foreach (var (route, endpointDefinition) in WebServer.Endpoints) {
+      if (!endpointDefinition.Methods.Contains(method))
         continue;
 
       if (route.TryMatch(path, out var m) && (bestMatch is null || route.Score > bestMatch.Score))
