@@ -38,22 +38,24 @@ public class WebsocketClientHandler
   {
     var wsCtx = await _httpContext.AcceptWebSocketAsync(null!);
 
-    var ws = wsCtx.WebSocket;
-    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength);
+    var serverShutdownToken = WebServer.ServerShutdownToken;
 
-    var cts = new CancellationTokenSource();
+    var ws = wsCtx.WebSocket;
+    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength, serverShutdownToken);
+
+    var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
 
     _ = Task.Run(async () => {
-      while (!cts.Token.IsCancellationRequested) {
+      while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
-          var msg = ctx.SenderQ.Dequeue(cts.Token);
-          await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, cts.Token);
+          var msg = ctx.SenderQ.Dequeue(senderQueueToken.Token);
+          await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token);
           msg.OnSent?.Invoke();
         }
         catch (TaskCanceledException) {
         }
       }
-    }, cts.Token);
+    }, senderQueueToken.Token);
 
     var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
 
@@ -83,8 +85,19 @@ public class WebsocketClientHandler
             .Properties(props)
             .Write();
 
-      cts.Cancel();
+      senderQueueToken.Cancel();
       ctx.ErrorTcs.TrySetResult(new WebSocketError());
+    }
+    catch (OperationCanceledException) {
+      senderQueueToken.Cancel();
+      ctx.ErrorTcs.TrySetResult(new WebSocketError());
+
+      try {
+        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "server is being shut down", new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+      }
+      catch (Exception) {
+        ws.Abort();
+      }
     }
     catch (Exception e) {
       Logger.Error()
@@ -93,7 +106,7 @@ public class WebsocketClientHandler
             .Exception(e)
             .Write();
 
-      cts.Cancel();
+      senderQueueToken.Cancel();
       ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect());
 
       try {

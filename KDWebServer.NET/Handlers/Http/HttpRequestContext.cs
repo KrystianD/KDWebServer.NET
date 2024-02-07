@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Xml.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
@@ -11,6 +12,7 @@ namespace KDWebServer.Handlers.Http;
 public class HttpRequestContext
 {
   public readonly HttpListenerContext HttpContext;
+  public readonly CancellationToken Token;
 
   public string Path => HttpContext.Request.Url!.AbsolutePath;
   public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
@@ -33,9 +35,10 @@ public class HttpRequestContext
   public JToken? JsonData { get; set; }
   public XDocument? XmlData { get; set; }
 
-  internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match, byte[] rawData)
+  internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match, byte[] rawData, CancellationToken token)
   {
     HttpContext = httpContext;
+    Token = token;
 
     HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
 

@@ -29,8 +29,10 @@ internal struct WebsocketOutgoingMessage
 [PublicAPI]
 public class WebsocketRequestContext
 {
-  public readonly HttpListenerContext HttpContext;
   private readonly WebSocket _webSocket;
+
+  public readonly HttpListenerContext HttpContext;
+  public readonly CancellationToken Token;
 
   public string Path => HttpContext.Request.Url!.AbsolutePath;
   public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
@@ -54,11 +56,13 @@ public class WebsocketRequestContext
                                    IPAddress remoteEndpoint,
                                    RequestDispatcher.RouteEndpointMatch match,
                                    WebSocket webSocket,
-                                   int senderQueueLength)
+                                   int senderQueueLength,
+                                   CancellationToken token)
   {
     _webSocket = webSocket;
 
     HttpContext = httpContext;
+    Token = token;
 
     Params = match.RouteParams;
 

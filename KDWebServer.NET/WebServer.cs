@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.Handlers;
@@ -73,6 +74,9 @@ public class WebServer
   internal HashSet<IPAddress>? TrustedProxies;
 
   public int WebsocketSenderQueueLength = 10;
+
+  private CancellationTokenSource? _serverShutdownTokenSource;
+  internal CancellationToken ServerShutdownToken => _serverShutdownTokenSource!.Token;
 
   private OpenApiDocument _openApiDocument = new() {
       SchemaType = SchemaType.OpenApi3,
@@ -168,6 +172,7 @@ public class WebServer
   public void RunSync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
     Start(host, port, sslConfig);
+    // ReSharper disable once MethodSupportsCancellation
     InternalRun().Wait();
   }
 
@@ -190,18 +195,27 @@ public class WebServer
     }
 
     _listener.Start();
+    _serverShutdownTokenSource = new();
+  }
+
+  public void Stop()
+  {
+    _listener?.Stop();
+    _serverShutdownTokenSource?.Cancel();
   }
 
   [SuppressMessage("ReSharper", "FunctionNeverReturns")]
   private async Task InternalRun()
   {
-    while (true) {
+    while (!_serverShutdownTokenSource!.IsCancellationRequested) {
       HttpListenerContext? httpContext = null;
       try {
         httpContext = await _listener!.GetContextAsync();
 
         var rq = new RequestDispatcher(this);
         rq.DispatchRequest(httpContext);
+      }
+      catch (ObjectDisposedException) {
       }
       catch (Exception e) {
         _logger.Error(e, "An error occurred during handling webserver client");

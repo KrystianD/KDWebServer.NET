@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 #if !NET6_0_OR_GREATER
 using MoreLinq.Extensions;
 #endif
@@ -77,6 +78,15 @@ namespace KDWebServer.Example
 
       server.AddGETEndpoint("/data", _ => Response.Json(new { a = 1, b = 2 }));
 
+      server.AddGETEndpoint("/cancel", async ctx => {
+        Task.Run(async () => {
+          await Task.Delay(100);
+          server.Stop();
+        });
+        await Task.Delay(10000, ctx.Token);
+        return Response.StatusCode(200);
+      });
+
       server.AddGETEndpoint("/stream_fixed", _ => {
         Stream ms = new MemoryStream();
         ms.WriteByte((byte)'A');
@@ -103,7 +113,10 @@ namespace KDWebServer.Example
 
       server.AddSwaggerEndpoint("/docs");
 
-      server.RunSync("0.0.0.0", 8080);
+      try {
+        server.RunSync("0.0.0.0", 8080);
+      }
+      catch (OperationCanceledException) { }
     }
   }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Mime;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json;
@@ -39,11 +40,13 @@ public class HttpClientHandler
 
   public async Task Handle(Dictionary<string, object?> loggingProps)
   {
-    var rawData = await ReadPayload(_httpContext);
+    var serverShutdownToken = WebServer.ServerShutdownToken;
+
+    var rawData = await ReadPayload(_httpContext, serverShutdownToken);
 
     _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
-    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData);
+    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData, serverShutdownToken);
 
     var props = new Dictionary<string, object?>(loggingProps);
     props.Add("content_type", _httpContext.Request.ContentType);
@@ -91,6 +94,9 @@ public class HttpClientHandler
 
       await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, loggingProps);
     }
+    catch (OperationCanceledException) {
+      Helpers.CloseStream(_httpContext.Response, 444, "server is being shut down");
+    }
     catch (Exception e) {
       Logger.Error()
             .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
@@ -103,14 +109,14 @@ public class HttpClientHandler
     }
   }
 
-  private static async Task<byte[]> ReadPayload(HttpListenerContext httpContext)
+  private static async Task<byte[]> ReadPayload(HttpListenerContext httpContext, CancellationToken token)
   {
     if (!httpContext.Request.HasEntityBody)
       return Array.Empty<byte>();
 
     using var ms = new MemoryStream();
 
-    await httpContext.Request.InputStream.CopyToAsync(ms);
+    await httpContext.Request.InputStream.CopyToAsync(ms, token);
 
     return ms.ToArray();
   }
