@@ -9,11 +9,11 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class JSONWebServerResponse : IWebServerResponse
+public class JsonWebServerResponse : IWebServerResponse
 {
   private readonly string _json;
 
-  private JSONWebServerResponse(string json)
+  private JsonWebServerResponse(string json)
   {
     _json = json;
   }
@@ -38,6 +38,6 @@ public class JSONWebServerResponse : IWebServerResponse
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
 
-  internal static JSONWebServerResponse FromData(JToken data, bool indented) => new(data.ToString(indented ? Formatting.Indented : Formatting.None));
-  internal static JSONWebServerResponse FromData(object data, bool indented) => FromData(JToken.FromObject(data), indented);
+  internal static JsonWebServerResponse FromData(JToken data, bool indented) => new(data.ToString(indented ? Formatting.Indented : Formatting.None));
+  internal static JsonWebServerResponse FromData(object data, bool indented) => FromData(JToken.FromObject(data), indented);
 }

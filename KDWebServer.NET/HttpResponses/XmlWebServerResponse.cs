@@ -7,36 +7,34 @@ using NLog.Fluent;
 
 namespace KDWebServer.HttpResponses;
 
-public class HTMLWebServerResponse : IWebServerResponse
+public class XmlWebServerResponse : IWebServerResponse
 {
-  private readonly string _html;
+  private readonly string _xml;
 
-  private HTMLWebServerResponse(string html)
+  private XmlWebServerResponse(string xml)
   {
-    _html = html;
+    _xml = xml;
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                          Dictionary<string, object?> loggingProps)
   {
-    var text = Utils.ExtractSimpleHtmlText(_html);
-
     handler.Logger.Trace()
-           .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
+           .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
-           .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(text, 1000) : "<skipped>")
+           .Property("xml", loggerConfig.LogPayloads ? Utils.LimitText(_xml, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
            .Write();
 
-    byte[] resp = Encoding.UTF8.GetBytes(_html);
+    byte[] resp = Encoding.UTF8.GetBytes(_xml);
 
     response.StatusCode = StatusCode;
     response.SendChunked = true;
-    response.ContentType = "text/html";
+    response.ContentType = "text/xml";
     response.ContentLength64 = resp.LongLength;
 
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
 
-  internal static HTMLWebServerResponse FromString(string html) => new(html);
+  internal static XmlWebServerResponse FromString(string xml) => new(xml);
 }

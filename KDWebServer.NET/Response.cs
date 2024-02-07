@@ -10,10 +10,10 @@ namespace KDWebServer;
 [PublicAPI]
 public static class Response
 {
-  public static HTMLWebServerResponse Html(string html) => HTMLWebServerResponse.FromString(html);
+  public static HtmlWebServerResponse Html(string html) => HtmlWebServerResponse.FromString(html);
 
-  public static JSONWebServerResponse Json(JToken data, bool indented = false) => JSONWebServerResponse.FromData(data, indented);
-  public static JSONWebServerResponse Json(object data, bool indented = false) => JSONWebServerResponse.FromData(data, indented);
+  public static JsonWebServerResponse Json(JToken data, bool indented = false) => JsonWebServerResponse.FromData(data, indented);
+  public static JsonWebServerResponse Json(object data, bool indented = false) => JsonWebServerResponse.FromData(data, indented);
 
   public static NotFoundWebServerResponse NotFound(string? text = null, JToken? json = null, string? html = null) => NotFoundWebServerResponse.Create(text, json, html);
 
@@ -37,7 +37,7 @@ public static class Response
   public static TextWebServerResponse Text(string text) => TextWebServerResponse.FromString(text);
   public static TextWebServerResponse Text(string text, string contentType) => TextWebServerResponse.FromString(text, contentType);
 
-  public static XMLWebServerResponse Xml(string xml) => XMLWebServerResponse.FromString(xml);
+  public static XmlWebServerResponse Xml(string xml) => XmlWebServerResponse.FromString(xml);
 
   public static BinaryWebServerResponse Bytes(byte[] data, string mimeType = "application/octet-stream") => BinaryWebServerResponse.FromBytes(data, mimeType);
   public static StreamWebServerResponse Stream(Stream stream, bool closeAfter, string mimeType = "application/octet-stream") => StreamWebServerResponse.FromStream(stream, closeAfter, mimeType);
