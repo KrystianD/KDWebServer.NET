@@ -62,6 +62,9 @@ internal static class ClassHandlerExecutor
 
           call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
           break;
+        case ParameterType.Context:
+          call.Add(ctx);
+          break;
         default:
           throw new ArgumentException("invalid parameter type");
       }

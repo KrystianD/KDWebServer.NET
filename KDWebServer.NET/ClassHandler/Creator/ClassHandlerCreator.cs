@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Exceptions;
 using KDWebServer.ClassHandler.Executor;
+using KDWebServer.Handlers.Http;
 using NJsonSchema;
 using NSwag;
 
@@ -75,6 +76,12 @@ public static class ClassHandlerCreator
 
       methodParameterDescriptor.Type = ParameterType.Path;
       methodParameterDescriptor.PathTypeConverter = typeConverter;
+    }
+
+    foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Type == null)) {
+      if (methodParameterDescriptor.ValueType == typeof(HttpRequestContext)) {
+        methodParameterDescriptor.Type = ParameterType.Context;
+      }
     }
 
     // assign Query or Body to parameter descriptors
