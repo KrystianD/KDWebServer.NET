@@ -212,6 +212,11 @@ public class WebServer
       try {
         httpContext = await _listener!.GetContextAsync();
 
+        // C# HTTP server automatically sends back /Length Required/ error response
+        if (httpContext.Response.StatusCode == 411) {
+          continue;
+        }
+
         var rq = new RequestDispatcher(this);
         rq.DispatchRequest(httpContext);
       }
