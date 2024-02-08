@@ -12,7 +12,7 @@ public class TextWebServerResponse : WebServerResponse
   private readonly string _text;
   private readonly string _contentType;
 
-  private TextWebServerResponse(string text, string contentType)
+  internal TextWebServerResponse(string text, string contentType = "text/plain")
   {
     _text = text;
     _contentType = contentType;
@@ -37,6 +37,4 @@ public class TextWebServerResponse : WebServerResponse
 
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
-
-  internal static TextWebServerResponse FromString(string text, string contentType = "text/plain") => new(text, contentType);
 }

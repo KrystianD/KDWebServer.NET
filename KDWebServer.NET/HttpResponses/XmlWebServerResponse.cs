@@ -11,7 +11,7 @@ public class XmlWebServerResponse : WebServerResponse
 {
   private readonly string _xml;
 
-  private XmlWebServerResponse(string xml)
+  internal XmlWebServerResponse(string xml)
   {
     _xml = xml;
   }
@@ -35,6 +35,4 @@ public class XmlWebServerResponse : WebServerResponse
 
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
-
-  internal static XmlWebServerResponse FromString(string xml) => new(xml);
 }

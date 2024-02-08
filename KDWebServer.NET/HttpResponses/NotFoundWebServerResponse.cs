@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DotLiquid.Exceptions;
 using KDWebServer.Handlers.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog.Fluent;
 
@@ -15,10 +16,10 @@ public class NotFoundWebServerResponse : WebServerResponse
   private readonly string? _json;
   private readonly string? _html;
 
-  private NotFoundWebServerResponse(string? text = null, string? json = null, string? html = null)
+  internal NotFoundWebServerResponse(string? text = null, object? json = null, string? html = null)
   {
     _text = text;
-    _json = json;
+    _json = json == null ? null : JToken.FromObject(json).ToString(Formatting.None);
     _html = html;
 
     if ((_text != null ? 1 : 0) + (_json != null ? 1 : 0) + (_html != null ? 1 : 0) > 1) {
@@ -74,6 +75,4 @@ public class NotFoundWebServerResponse : WebServerResponse
       return Task.CompletedTask;
     }
   }
-
-  internal static NotFoundWebServerResponse Create(string? text = null, JToken? json = null, string? html = null) => new(text, json?.ToString(Formatting.None), html);
 }

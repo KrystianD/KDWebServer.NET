@@ -11,7 +11,7 @@ public class BinaryWebServerResponse : WebServerResponse
   private readonly byte[] _data;
   private readonly string _mimeType;
 
-  private BinaryWebServerResponse(byte[] data, string mimeType = "application/octet-stream")
+  internal BinaryWebServerResponse(byte[] data, string mimeType = "application/octet-stream")
   {
     _data = data;
     _mimeType = mimeType;
@@ -34,6 +34,4 @@ public class BinaryWebServerResponse : WebServerResponse
 
     return response.OutputStream.WriteAsync(_data, 0, _data.Length);
   }
-
-  internal static BinaryWebServerResponse FromBytes(byte[] data, string mimeType = "application/octet-stream") => new(data, mimeType);
 }

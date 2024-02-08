@@ -11,7 +11,7 @@ public class HtmlWebServerResponse : WebServerResponse
 {
   private readonly string _html;
 
-  private HtmlWebServerResponse(string html)
+  internal HtmlWebServerResponse(string html)
   {
     _html = html;
   }
@@ -37,6 +37,4 @@ public class HtmlWebServerResponse : WebServerResponse
 
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
-
-  internal static HtmlWebServerResponse FromString(string html) => new(html);
 }

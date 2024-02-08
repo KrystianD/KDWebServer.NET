@@ -13,9 +13,9 @@ public class JsonWebServerResponse : WebServerResponse
 {
   private readonly string _json;
 
-  private JsonWebServerResponse(string json)
+  internal JsonWebServerResponse(object data, bool indented)
   {
-    _json = json;
+    _json = JToken.FromObject(data).ToString(indented ? Formatting.Indented : Formatting.None);
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
@@ -37,7 +37,4 @@ public class JsonWebServerResponse : WebServerResponse
 
     return response.OutputStream.WriteAsync(resp, 0, resp.Length);
   }
-
-  internal static JsonWebServerResponse FromData(JToken data, bool indented) => new(data.ToString(indented ? Formatting.Indented : Formatting.None));
-  internal static JsonWebServerResponse FromData(object data, bool indented) => FromData(JToken.FromObject(data), indented);
 }

@@ -13,7 +13,7 @@ public class StreamWebServerResponse : WebServerResponse
   private readonly bool _closeAfter;
   private readonly string _mimeType;
 
-  private StreamWebServerResponse(Stream stream, bool closeAfter, string mimeType = "application/octet-stream")
+  internal StreamWebServerResponse(Stream stream, bool closeAfter, string mimeType = "application/octet-stream")
   {
     _stream = stream;
     _closeAfter = closeAfter;
@@ -50,6 +50,4 @@ public class StreamWebServerResponse : WebServerResponse
     if (_closeAfter)
       _stream.Close();
   }
-
-  internal static StreamWebServerResponse FromStream(Stream stream, bool closeAfter, string mimeType = "application/octet-stream") => new(stream, closeAfter, mimeType);
 }

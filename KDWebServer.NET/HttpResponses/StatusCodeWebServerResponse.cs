@@ -11,10 +11,14 @@ public class StatusCodeWebServerResponse : WebServerResponse
 {
   private readonly string _text;
 
-  private StatusCodeWebServerResponse(int code, string text = "")
+  internal StatusCodeWebServerResponse(int code, string text = "")
   {
     _text = text;
     StatusCode = code;
+  }
+
+  internal StatusCodeWebServerResponse(HttpStatusCode code, string text = "") : this((int)code, text)
+  {
   }
 
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
@@ -46,8 +50,4 @@ public class StatusCodeWebServerResponse : WebServerResponse
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }
   }
-
-
-  internal static StatusCodeWebServerResponse FromStatusCode(int statusCode, string text = "") => new(statusCode, text);
-  internal static StatusCodeWebServerResponse FromStatusCode(HttpStatusCode statusCode, string text = "") => FromStatusCode((int)statusCode, text);
 }

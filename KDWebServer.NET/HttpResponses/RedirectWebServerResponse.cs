@@ -10,7 +10,7 @@ public class RedirectWebServerResponse : WebServerResponse
 {
   private readonly string _location;
 
-  private RedirectWebServerResponse(string location)
+  internal RedirectWebServerResponse(string location)
   {
     StatusCode = 302;
     _location = location;
@@ -31,6 +31,4 @@ public class RedirectWebServerResponse : WebServerResponse
 
     return Task.CompletedTask;
   }
-
-  internal static RedirectWebServerResponse FromLocation(string location) => new(location);
 }
