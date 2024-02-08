@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.Serialization;
 using NJsonSchema;
 
 namespace KDWebServer;
@@ -66,6 +68,32 @@ public static class SimpleTypeConverters
 
   public static TypeConverter? GetConverterByType(Type type)
   {
+    if (type.IsEnum) {
+      var enumValues = Enum.GetValues(type);
+
+      var enumStrs = new Dictionary<string, Enum>();
+      for (int i = 0; i < enumValues.Length; i++) {
+        var value = (Enum)enumValues.GetValue(i)!;
+
+        FieldInfo fieldInfo = value.GetType().GetField(value.ToString())!;
+        var attribute = (EnumMemberAttribute)fieldInfo.GetCustomAttribute(typeof(EnumMemberAttribute))!;
+        if (attribute?.Value is null)
+          throw new ArgumentException("All enum items must have EnumMember attribute set and not null");
+
+        enumStrs.Add(attribute.Value, value);
+      }
+
+      return new TypeConverter(
+          type,
+          "string",
+          schema => {
+            schema.Type = JsonObjectType.String;
+            foreach (var enumStr in enumStrs)
+              schema.Enumeration.Add(enumStr.Key);
+          },
+          s => enumStrs[s]);
+    }
+
     return Converters.Find(x => x.Type == type);
   }
 
