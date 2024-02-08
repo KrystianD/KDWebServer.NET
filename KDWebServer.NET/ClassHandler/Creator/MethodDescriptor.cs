@@ -10,4 +10,5 @@ internal record MethodDescriptor(
     EndpointAttribute EndpointAttribute,
     List<MethodParameterDescriptor> MethodParameterDescriptors,
     string RouterPath,
-    JsonSchema? BodyJsonSchema);
+    JsonSchema? BodyJsonSchema,
+    ResponseTypeEnum MethodResponseType);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Creator;
 using KDWebServer.Handlers.Http;
 
@@ -80,7 +81,11 @@ internal static class ClassHandlerExecutor
       return res switch {
           WebServerResponse resp => resp,
           null => Response.StatusCode(200),
-          _ => Response.Json(res),
+          _ => methodDescriptor.MethodResponseType switch {
+              ResponseTypeEnum.Json => Response.Json(res),
+              ResponseTypeEnum.Text => Response.Text((string)res),
+              _ => throw new Exception("invalid enum value"),
+          },
       };
     }
     catch (TargetInvocationException e) {

@@ -166,15 +166,33 @@ public static class ClassHandlerCreator
 
     var ret = methodInfo.ReturnType;
     var retType = ret.BaseType == typeof(Task) ? ret.GenericTypeArguments[0] : ret;
-    
-    if (retType != typeof(void)) {
-      var jsonSchema = new JsonSchema();
-      handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(retType, jsonSchema);
-      var od = new OpenApiMediaType() {
-          Schema = jsonSchema,
-      };
 
-      response.Content.Add("application/json", od);
+    var methodResponseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type) ?? ResponseTypeEnum.Json;
+
+    if (methodResponseType == ResponseTypeEnum.Text) {
+      if (retType == typeof(string)) {
+        var od = new OpenApiMediaType() {
+            Schema = new JsonSchema() {
+                Type = JsonObjectType.String,
+            },
+        };
+
+        response.Content.Add("application/text", od);
+      }
+      else {
+        throw new MethodDescriptorException("method defined as ResponseTypeEnum.Text must return string or Task<string>");
+      }
+    }
+    else {
+      if (retType != typeof(void)) {
+        var jsonSchema = new JsonSchema();
+        handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(retType, jsonSchema);
+        var od = new OpenApiMediaType() {
+            Schema = jsonSchema,
+        };
+
+        response.Content.Add("application/json", od);
+      }
     }
 
     op.Responses.Add("200", response);
@@ -203,7 +221,8 @@ public static class ClassHandlerCreator
         EndpointAttribute: endpointAttribute,
         MethodParameterDescriptors: methodParameterDescriptors,
         RouterPath: routerPath,
-        BodyJsonSchema: bodyJsonSchema);
+        BodyJsonSchema: bodyJsonSchema,
+        MethodResponseType: methodResponseType);
   }
 
   private static DefaultValue GetParameterDefaultValue(ParameterInfo parameterInfo)
