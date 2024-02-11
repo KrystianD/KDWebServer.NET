@@ -52,7 +52,10 @@ internal static class ClassHandlerExecutor
 
           break;
         case ParameterType.Body:
-          var jsonData = ctx.JsonData!;
+          var jsonData = ctx.JsonData;
+          if (jsonData is null) {
+            return Response.StatusCode(400, "body is required");
+          }
 
           var errors = methodDescriptor.BodyJsonSchema!.Validate(jsonData);
 
