@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using KDWebServer.ClassHandler.Attributes;
+using KDWebServer.ClassHandler.Exceptions;
 using Newtonsoft.Json;
 using NJsonSchema;
 using NSwag;
@@ -62,8 +63,13 @@ internal class TypeSchemaRegistry
     else if (SimpleTypeConverters.GetConverterByType(type) is { } typeConverter) {
       typeConverter.ApplyToJsonSchema(jsonSchema);
     }
-    else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)) {
-      ApplyListTypeToJsonSchema(type, jsonSchema);
+    else if (type.IsGenericType) {
+      if (type.GetGenericTypeDefinition() == typeof(List<>)) {
+        ApplyListTypeToJsonSchema(type, jsonSchema);
+      }
+      else {
+        throw new UnsupportedDataTypeException(type);
+      }
     }
     else {
       ApplyCustomTypeToJsonSchema(type, jsonSchema);
