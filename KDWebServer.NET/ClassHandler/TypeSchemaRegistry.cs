@@ -67,6 +67,9 @@ internal class TypeSchemaRegistry
       if (type.GetGenericTypeDefinition() == typeof(List<>)) {
         ApplyListTypeToJsonSchema(type, jsonSchema);
       }
+      else if (type.GetGenericTypeDefinition() == typeof(Dictionary<,>)) {
+        ApplyDictionaryTypeToJsonSchema(type, jsonSchema);
+      }
       else {
         throw new UnsupportedDataTypeException(type);
       }
@@ -84,6 +87,21 @@ internal class TypeSchemaRegistry
     jsonSchema.Type = JsonObjectType.Array;
     ApplyTypeToJsonSchema(listItemType, listSchema);
     jsonSchema.Item = listSchema;
+  }
+
+  private void ApplyDictionaryTypeToJsonSchema(Type type, JsonSchema jsonSchema)
+  {
+    var dictKeyType = type.GenericTypeArguments[0];
+    var dictValueType = type.GenericTypeArguments[1];
+
+    if (dictKeyType != typeof(string)) {
+      throw new UnsupportedDataTypeException($"Type /{dictKeyType}/ not supported as an object/dictionary key");
+    }
+
+    var itemSchema = new JsonSchema();
+    jsonSchema.Type = JsonObjectType.Object;
+    ApplyTypeToJsonSchema(dictValueType, itemSchema);
+    jsonSchema.AdditionalPropertiesSchema = itemSchema;
   }
 
   private void ApplyCustomTypeToJsonSchema(Type type, JsonSchema jsonSchema)
