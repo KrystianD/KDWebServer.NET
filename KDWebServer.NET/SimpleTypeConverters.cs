@@ -64,6 +64,18 @@ public static class SimpleTypeConverters
             x.Format = "decimal";
           },
           str => decimal.Parse(str)),
+      new(typeof(float), "float",
+          x => {
+            x.Type = JsonObjectType.Number;
+            x.Format = "float";
+          },
+          str => float.Parse(str)),
+      new(typeof(double), "double",
+          x => {
+            x.Type = JsonObjectType.Number;
+            x.Format = "double";
+          },
+          str => double.Parse(str)),
   };
 
   public static TypeConverter? GetConverterByType(Type type)
