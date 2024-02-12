@@ -105,6 +105,24 @@ public static class SimpleTypeConverters
           },
           s => enumStrs[s]);
     }
+    else if (NullabilityUtils.IsNullable(type, out var innerType)) {
+      var innerTypeConverter = GetConverterByType(innerType);
+      if (innerTypeConverter == null)
+        return null;
+
+      return new TypeConverter(innerTypeConverter.Type,
+                               innerTypeConverter.RouterTypeName,
+                               x => {
+                                 innerTypeConverter.ApplyToJsonSchema(x);
+                                 x.IsNullableRaw = true;
+                               },
+                               x => {
+                                 if (x == null!)
+                                   return null!;
+                                 else
+                                   return innerTypeConverter.FromStringConverter(x);
+                               });
+    }
 
     return Converters.Find(x => x.Type == type);
   }

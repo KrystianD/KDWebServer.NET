@@ -49,6 +49,12 @@ internal class TypeSchemaRegistry
 
   public void ApplyTypeToJsonSchema(Type type, JsonSchema jsonSchema)
   {
+    if (NullabilityUtils.IsNullable(type, out var innerType)) {
+      ApplyTypeToJsonSchema(innerType, jsonSchema);
+      jsonSchema.IsNullableRaw = true;
+      return;
+    }
+
     if (type == typeof(object)) {
       jsonSchema.AllowAdditionalProperties = AnyValue.AllowAdditionalProperties;
       jsonSchema.Description = AnyValue.Description;
@@ -105,7 +111,7 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Example = exampleAttribute.Value;
       }
 
-      if (!NullabilityUtils.IsNullable(fieldType, out var fieldActualType)) {
+      if (!NullabilityUtils.IsNullable(memberInfo, out var fieldActualType)) {
         jsonSchemaProperty.IsNullableRaw = true;
         jsonSchemaProperty.IsRequired = false;
       }

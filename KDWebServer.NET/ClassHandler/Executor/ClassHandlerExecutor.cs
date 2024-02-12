@@ -45,6 +45,9 @@ internal static class ClassHandlerExecutor
           else if (methodParameterDescriptor.DefaultValue.HasDefaultValue) {
             call.Add(methodParameterDescriptor.DefaultValue.Value);
           }
+          else if (methodParameterDescriptor.QueryIsNullable!.Value) {
+            call.Add(null);
+          }
           else {
             var s = $"no param {methodParameterDescriptor.Name}";
             return Response.StatusCode(400, s);

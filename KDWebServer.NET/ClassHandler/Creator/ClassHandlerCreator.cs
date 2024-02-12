@@ -58,6 +58,7 @@ public static class ClassHandlerCreator
         methodInfo.GetParameters()
                   .Select(parameterInfo => new MethodParameterDescriptor(
                               name: parameterInfo.Name!,
+                              parameterInfo: parameterInfo,
                               valueType: parameterInfo.ParameterType,
                               defaultValue: GetParameterDefaultValue(parameterInfo),
                               description: parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? ""))
@@ -93,6 +94,7 @@ public static class ClassHandlerCreator
         if (typeConverter != null) {
           methodParameterDescriptor.Type = ParameterType.Query;
           methodParameterDescriptor.QueryTypeConverter = typeConverter;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
         else {
           if (bodyParameterDescriptor == null) {
@@ -113,6 +115,7 @@ public static class ClassHandlerCreator
         if (typeConverter != null) {
           methodParameterDescriptor.Type = ParameterType.Query;
           methodParameterDescriptor.QueryTypeConverter = typeConverter;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
         else {
           throw new MethodDescriptorException($"query parameter {methodParameterDescriptor.Name} type is incorrect for query parameter: {methodParameterDescriptor.ValueType}");
@@ -144,7 +147,7 @@ public static class ClassHandlerCreator
       var p = new OpenApiParameter();
       p.Name = descriptor.Name;
       p.Kind = OpenApiParameterKind.Query;
-      p.IsRequired = !descriptor.DefaultValue.HasDefaultValue;
+      p.IsRequired = !descriptor.QueryIsNullable!.Value;
 
       p.Schema = new JsonSchema();
       handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
