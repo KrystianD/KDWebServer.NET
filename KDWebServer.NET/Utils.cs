@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
@@ -79,5 +80,17 @@ internal static class Utils
     }
 
     return new string(stringChars);
+  }
+
+  public static bool IsNullable(Type type, [NotNullWhen(true)] out Type? innerType)
+  {
+    if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) {
+      innerType = type.GenericTypeArguments[0];
+      return true;
+    }
+    else {
+      innerType = default;
+      return false;
+    }
   }
 }

@@ -105,10 +105,7 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Example = exampleAttribute.Value;
       }
 
-      Type fieldActualType;
-
-      if (IsNullable(fieldType)) {
-        fieldActualType = GetNullableInnerType(fieldType);
+      if (!Utils.IsNullable(fieldType, out var fieldActualType)) {
         jsonSchemaProperty.IsNullableRaw = true;
         jsonSchemaProperty.IsRequired = false;
       }
@@ -157,18 +154,5 @@ internal class TypeSchemaRegistry
     _openApiDocument.Definitions[typeKey] = schema;
 
     jsonSchema.Reference = schema;
-  }
-
-  private static bool IsNullable(Type type)
-  {
-    return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-  }
-
-  private static Type GetNullableInnerType(Type type)
-  {
-    if (!IsNullable(type))
-      throw new Exception("Type is not nullable");
-
-    return type.GenericTypeArguments[0];
   }
 }
