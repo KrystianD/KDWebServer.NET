@@ -105,7 +105,7 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Example = exampleAttribute.Value;
       }
 
-      if (!Utils.IsNullable(fieldType, out var fieldActualType)) {
+      if (!NullabilityUtils.IsNullable(fieldType, out var fieldActualType)) {
         jsonSchemaProperty.IsNullableRaw = true;
         jsonSchemaProperty.IsRequired = false;
       }
