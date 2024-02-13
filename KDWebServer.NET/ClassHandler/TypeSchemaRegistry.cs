@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -133,6 +134,11 @@ internal class TypeSchemaRegistry
       var exampleAttribute = memberInfo.GetCustomAttribute<ExampleAttribute>();
       if (exampleAttribute != null) {
         jsonSchemaProperty.Example = exampleAttribute.Value;
+      }
+
+      var defaultValueAttribute = memberInfo.GetCustomAttribute<DefaultValueAttribute>();
+      if (defaultValueAttribute != null) {
+        jsonSchemaProperty.Default = defaultValueAttribute.Value;
       }
 
       if (!NullabilityUtils.IsNullable(memberInfo, out var fieldActualType)) {
