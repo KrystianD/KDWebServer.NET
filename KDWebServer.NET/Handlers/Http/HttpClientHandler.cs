@@ -65,7 +65,7 @@ public class HttpClientHandler
             .Exception(e)
             .Write();
 
-      _httpContext.Response.StatusCode = 400;
+      Helpers.SetResponse(_httpContext.Response, 400);
       return;
     }
 
@@ -95,7 +95,7 @@ public class HttpClientHandler
       await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, loggingProps);
     }
     catch (OperationCanceledException) {
-      Helpers.CloseStream(_httpContext.Response, 444, "server is being shut down");
+      Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");
     }
     catch (Exception e) {
       Logger.Error()
@@ -105,7 +105,7 @@ public class HttpClientHandler
             .Exception(e)
             .Write();
 
-      _httpContext.Response.StatusCode = 500;
+      Helpers.SetResponse(_httpContext.Response, 500);
     }
   }
 
