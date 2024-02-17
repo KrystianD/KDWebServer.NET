@@ -42,16 +42,18 @@ public class HttpClientHandler
   {
     var serverShutdownToken = WebServer.ServerShutdownToken;
 
-    var rawData = await ReadPayload(_httpContext, serverShutdownToken);
-
     _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
 
-    HttpRequestContext ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData, serverShutdownToken);
+    HttpRequestContext ctx;
 
     var props = new Dictionary<string, object?>(loggingProps);
     props.Add("content_type", _httpContext.Request.ContentType);
     props.Add("content_length", _httpContext.Request.ContentLength64);
     try {
+      var rawData = await ReadPayload(_httpContext, serverShutdownToken);
+
+      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData, serverShutdownToken);
+
       if (_httpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
         props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
@@ -59,7 +61,7 @@ public class HttpClientHandler
     }
     catch (Exception e) {
       Logger.Error()
-            .Message($"[{ClientId}] Error during parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
+            .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 400)
             .Exception(e)
