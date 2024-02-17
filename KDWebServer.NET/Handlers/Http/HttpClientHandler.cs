@@ -59,7 +59,7 @@ public class HttpClientHandler
     }
     catch (Exception e) {
       Logger.Error()
-            .Message($"[{ClientId}] Error during preparing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
+            .Message($"[{ClientId}] Error during parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 400)
             .Exception(e)
