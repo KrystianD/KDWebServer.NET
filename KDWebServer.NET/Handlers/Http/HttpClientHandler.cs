@@ -60,7 +60,7 @@ public class HttpClientHandler
       }
     }
     catch (Exception e) {
-      Logger.Error()
+      Logger.Info()
             .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 400)
