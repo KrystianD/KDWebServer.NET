@@ -97,6 +97,9 @@ public class HttpClientHandler
     catch (OperationCanceledException) {
       Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");
     }
+    catch (HttpListenerException e) when (e.ErrorCode == -2146232800) { // Unable to write data to the transport connection: Broken pipe.
+      // transport is already closed
+    }
     catch (Exception e) {
       Logger.Error()
             .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
