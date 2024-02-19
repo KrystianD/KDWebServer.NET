@@ -173,6 +173,9 @@ internal class TypeSchemaRegistry
     if (jsonPropertyAttribute is not null) {
       DeterminePropertiesFromJsonProperty(memberInfo, jsonPropertyAttribute, jsonSchemaProperty, out name);
     }
+    else if (dataMemberAttribute is not null) {
+      DeterminePropertiesFromDataMember(memberInfo, dataMemberAttribute, jsonSchemaProperty, out name);
+    }
     else {
       name = memberInfo.Name;
 
@@ -205,5 +208,12 @@ internal class TypeSchemaRegistry
       default:
         throw new ArgumentException("invalid Required value");
     }
+  }
+
+  private static void DeterminePropertiesFromDataMember(MemberInfo memberInfo, DataMemberAttribute dataMemberAttribute, JsonSchemaProperty jsonSchemaProperty, out string name)
+  {
+    name = dataMemberAttribute.Name!;
+
+    jsonSchemaProperty.IsRequired = dataMemberAttribute.IsRequired;
   }
 }
