@@ -124,13 +124,6 @@ internal class TypeSchemaRegistry
     foreach (var (memberInfo, fieldType) in members) {
       var jsonSchemaProperty = new JsonSchemaProperty();
 
-      var name = memberInfo.Name;
-
-      var jsonProperty = memberInfo.GetCustomAttribute<JsonPropertyAttribute>();
-      if (jsonProperty != null) {
-        name = jsonProperty.PropertyName!;
-      }
-
       var exampleAttribute = memberInfo.GetCustomAttribute<ExampleAttribute>();
       if (exampleAttribute != null) {
         jsonSchemaProperty.Example = exampleAttribute.Value;
@@ -141,38 +134,14 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Default = defaultValueAttribute.Value;
       }
 
+      DetermineProperties(memberInfo, jsonSchemaProperty, out var name);
+
       if (!NullabilityUtils.IsNullable(memberInfo, out var fieldActualType)) {
         jsonSchemaProperty.IsNullableRaw = true;
         jsonSchemaProperty.IsRequired = false;
       }
       else {
         fieldActualType = fieldType;
-
-        if (jsonProperty == null) {
-          jsonSchemaProperty.IsNullableRaw = false;
-          jsonSchemaProperty.IsRequired = true;
-        }
-        else {
-          switch (jsonProperty.Required) {
-            case Required.Default:
-              jsonSchemaProperty.IsNullableRaw = true;
-              jsonSchemaProperty.IsRequired = false;
-              break;
-            case Required.AllowNull:
-              jsonSchemaProperty.IsNullableRaw = true;
-              jsonSchemaProperty.IsRequired = true;
-              break;
-            case Required.Always:
-              jsonSchemaProperty.IsNullableRaw = false;
-              jsonSchemaProperty.IsRequired = true;
-              break;
-            case Required.DisallowNull:
-              jsonSchemaProperty.IsNullableRaw = false;
-              jsonSchemaProperty.IsRequired = false;
-              break;
-            default: throw new ArgumentException("invalid Required value");
-          }
-        }
       }
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
@@ -190,5 +159,51 @@ internal class TypeSchemaRegistry
     _openApiDocument.Definitions[typeKey] = schema;
 
     jsonSchema.Reference = schema;
+  }
+
+  private static void DetermineProperties(MemberInfo memberInfo, JsonSchemaProperty jsonSchemaProperty, out string name)
+  {
+    var jsonPropertyAttribute = memberInfo.GetCustomAttribute<JsonPropertyAttribute>();
+    var dataMemberAttribute = memberInfo.GetCustomAttribute<DataMemberAttribute>();
+
+    if (jsonPropertyAttribute != null && dataMemberAttribute != null) {
+      throw new NotSupportedException("using both JsonProperty and DataMember attributes is not supported");
+    }
+
+    if (jsonPropertyAttribute is not null) {
+      DeterminePropertiesFromJsonProperty(memberInfo, jsonPropertyAttribute, jsonSchemaProperty, out name);
+    }
+    else {
+      name = memberInfo.Name;
+
+      jsonSchemaProperty.IsNullableRaw = false;
+      jsonSchemaProperty.IsRequired = true;
+    }
+  }
+
+  private static void DeterminePropertiesFromJsonProperty(MemberInfo memberInfo, JsonPropertyAttribute jsonPropertyAttribute, JsonSchemaProperty jsonSchemaProperty, out string name)
+  {
+    name = jsonPropertyAttribute.PropertyName!;
+
+    switch (jsonPropertyAttribute.Required) {
+      case Required.Default:
+        jsonSchemaProperty.IsNullableRaw = true;
+        jsonSchemaProperty.IsRequired = false;
+        break;
+      case Required.AllowNull:
+        jsonSchemaProperty.IsNullableRaw = true;
+        jsonSchemaProperty.IsRequired = true;
+        break;
+      case Required.Always:
+        jsonSchemaProperty.IsNullableRaw = false;
+        jsonSchemaProperty.IsRequired = true;
+        break;
+      case Required.DisallowNull:
+        jsonSchemaProperty.IsNullableRaw = false;
+        jsonSchemaProperty.IsRequired = false;
+        break;
+      default:
+        throw new ArgumentException("invalid Required value");
+    }
   }
 }
