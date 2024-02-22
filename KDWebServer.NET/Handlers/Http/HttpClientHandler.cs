@@ -72,7 +72,7 @@ public class HttpClientHandler
 
     var ep = Match.Endpoint;
 
-    Logger.Trace()
+    Logger.Info()
           .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
           .Properties(props)
           .Write();
