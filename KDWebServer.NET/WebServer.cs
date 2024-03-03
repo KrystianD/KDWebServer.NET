@@ -99,7 +99,7 @@ public class WebServer
   public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
-      throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
+      throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
     Endpoints.Add(route, new EndpointDefinition(callback, null, methods, skipDocs));
@@ -108,7 +108,7 @@ public class WebServer
   public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
-      throw new ArgumentException("Endpoint path must start with slash or be a catch-all one (*)");
+      throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
