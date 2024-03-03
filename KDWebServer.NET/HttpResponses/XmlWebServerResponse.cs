@@ -3,7 +3,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -19,12 +19,12 @@ public class XmlWebServerResponse : WebServerResponse
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                          Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending XML response ({handler.ProcessingTime}ms) ({Utils.LimitText(_xml, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("xml", loggerConfig.LogPayloads ? Utils.LimitText(_xml, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_xml);
 

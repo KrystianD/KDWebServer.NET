@@ -60,11 +60,11 @@ public class HttpClientHandler
       }
     }
     catch (Exception e) {
-      Logger.Info()
+      Logger.ForInfoEvent()
             .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath} - {e.Message}")
             .Properties(props)
             .Property("status_code", 400)
-            .Write();
+            .Log();
 
       Helpers.SetResponse(_httpContext.Response, 400);
       return;
@@ -72,10 +72,10 @@ public class HttpClientHandler
 
     var ep = Match.Endpoint;
 
-    Logger.Info()
+    Logger.ForInfoEvent()
           .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
           .Properties(props)
-          .Write();
+          .Log();
 
     Stopwatch timer = new Stopwatch();
     timer.Start();
@@ -102,12 +102,12 @@ public class HttpClientHandler
       // transport is already closed
     }
     catch (Exception e) {
-      Logger.Error()
+      Logger.ForErrorEvent()
             .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 500)
             .Exception(e)
-            .Write();
+            .Log();
 
       Helpers.SetResponse(_httpContext.Response, 500);
     }

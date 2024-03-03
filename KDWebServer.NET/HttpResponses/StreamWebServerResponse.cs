@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -33,11 +33,11 @@ public class StreamWebServerResponse : WebServerResponse
       lengthToSendStr = Utils.BytesToString(lengthToSend);
     }
 
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending stream response ({handler.ProcessingTime}ms) ({lengthToSendStr})")
            .Properties(loggingProps)
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     response.StatusCode = StatusCode;
     response.SendChunked = true;

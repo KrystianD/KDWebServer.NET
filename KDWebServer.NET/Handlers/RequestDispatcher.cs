@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http;
 using KDWebServer.Exceptions;
 using NLog;
-using NLog.Fluent;
 
 namespace KDWebServer.Handlers;
 
@@ -38,16 +37,16 @@ public class RequestDispatcher
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
-    using (MappedDiagnosticsLogicalContext.SetScoped("method", request.HttpMethod))
-    using (MappedDiagnosticsLogicalContext.SetScoped("path", request.Url?.AbsolutePath))
-    using (MappedDiagnosticsLogicalContext.SetScoped("client_id", clientId))
-    using (MappedDiagnosticsLogicalContext.SetScoped("remote_ip", remoteEndpoint)) {
+    using (ScopeContext.PushProperty("method", request.HttpMethod))
+    using (ScopeContext.PushProperty("path", request.Url?.AbsolutePath))
+    using (ScopeContext.PushProperty("client_id", clientId))
+    using (ScopeContext.PushProperty("remote_ip", remoteEndpoint)) {
       if (remoteEndpoint == null || request.Url is null) {
-        Logger.Info()
+        Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid request - {logSuffix}")
               .Properties(loggingProps)
               .Property("status_code", 400)
-              .Write();
+              .Log();
 
         Helpers.CloseStream(response, 400, "invalid request");
         return;
@@ -57,22 +56,22 @@ public class RequestDispatcher
       try {
         match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
         if (match == null) {
-          Logger.Trace()
+          Logger.ForTraceEvent()
                 .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
                 .Properties(loggingProps)
                 .Property("status_code", 404)
-                .Write();
+                .Log();
 
           Helpers.CloseStream(response, 404);
           return;
         }
       }
       catch (RouteInvalidValueProvidedException e) {
-        Logger.Info()
+        Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid route parameters provided - {logSuffix}")
               .Properties(loggingProps)
               .Property("status_code", 400)
-              .Write();
+              .Log();
 
         Helpers.CloseStream(response, 400, e.Message);
         return;
@@ -85,22 +84,22 @@ public class RequestDispatcher
           Helpers.CloseStream(response);
         }
         else { // HTTP request to WS endpoint
-          Logger.Info()
+          Logger.ForInfoEvent()
                 .Message($"[{clientId}] HTTP request to WS endpoint - {logSuffix}")
                 .Properties(loggingProps)
                 .Property("status_code", 426)
-                .Write();
+                .Log();
 
           Helpers.CloseStream(response, 426);
         }
       }
       else {
         if (request.IsWebSocketRequest) { // WS request to HTTP endpoint
-          Logger.Info()
+          Logger.ForInfoEvent()
                 .Message($"[{clientId}] WS request to HTTP endpoint - {logSuffix}")
                 .Properties(loggingProps)
                 .Property("status_code", 405)
-                .Write();
+                .Log();
 
           Helpers.CloseStream(response, 405);
         }

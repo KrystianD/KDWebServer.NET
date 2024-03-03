@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -21,12 +21,12 @@ public class JsonWebServerResponse : WebServerResponse
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                          Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending JSON response ({handler.ProcessingTime}ms)")
            .Properties(loggingProps)
            .Property("data", loggerConfig.LogPayloads ? Utils.LimitText(_json, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_json);
 

@@ -3,7 +3,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -21,12 +21,12 @@ public class HtmlWebServerResponse : WebServerResponse
   {
     var text = Utils.ExtractSimpleHtmlText(_html);
 
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(text, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_html);
 

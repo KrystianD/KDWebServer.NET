@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DotLiquid;
 using KDWebServer.Handlers.Http;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -28,12 +28,12 @@ public class TemplateWebServerResponse : WebServerResponse
 
     var logText = Utils.ExtractSimpleHtmlText(html);
 
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending HTML template response ({handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
            .Properties(loggingProps)
            .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(logText, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(html);
 

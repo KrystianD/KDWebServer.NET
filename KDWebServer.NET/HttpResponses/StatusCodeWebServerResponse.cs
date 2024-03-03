@@ -3,7 +3,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -30,12 +30,12 @@ public class StatusCodeWebServerResponse : WebServerResponse
     if (_text != "")
       textStr = $" with text: /{Utils.LimitText(_text, 30)}/";
 
-    handler.Logger.Trace()
+    handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.ProcessingTime}ms)")
            .Properties(loggingProps)
            .Property("text", _text)
            .Property("status_code", StatusCode)
-           .Write();
+           .Log();
 
     response.StatusCode = StatusCode;
     if (_text == "") {

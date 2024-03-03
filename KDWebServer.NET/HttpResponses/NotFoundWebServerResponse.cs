@@ -6,7 +6,7 @@ using DotLiquid.Exceptions;
 using KDWebServer.Handlers.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NLog.Fluent;
+using NLog;
 
 namespace KDWebServer.HttpResponses;
 
@@ -32,7 +32,7 @@ public class NotFoundWebServerResponse : WebServerResponse
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                          Dictionary<string, object?> loggingProps)
   {
-    var logMsg = handler.Logger.Trace()
+    var logMsg = handler.Logger.ForTraceEvent()
                         .Property("status_code", StatusCode);
 
     byte[]? resp = null;
@@ -63,7 +63,7 @@ public class NotFoundWebServerResponse : WebServerResponse
       response.ContentType = "text/html";
     }
 
-    logMsg.Write();
+    logMsg.Log();
 
     response.StatusCode = StatusCode;
     if (resp != null) {

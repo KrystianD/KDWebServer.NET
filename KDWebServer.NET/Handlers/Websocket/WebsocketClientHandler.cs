@@ -59,10 +59,10 @@ public class WebsocketClientHandler
 
     var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
 
-    Logger.Trace()
+    Logger.ForTraceEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
           .Properties(props)
-          .Write();
+          .Log();
 
     try {
       await Match.Endpoint.WsCallback!(ctx);
@@ -74,16 +74,16 @@ public class WebsocketClientHandler
         ws.Abort();
       }
 
-      Logger.Trace()
+      Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS handler finished gracefully - {logSuffix}")
             .Properties(props)
-            .Write();
+            .Log();
     }
     catch (WebSocketException) {
-      Logger.Trace()
+      Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(props)
-            .Write();
+            .Log();
 
       senderQueueToken.Cancel();
       ctx.ErrorTcs.TrySetResult(new WebSocketError());
@@ -100,11 +100,11 @@ public class WebsocketClientHandler
       }
     }
     catch (Exception e) {
-      Logger.Error()
+      Logger.ForErrorEvent()
             .Message($"[{ClientId}] Error during handling WS connection - {logSuffix}")
             .Properties(props)
             .Exception(e)
-            .Write();
+            .Log();
 
       senderQueueToken.Cancel();
       ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect());
