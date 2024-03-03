@@ -134,15 +134,7 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Default = defaultValueAttribute.Value;
       }
 
-      DetermineProperties(memberInfo, jsonSchemaProperty, out var name);
-
-      if (!NullabilityUtils.IsNullable(memberInfo, out var fieldActualType)) {
-        jsonSchemaProperty.IsNullableRaw = true;
-        jsonSchemaProperty.IsRequired = false;
-      }
-      else {
-        fieldActualType = fieldType;
-      }
+      DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
       if (typeConverter != null) {
@@ -161,8 +153,10 @@ internal class TypeSchemaRegistry
     jsonSchema.Reference = schema;
   }
 
-  private static void DetermineProperties(MemberInfo memberInfo, JsonSchemaProperty jsonSchemaProperty, out string name)
+  private static void DetermineProperties(MemberInfo memberInfo, JsonSchemaProperty jsonSchemaProperty, out string name, out Type fieldActualType)
   {
+    var isNullable = NullabilityUtils.IsNullable(memberInfo, out fieldActualType);
+
     var jsonPropertyAttribute = memberInfo.GetCustomAttribute<JsonPropertyAttribute>();
     var dataMemberAttribute = memberInfo.GetCustomAttribute<DataMemberAttribute>();
 
@@ -171,29 +165,38 @@ internal class TypeSchemaRegistry
     }
 
     if (jsonPropertyAttribute is not null) {
-      DeterminePropertiesFromJsonProperty(memberInfo, jsonPropertyAttribute, jsonSchemaProperty, out name);
+      DeterminePropertiesFromJsonProperty(memberInfo, jsonPropertyAttribute, jsonSchemaProperty, isNullable, out name);
     }
     else if (dataMemberAttribute is not null) {
-      DeterminePropertiesFromDataMember(memberInfo, dataMemberAttribute, jsonSchemaProperty, out name);
+      DeterminePropertiesFromDataMember(memberInfo, dataMemberAttribute, jsonSchemaProperty, isNullable, out name);
     }
     else {
       name = memberInfo.Name;
 
-      jsonSchemaProperty.IsNullableRaw = false;
-      jsonSchemaProperty.IsRequired = true;
+      if (isNullable) {
+        jsonSchemaProperty.IsNullableRaw = true;
+        jsonSchemaProperty.IsRequired = false;
+      }
+      else {
+        jsonSchemaProperty.IsNullableRaw = false;
+        jsonSchemaProperty.IsRequired = true;
+      }
     }
   }
 
-  private static void DeterminePropertiesFromJsonProperty(MemberInfo memberInfo, JsonPropertyAttribute jsonPropertyAttribute, JsonSchemaProperty jsonSchemaProperty, out string name)
+  private static void DeterminePropertiesFromJsonProperty(MemberInfo memberInfo, JsonPropertyAttribute jsonPropertyAttribute, JsonSchemaProperty jsonSchemaProperty, bool isNullable, out string name)
   {
     name = jsonPropertyAttribute.PropertyName!;
 
     switch (jsonPropertyAttribute.Required) {
       case Required.Default:
-        jsonSchemaProperty.IsNullableRaw = true;
+        jsonSchemaProperty.IsNullableRaw = isNullable;
         jsonSchemaProperty.IsRequired = false;
         break;
       case Required.AllowNull:
+        if (isNullable)
+          throw new ArgumentException($"property {memberInfo.Name} is defined as Required.AllowNull but it is not nullable");
+
         jsonSchemaProperty.IsNullableRaw = true;
         jsonSchemaProperty.IsRequired = true;
         break;
@@ -210,10 +213,11 @@ internal class TypeSchemaRegistry
     }
   }
 
-  private static void DeterminePropertiesFromDataMember(MemberInfo memberInfo, DataMemberAttribute dataMemberAttribute, JsonSchemaProperty jsonSchemaProperty, out string name)
+  private static void DeterminePropertiesFromDataMember(MemberInfo memberInfo, DataMemberAttribute dataMemberAttribute, JsonSchemaProperty jsonSchemaProperty, bool isNullable, out string name)
   {
     name = dataMemberAttribute.Name!;
 
     jsonSchemaProperty.IsRequired = dataMemberAttribute.IsRequired;
+    jsonSchemaProperty.IsNullableRaw = isNullable;
   }
 }
