@@ -89,11 +89,12 @@ public static class ClassHandlerCreator
     MethodParameterDescriptor? bodyParameterDescriptor = null;
     JsonSchema? bodyJsonSchema = null;
     foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Type == null)) {
-      var typeConverter = SimpleTypeConverters.GetConverterByType(methodParameterDescriptor.ValueType);
+      var simpleTypeConverter = SimpleTypeConverters.GetConverterByType(methodParameterDescriptor.ValueType);
       if (hasBody) {
-        if (typeConverter != null) {
+        var bodyTypeConverter = BodyTypeConverters.GetConverterByType(methodParameterDescriptor.ValueType);
+        if (bodyTypeConverter == null && simpleTypeConverter != null) {
           methodParameterDescriptor.Type = ParameterType.Query;
-          methodParameterDescriptor.QueryTypeConverter = typeConverter;
+          methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
         else {
@@ -101,10 +102,15 @@ public static class ClassHandlerCreator
             methodParameterDescriptor.Type = ParameterType.Body;
             bodyParameterDescriptor = methodParameterDescriptor;
 
-            var type = methodParameterDescriptor.ValueType;
-            var jsonSchema = new JsonSchema();
-            handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(type, jsonSchema);
-            bodyJsonSchema = jsonSchema;
+            bodyJsonSchema = new JsonSchema();
+
+            if (bodyTypeConverter == null) {
+              var type = methodParameterDescriptor.ValueType;
+              handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(type, bodyJsonSchema);
+            }
+            else {
+              bodyTypeConverter.ApplyToJsonSchema(bodyJsonSchema);
+            }
           }
           else {
             throw new MethodDescriptorException($"only one body parameter is allowed. Used as body: {bodyParameterDescriptor.Name}, about to be used: {methodParameterDescriptor.Name}");
@@ -112,9 +118,9 @@ public static class ClassHandlerCreator
         }
       }
       else { // endpoint doesn't contain the body
-        if (typeConverter != null) {
+        if (simpleTypeConverter != null) {
           methodParameterDescriptor.Type = ParameterType.Query;
-          methodParameterDescriptor.QueryTypeConverter = typeConverter;
+          methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
         else {
