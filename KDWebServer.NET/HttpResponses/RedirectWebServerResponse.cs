@@ -20,7 +20,7 @@ public class RedirectWebServerResponse : WebServerResponse
                                          Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending Redirect response ({handler.ProcessingTime}ms) (to {_location})")
+           .Message($"[{handler.ClientId}] sending Redirect response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) (to {_location})")
            .Properties(loggingProps)
            .Property("location", _location)
            .Property("status_code", StatusCode)

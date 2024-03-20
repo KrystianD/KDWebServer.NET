@@ -22,7 +22,7 @@ public class TextWebServerResponse : WebServerResponse
                                          Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending text response ({handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")
+           .Message($"[{handler.ClientId}] sending text response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({Utils.LimitText(_text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("text", loggerConfig.LogPayloads ? Utils.LimitText(_text, 1000) : "<skipped>")
            .Property("status_code", StatusCode)

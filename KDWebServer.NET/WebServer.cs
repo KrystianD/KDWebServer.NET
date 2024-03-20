@@ -211,6 +211,7 @@ public class WebServer
       HttpListenerContext? httpContext = null;
       try {
         httpContext = await _listener!.GetContextAsync();
+        var requestTimer = Stopwatch.StartNew();
 
         // C# HTTP server automatically sends back /Length Required/ error response
         if (httpContext.Response.StatusCode == 411) {
@@ -218,7 +219,7 @@ public class WebServer
         }
 
         var rq = new RequestDispatcher(this);
-        rq.DispatchRequest(httpContext);
+        rq.DispatchRequest(httpContext, requestTimer);
       }
       catch (ObjectDisposedException) {
       }

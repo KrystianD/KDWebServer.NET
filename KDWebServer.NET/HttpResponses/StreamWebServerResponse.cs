@@ -34,7 +34,7 @@ public class StreamWebServerResponse : WebServerResponse
     }
 
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending stream response ({handler.ProcessingTime}ms) ({lengthToSendStr})")
+           .Message($"[{handler.ClientId}] sending stream response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({lengthToSendStr})")
            .Properties(loggingProps)
            .Property("status_code", StatusCode)
            .Log();

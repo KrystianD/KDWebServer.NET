@@ -19,7 +19,9 @@ public class HttpClientHandler
   private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
 
   private readonly HttpListenerContext _httpContext;
+  private readonly Stopwatch _requestTimer;
   private readonly RequestDispatcher.RouteEndpointMatch Match;
+  public long HandlerTime;
   public long ProcessingTime;
 
   private WebServer WebServer { get; }
@@ -27,9 +29,10 @@ public class HttpClientHandler
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, RequestDispatcher.RouteEndpointMatch match)
+  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
+    _requestTimer = requestTimer;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
 
@@ -88,7 +91,8 @@ public class HttpClientHandler
         response = r;
       }
 
-      ProcessingTime = timer.ElapsedMilliseconds;
+      HandlerTime = timer.ElapsedMilliseconds;
+      ProcessingTime = _requestTimer.ElapsedMilliseconds;
 
       foreach (string responseHeader in response.Headers)
         _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
@@ -102,8 +106,10 @@ public class HttpClientHandler
       // transport is already closed
     }
     catch (Exception e) {
+      ProcessingTime = _requestTimer.ElapsedMilliseconds;
+
       Logger.ForErrorEvent()
-            .Message($"[{ClientId}] Error during handling HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+            .Message($"[{ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
             .Properties(props)
             .Property("status_code", 500)
             .Exception(e)

@@ -21,7 +21,7 @@ public class BinaryWebServerResponse : WebServerResponse
                                          Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending binary response ({handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")
+           .Message($"[{handler.ClientId}] sending binary response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({Utils.BytesToString(_data.Length)})")
            .Properties(loggingProps)
            .Property("data_length", _data.Length)
            .Property("status_code", StatusCode)

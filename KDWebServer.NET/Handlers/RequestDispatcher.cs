@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using KDWebServer.Exceptions;
@@ -21,7 +22,7 @@ public class RequestDispatcher
     Logger = webServer.LogFactory?.GetLogger("webserver.dispatcher") ?? LogManager.LogFactory.CreateNullLogger();
   }
 
-  public async void DispatchRequest(HttpListenerContext httpContext)
+  public async void DispatchRequest(HttpListenerContext httpContext, Stopwatch requestTimer)
   {
     string shortId = Utils.GenerateRandomString(4);
     var remoteEndpoint = Utils.GetClientIp(httpContext, WebServer.TrustedProxies);
@@ -79,7 +80,7 @@ public class RequestDispatcher
 
       if (match.Endpoint.IsWebsocket) {
         if (request.IsWebSocketRequest) {
-          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, requestTimer, match);
           await wsHandler.Handle(loggingProps);
           Helpers.CloseStream(response);
         }
@@ -104,7 +105,7 @@ public class RequestDispatcher
           Helpers.CloseStream(response, 405);
         }
         else {
-          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, clientId, match);
+          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, requestTimer, clientId, match);
           await httpHandler.Handle(loggingProps);
           Helpers.CloseStream(response);
         }

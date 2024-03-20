@@ -23,7 +23,7 @@ public class WebsocketClientHandler
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal WebsocketClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, RequestDispatcher.RouteEndpointMatch match)
+  internal WebsocketClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
     WebServer = webServer;

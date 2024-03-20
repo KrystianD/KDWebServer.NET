@@ -22,7 +22,7 @@ public class HtmlWebServerResponse : WebServerResponse
     var text = Utils.ExtractSimpleHtmlText(_html);
 
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending HTML response ({handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
+           .Message($"[{handler.ClientId}] sending HTML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(text, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
