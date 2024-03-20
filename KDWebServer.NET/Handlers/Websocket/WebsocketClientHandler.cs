@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Nito.AsyncEx;
 using NLog;
 using NLog.Fluent;
 
@@ -65,7 +67,10 @@ public class WebsocketClientHandler
           .Log();
 
     try {
-      await Match.Endpoint.WsCallback!(ctx);
+      if (WebServer.SynchronizationContext == null)
+        await Match.Endpoint.WsCallback!(ctx);
+      else
+        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx));
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);

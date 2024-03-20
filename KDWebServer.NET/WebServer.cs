@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -66,6 +67,7 @@ public class WebServer
   public string? Name { get; set; }
 
   internal LogFactory? LogFactory { get; }
+  internal SynchronizationContext? SynchronizationContext { get; }
   internal WebServerLoggerConfig LoggerConfig { get; }
 
   private readonly ILogger _logger;
@@ -82,9 +84,10 @@ public class WebServer
       SchemaType = SchemaType.OpenApi3,
   };
 
-  public WebServer(LogFactory? factory, WebServerLoggerConfig? loggerConfig = null)
+  public WebServer(LogFactory? factory, WebServerLoggerConfig? loggerConfig = null, SynchronizationContext? synchronizationContext = null)
   {
     LogFactory = factory;
+    SynchronizationContext = synchronizationContext;
     LoggerConfig = loggerConfig ?? new WebServerLoggerConfig();
     _logger = factory?.GetLogger("webserver") ?? LogManager.LogFactory.CreateNullLogger();
   }
@@ -173,13 +176,13 @@ public class WebServer
   {
     Start(host, port, sslConfig);
     // ReSharper disable once MethodSupportsCancellation
-    InternalRun().Wait();
+    Task.Run(InternalRun).Wait(ServerShutdownToken);
   }
 
   public void RunAsync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
     Start(host, port, sslConfig);
-    _ = InternalRun();
+    Task.Run(InternalRun, ServerShutdownToken);
   }
 
   private void Start(string host, int port, WebServerSslConfig? sslConfig)

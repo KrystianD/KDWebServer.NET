@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Nito.AsyncEx;
 using NLog;
 using NLog.Fluent;
 
@@ -85,7 +86,10 @@ public class HttpClientHandler
     try {
       WebServerResponse response;
       try {
-        response = await ep.HttpCallback!(ctx);
+        if (WebServer.SynchronizationContext == null)
+          response = await ep.HttpCallback!(ctx);
+        else
+          response = await WebServer.SynchronizationContext.PostAsync(async () => await ep.HttpCallback!(ctx));
       }
       catch (WebServerResponse r) {
         response = r;
