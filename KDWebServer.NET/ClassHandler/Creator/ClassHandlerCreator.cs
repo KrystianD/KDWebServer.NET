@@ -174,7 +174,11 @@ public static class ClassHandlerCreator
     };
 
     var ret = methodInfo.ReturnType;
-    var retType = ret.BaseType == typeof(Task) ? ret.GenericTypeArguments[0] : ret;
+    var retType = ret == typeof(Task)
+        ? typeof(void)
+        : ret.BaseType == typeof(Task)
+            ? ret.GenericTypeArguments[0]
+            : ret;
 
     var methodResponseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type) ?? ResponseTypeEnum.Json;
 

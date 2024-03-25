@@ -81,7 +81,16 @@ internal static class ClassHandlerExecutor
       var res = methodDescriptor.MethodInfo.Invoke(handler, call.ToArray());
       if (res is Task task) {
         await task;
-        res = ((dynamic)task).Result;
+
+        var taskType = task.GetType();
+        if (taskType.IsGenericType &&
+            taskType.GetGenericTypeDefinition() == typeof(Task<>) &&
+            taskType.GetGenericArguments()[0] != Type.GetType("System.Threading.Tasks.VoidTaskResult")) {
+          res = ((dynamic)task).Result;
+        }
+        else {
+          res = null;
+        }
       }
 
       return res switch {
