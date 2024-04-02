@@ -30,7 +30,7 @@ public class StreamWebServerResponse : WebServerResponse
       var endPos = _stream.Seek(0, SeekOrigin.End);
       _stream.Seek(curPos, SeekOrigin.Begin);
       lengthToSend = endPos - curPos;
-      lengthToSendStr = Utils.BytesToString(lengthToSend);
+      lengthToSendStr = WebServerUtils.BytesToString(lengthToSend);
     }
 
     handler.Logger.ForTraceEvent()

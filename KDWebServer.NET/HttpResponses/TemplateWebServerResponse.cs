@@ -26,12 +26,12 @@ public class TemplateWebServerResponse : WebServerResponse
     var template = Template.Parse(_templateText);
     string html = template.Render(_hash);
 
-    var logText = Utils.ExtractSimpleHtmlText(html);
+    var logText = WebServerUtils.ExtractSimpleHtmlText(html);
 
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending HTML template response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({Utils.LimitText(logText, 30)})")
+           .Message($"[{handler.ClientId}] sending HTML template response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(logText, 30)})")
            .Properties(loggingProps)
-           .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(logText, 1000) : "<skipped>")
+           .Property("body", loggerConfig.LogPayloads ? WebServerUtils.LimitText(logText, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
            .Log();
 

@@ -9,7 +9,7 @@ using HtmlAgilityPack;
 
 namespace KDWebServer;
 
-internal static class Utils
+internal static class WebServerUtils
 {
   public static TOut Let<TIn, TOut>(this TIn value, Func<TIn, TOut> f) => f(value);
 

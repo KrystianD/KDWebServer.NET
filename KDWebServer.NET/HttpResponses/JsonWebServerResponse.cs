@@ -24,7 +24,7 @@ public class JsonWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending JSON response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
-           .Property("data", loggerConfig.LogPayloads ? Utils.LimitText(_json, 1000) : "<skipped>")
+           .Property("data", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_json, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
            .Log();
 

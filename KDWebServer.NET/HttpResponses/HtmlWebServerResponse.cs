@@ -19,12 +19,12 @@ public class HtmlWebServerResponse : WebServerResponse
   internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                          Dictionary<string, object?> loggingProps)
   {
-    var text = Utils.ExtractSimpleHtmlText(_html);
+    var text = WebServerUtils.ExtractSimpleHtmlText(_html);
 
     handler.Logger.ForTraceEvent()
-           .Message($"[{handler.ClientId}] sending HTML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({Utils.LimitText(text, 30).Replace("\n", " ")})")
+           .Message($"[{handler.ClientId}] sending HTML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
-           .Property("body", loggerConfig.LogPayloads ? Utils.LimitText(text, 1000) : "<skipped>")
+           .Property("body", loggerConfig.LogPayloads ? WebServerUtils.LimitText(text, 1000) : "<skipped>")
            .Property("status_code", StatusCode)
            .Log();
 

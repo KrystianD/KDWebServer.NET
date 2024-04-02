@@ -24,8 +24,8 @@ public class RequestDispatcher
 
   public async void DispatchRequest(HttpListenerContext httpContext, Stopwatch requestTimer)
   {
-    string shortId = Utils.GenerateRandomString(4);
-    var remoteEndpoint = Utils.GetClientIp(httpContext, WebServer.TrustedProxies);
+    string shortId = WebServerUtils.GenerateRandomString(4);
+    var remoteEndpoint = WebServerUtils.GetClientIp(httpContext, WebServer.TrustedProxies);
     var clientId = $"{remoteEndpoint} {shortId}";
 
     var request = httpContext.Request;
