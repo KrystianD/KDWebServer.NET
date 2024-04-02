@@ -34,7 +34,26 @@ public static class SimpleTypeConverters
           x => {
             x.Type = JsonObjectType.Boolean;
           },
-          str => bool.Parse(str)),
+          str => {
+            switch (str.ToLower()) {
+              case "1":
+              case "y":
+              case "yes":
+              case "on":
+              case "t":
+              case "true":
+                return true;
+              case "0":
+              case "n":
+              case "no":
+              case "off":
+              case "false":
+              case "f":
+                return false;
+              default:
+                throw new FormatException($"invalid boolean value: {str}");
+            }
+          }),
       new(typeof(string), "string",
           x => {
             x.Type = JsonObjectType.String;
