@@ -21,8 +21,8 @@ public class StatusCodeWebServerResponse : WebServerResponse
   {
   }
 
-  internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps)
+  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps)
   {
     HttpStatusCode code = (HttpStatusCode)StatusCode;
 

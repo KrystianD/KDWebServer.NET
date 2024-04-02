@@ -20,8 +20,8 @@ public class TemplateWebServerResponse : WebServerResponse
     _hash = hash;
   }
 
-  internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                               Dictionary<string, object?> loggingProps)
+  public override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                             Dictionary<string, object?> loggingProps)
   {
     var template = Template.Parse(_templateText);
     string html = template.Render(_hash);

@@ -20,8 +20,8 @@ public class StreamWebServerResponse : WebServerResponse
     _mimeType = mimeType;
   }
 
-  internal override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                               Dictionary<string, object?> loggingProps)
+  public override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                             Dictionary<string, object?> loggingProps)
   {
     long lengthToSend = -1;
     var lengthToSendStr = "unknown length";

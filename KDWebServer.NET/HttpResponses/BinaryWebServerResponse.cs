@@ -17,8 +17,8 @@ public class BinaryWebServerResponse : WebServerResponse
     _mimeType = mimeType;
   }
 
-  internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps)
+  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending binary response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.BytesToString(_data.Length)})")

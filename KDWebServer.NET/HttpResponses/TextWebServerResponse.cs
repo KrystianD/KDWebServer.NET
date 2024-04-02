@@ -18,8 +18,8 @@ public class TextWebServerResponse : WebServerResponse
     _contentType = contentType;
   }
 
-  internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps)
+  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending text response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_text, 30).Replace("\n", " ")})")

@@ -13,8 +13,8 @@ public abstract class WebServerResponse : System.Exception
 
   internal readonly WebHeaderCollection Headers = new();
 
-  internal abstract Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps);
+  public abstract Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps);
 
   public void SetHeader(HttpResponseHeader header, string value) => Headers.Add(header, value);
   public void SetHeader(string name, string value) => Headers.Add(name, value);

@@ -29,8 +29,8 @@ public class NotFoundWebServerResponse : WebServerResponse
     StatusCode = 404;
   }
 
-  internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps)
+  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps)
   {
     var logMsg = handler.Logger.ForTraceEvent()
                         .Property("status_code", StatusCode);

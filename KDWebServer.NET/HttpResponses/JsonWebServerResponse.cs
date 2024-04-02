@@ -18,8 +18,8 @@ public class JsonWebServerResponse : WebServerResponse
     _json = JToken.FromObject(data).ToString(indented ? Formatting.Indented : Formatting.None);
   }
 
-  internal override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
-                                         Dictionary<string, object?> loggingProps)
+  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+                                       Dictionary<string, object?> loggingProps)
   {
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending JSON response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
