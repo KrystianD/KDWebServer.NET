@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KDWebServer.NET", "KDWebSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KDWebServer.NET.Example", "KDWebServer.NET.Example\KDWebServer.NET.Example.csproj", "{663EA7B0-2BCE-4154-9A54-34F2C2F51D63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KDWebServer.DotLiquid", "KDWebServer.DotLiquid\KDWebServer.DotLiquid.csproj", "{6C51A50B-F8F6-4E81-AA9C-0032CB259D5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{663EA7B0-2BCE-4154-9A54-34F2C2F51D63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{663EA7B0-2BCE-4154-9A54-34F2C2F51D63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{663EA7B0-2BCE-4154-9A54-34F2C2F51D63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C51A50B-F8F6-4E81-AA9C-0032CB259D5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C51A50B-F8F6-4E81-AA9C-0032CB259D5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C51A50B-F8F6-4E81-AA9C-0032CB259D5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C51A50B-F8F6-4E81-AA9C-0032CB259D5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

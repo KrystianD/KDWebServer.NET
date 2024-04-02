@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Net;
 using JetBrains.Annotations;
@@ -23,18 +20,6 @@ public static class Response
   public static StatusCodeWebServerResponse StatusCode(int code, string text) => new(code, text);
   public static StatusCodeWebServerResponse StatusCode(HttpStatusCode code) => new(code);
   public static StatusCodeWebServerResponse StatusCode(HttpStatusCode code, string text) => new(code, text);
-
-  public static TemplateWebServerResponse TemplateFile(string templatePath) => TemplateWebServerResponse.FromFile(templatePath);
-  public static TemplateWebServerResponse TemplateFile(string templatePath, Dictionary<string, object> data) => TemplateWebServerResponse.FromFile(templatePath, data);
-  public static TemplateWebServerResponse TemplateFile(string templatePath, object data) => TemplateWebServerResponse.FromFile(templatePath, data);
-
-  public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath) => TemplateWebServerResponse.FromFileAsync(templatePath);
-  public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath, Dictionary<string, object> data) => TemplateWebServerResponse.FromFileAsync(templatePath, data);
-  public static Task<TemplateWebServerResponse> TemplateFileAsync(string templatePath, object data) => TemplateWebServerResponse.FromFileAsync(templatePath, data);
-
-  public static TemplateWebServerResponse TemplateString(string templateText) => TemplateWebServerResponse.FromString(templateText);
-  public static TemplateWebServerResponse TemplateString(string templateText, Dictionary<string, object> data) => TemplateWebServerResponse.FromString(templateText, data);
-  public static TemplateWebServerResponse TemplateString(string templateText, object data) => TemplateWebServerResponse.FromString(templateText, data);
 
   public static TextWebServerResponse Text(string text) => new(text);
   public static TextWebServerResponse Text(string text, string contentType) => new(text, contentType);

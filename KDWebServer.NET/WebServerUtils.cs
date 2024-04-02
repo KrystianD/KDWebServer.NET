@@ -9,9 +9,9 @@ using HtmlAgilityPack;
 
 namespace KDWebServer;
 
-internal static class WebServerUtils
+public static class WebServerUtils
 {
-  public static TOut Let<TIn, TOut>(this TIn value, Func<TIn, TOut> f) => f(value);
+  internal static TOut Let<TIn, TOut>(this TIn value, Func<TIn, TOut> f) => f(value);
 
   public static string ExtractSimpleHtmlText(string html)
   {
@@ -27,7 +27,7 @@ internal static class WebServerUtils
   }
 
 
-  public static IPAddress? GetClientIp(HttpListenerContext httpContext, HashSet<IPAddress>? trustedProxies = null)
+  internal static IPAddress? GetClientIp(HttpListenerContext httpContext, HashSet<IPAddress>? trustedProxies = null)
   {
     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
     return GetClientIp(httpContext.Request.RemoteEndPoint?.Address,
@@ -57,7 +57,7 @@ internal static class WebServerUtils
     return text;
   }
 
-  public static string BytesToString(long byteCount)
+  internal static string BytesToString(long byteCount)
   {
     string[] suf = { "B", "KB", "MB", "GB", "TB" };
     if (byteCount == 0)
@@ -70,7 +70,7 @@ internal static class WebServerUtils
 
   private static readonly Random StringRandom = new();
 
-  public static string GenerateRandomString(
+  internal static string GenerateRandomString(
       int length,
       string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
   {

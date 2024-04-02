@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using DotLiquid;
-using KDWebServer.Handlers.Http;
+using JetBrains.Annotations;
 using NLog;
+using HttpClientHandler = KDWebServer.Handlers.Http.HttpClientHandler;
 
+// ReSharper disable once CheckNamespace
 namespace KDWebServer.HttpResponses;
 
+[PublicAPI]
 public class TemplateWebServerResponse : WebServerResponse
 {
   private readonly string _templateText;
@@ -62,15 +62,15 @@ public class TemplateWebServerResponse : WebServerResponse
     return new TemplateWebServerResponse(templateText, hash);
   }
 
-  internal static TemplateWebServerResponse FromString(string templateString) => FromString(templateString, (Hash?)null);
-  internal static TemplateWebServerResponse FromString(string templateString, Dictionary<string, object> data) => FromString(templateString, Hash.FromDictionary(data));
-  internal static TemplateWebServerResponse FromString(string templateString, object data) => FromString(templateString, Hash.FromAnonymousObject(data));
+  public static TemplateWebServerResponse FromString(string templateString) => FromString(templateString, (Hash?)null);
+  public static TemplateWebServerResponse FromString(string templateString, Dictionary<string, object> data) => FromString(templateString, Hash.FromDictionary(data));
+  public static TemplateWebServerResponse FromString(string templateString, object data) => FromString(templateString, Hash.FromAnonymousObject(data));
 
-  internal static TemplateWebServerResponse FromFile(string templatePath) => FromFile(templatePath, (Hash?)null);
-  internal static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data) => FromFile(templatePath, Hash.FromDictionary(data));
-  internal static TemplateWebServerResponse FromFile(string templatePath, object data) => FromFile(templatePath, Hash.FromAnonymousObject(data));
+  public static TemplateWebServerResponse FromFile(string templatePath) => FromFile(templatePath, (Hash?)null);
+  public static TemplateWebServerResponse FromFile(string templatePath, Dictionary<string, object> data) => FromFile(templatePath, Hash.FromDictionary(data));
+  public static TemplateWebServerResponse FromFile(string templatePath, object data) => FromFile(templatePath, Hash.FromAnonymousObject(data));
 
-  internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath) => FromFileAsync(templatePath, (Hash?)null);
-  internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data) => FromFileAsync(templatePath, Hash.FromDictionary(data));
-  internal static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
+  public static Task<TemplateWebServerResponse> FromFileAsync(string templatePath) => FromFileAsync(templatePath, (Hash?)null);
+  public static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, Dictionary<string, object> data) => FromFileAsync(templatePath, Hash.FromDictionary(data));
+  public static Task<TemplateWebServerResponse> FromFileAsync(string templatePath, object data) => FromFileAsync(templatePath, Hash.FromAnonymousObject(data));
 }
