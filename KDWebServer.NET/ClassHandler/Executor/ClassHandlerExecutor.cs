@@ -84,7 +84,8 @@ internal static class ClassHandlerExecutor
 
         var taskType = task.GetType();
         if (taskType.IsGenericType &&
-            taskType.GetGenericTypeDefinition() == typeof(Task<>) &&
+            (taskType.GetGenericTypeDefinition() == typeof(Task<>) || // for async Task<> without an async operation
+             taskType.GetGenericTypeDefinition().DeclaringType == typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder<>)) && // for async Task<> with an async operation
             taskType.GetGenericArguments()[0] != Type.GetType("System.Threading.Tasks.VoidTaskResult")) {
           res = ((dynamic)task).Result;
         }
