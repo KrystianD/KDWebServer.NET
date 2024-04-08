@@ -73,7 +73,7 @@ public class WebServer
 
   private readonly ILogger _logger;
 
-  internal readonly Dictionary<Router.RouteDescriptor, EndpointDefinition> Endpoints = new();
+  internal readonly List<(Router.RouteDescriptor, EndpointDefinition)> Endpoints = new();
   internal HashSet<IPAddress>? TrustedProxies;
 
   public int WebsocketSenderQueueLength = 10;
@@ -106,7 +106,7 @@ public class WebServer
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
-    Endpoints.Add(route, new EndpointDefinition(callback, null, methods, skipDocs));
+    Endpoints.Add((route, new EndpointDefinition(callback, null, methods, skipDocs)));
   }
 
   public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
@@ -116,7 +116,7 @@ public class WebServer
 
     var route = Router.CompileRoute(endpoint);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add(route, new EndpointDefinition(null, callback, methods, false));
+    Endpoints.Add((route, new EndpointDefinition(null, callback, methods, false)));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
