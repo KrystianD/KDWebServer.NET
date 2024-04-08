@@ -87,7 +87,7 @@ public class RequestDispatcher
       if (match.Endpoint.IsWebsocket) {
         if (request.IsWebSocketRequest) {
           var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, requestTimer, match);
-          await wsHandler.Handle(loggingProps);
+          await wsHandler.Handle(loggingProps).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
         else { // HTTP request to WS endpoint
@@ -112,7 +112,7 @@ public class RequestDispatcher
         }
         else {
           var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, requestTimer, clientId, match);
-          await httpHandler.Handle(loggingProps);
+          await httpHandler.Handle(loggingProps).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
       }

@@ -54,7 +54,7 @@ public class HttpClientHandler
     props.Add("content_type", _httpContext.Request.ContentType);
     props.Add("content_length", _httpContext.Request.ContentLength64);
     try {
-      var rawData = await ReadPayload(_httpContext, serverShutdownToken);
+      var rawData = await ReadPayload(_httpContext, serverShutdownToken).ConfigureAwait(false);
 
       ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData, serverShutdownToken);
 
@@ -87,9 +87,9 @@ public class HttpClientHandler
       WebServerResponse response;
       try {
         if (WebServer.SynchronizationContext == null)
-          response = await ep.HttpCallback!(ctx);
+          response = await ep.HttpCallback!(ctx).ConfigureAwait(false);
         else
-          response = await WebServer.SynchronizationContext.PostAsync(async () => await ep.HttpCallback!(ctx));
+          response = await WebServer.SynchronizationContext.PostAsync(async () => await ep.HttpCallback!(ctx).ConfigureAwait(false)).ConfigureAwait(false);
       }
       catch (WebServerResponse r) {
         response = r;

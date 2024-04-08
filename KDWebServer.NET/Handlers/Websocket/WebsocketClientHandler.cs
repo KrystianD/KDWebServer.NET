@@ -38,7 +38,7 @@ public class WebsocketClientHandler
 
   public async Task Handle(Dictionary<string, object?> props)
   {
-    var wsCtx = await _httpContext.AcceptWebSocketAsync(null!);
+    var wsCtx = await _httpContext.AcceptWebSocketAsync(null!).ConfigureAwait(false);
 
     var serverShutdownToken = WebServer.ServerShutdownToken;
 
@@ -51,7 +51,7 @@ public class WebsocketClientHandler
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
           var msg = ctx.SenderQ.Dequeue(senderQueueToken.Token);
-          await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token);
+          await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }
         catch (TaskCanceledException) {
@@ -68,12 +68,12 @@ public class WebsocketClientHandler
 
     try {
       if (WebServer.SynchronizationContext == null)
-        await Match.Endpoint.WsCallback!(ctx);
+        await Match.Endpoint.WsCallback!(ctx).ConfigureAwait(false);
       else
-        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx));
+        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx)).ConfigureAwait(false);
 
       try {
-        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
       }
       catch {
         ws.Abort();
@@ -98,7 +98,7 @@ public class WebsocketClientHandler
       ctx.ErrorTcs.TrySetResult(new WebSocketError());
 
       try {
-        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "server is being shut down", new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "server is being shut down", new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
       }
       catch (Exception) {
         ws.Abort();
@@ -115,7 +115,7 @@ public class WebsocketClientHandler
       ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect());
 
       try {
-        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
       }
       catch {
         ws.Abort();
