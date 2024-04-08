@@ -11,6 +11,7 @@ public class RequestDispatcher
 {
   public record RouteEndpointMatch(
       WebServer.EndpointDefinition Endpoint,
+      HttpMethod Method,
       Dictionary<string, object> RouteParams);
 
   private WebServer WebServer { get; }
@@ -139,7 +140,7 @@ public class RequestDispatcher
     else {
       bestMatch.Route.ParseParams(out var routeParams);
 
-      return new RouteEndpointMatch(bestMatch.Endpoint, routeParams);
+      return new RouteEndpointMatch(bestMatch.Endpoint, method, routeParams);
     }
   }
 }
