@@ -46,7 +46,7 @@ public class WebServer
 
   private HttpListener? _listener;
 
-  internal class EndpointDefinition
+  public class EndpointDefinition
   {
     public readonly AsyncEndpointHandler? HttpCallback;
     public readonly AsyncWebsocketEndpointHandler? WsCallback;
@@ -65,6 +65,7 @@ public class WebServer
   }
 
   public string? Name { get; set; }
+  public List<IRequestObserver> Observers { get; } = new();
 
   internal LogFactory? LogFactory { get; }
   internal SynchronizationContext? SynchronizationContext { get; }

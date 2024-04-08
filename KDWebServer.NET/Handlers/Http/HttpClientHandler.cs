@@ -101,7 +101,13 @@ public class HttpClientHandler
       foreach (string responseHeader in response.Headers)
         _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
 
+      foreach (var observer in WebServer.Observers)
+        observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
+
       await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, loggingProps);
+
+      foreach (var observer in WebServer.Observers)
+        observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);
     }
     catch (OperationCanceledException) {
       Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");

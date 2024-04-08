@@ -9,7 +9,7 @@ namespace KDWebServer.Handlers;
 
 public class RequestDispatcher
 {
-  internal record RouteEndpointMatch(
+  public record RouteEndpointMatch(
       WebServer.EndpointDefinition Endpoint,
       Dictionary<string, object> RouteParams);
 
@@ -38,6 +38,9 @@ public class RequestDispatcher
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
+    foreach (var observer in WebServer.Observers)
+      observer.OnNewRequest(httpContext);
+    
     using (ScopeContext.PushProperty("method", request.HttpMethod))
     using (ScopeContext.PushProperty("path", request.Url?.AbsolutePath))
     using (ScopeContext.PushProperty("client_id", clientId))
@@ -77,6 +80,9 @@ public class RequestDispatcher
         Helpers.CloseStream(response, 400, e.Message);
         return;
       }
+
+      foreach (var observer in WebServer.Observers)
+        observer.OnRequestMatch(httpContext, match);
 
       if (match.Endpoint.IsWebsocket) {
         if (request.IsWebSocketRequest) {
