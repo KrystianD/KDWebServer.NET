@@ -17,7 +17,7 @@ namespace KDWebServer.ClassHandler.Creator;
 
 public static class ClassHandlerCreator
 {
-  public static void RegisterHandler(WebServer srv, object handler)
+  public static void RegisterHandler(WebServer srv, object handler, string prefix = "")
   {
     var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
@@ -27,6 +27,7 @@ public static class ClassHandlerCreator
       var endpointAttribute = methodInfo.GetCustomAttribute<EndpointAttribute>();
       if (endpointAttribute == null)
         continue;
+      endpointAttribute.Endpoint = prefix + endpointAttribute.Endpoint;
       var md = ProcessMethod(methodInfo, endpointAttribute, handlerDescriptor);
       handlerDescriptor.Methods.Add(md);
     }
