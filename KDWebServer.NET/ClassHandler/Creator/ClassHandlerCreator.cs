@@ -19,6 +19,8 @@ public static class ClassHandlerCreator
 {
   public static void RegisterHandler(WebServer srv, object handler, string prefix = "")
   {
+    prefix = prefix.TrimEnd('/');
+
     var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
     var handlerDescriptor = new HandlerDescriptor();
