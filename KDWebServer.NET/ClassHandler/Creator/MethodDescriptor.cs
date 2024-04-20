@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using KDWebServer.ClassHandler.Attributes;
@@ -6,7 +7,7 @@ using NJsonSchema;
 namespace KDWebServer.ClassHandler.Creator;
 
 internal record MethodDescriptor(
-    MethodInfo MethodInfo,
+    Func<object?[],object?> Callable,
     EndpointAttribute EndpointAttribute,
     List<MethodParameterDescriptor> MethodParameterDescriptors,
     string RouterPath,

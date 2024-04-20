@@ -37,7 +37,7 @@ public static class ClassHandlerCreator
     foreach (var methodDescriptor in handlerDescriptor.Methods) {
       foreach (var endpointAttributeHttpMethod in new[] { methodDescriptor.EndpointAttribute.HttpMethod }) {
         srv.AddEndpoint(methodDescriptor.RouterPath,
-                        ctx => ClassHandlerExecutor.HandleRequest(ctx, handler, methodDescriptor),
+                        ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor),
                         new HashSet<HttpMethod>() {
                             endpointAttributeHttpMethod,
                         },
@@ -233,7 +233,7 @@ public static class ClassHandlerCreator
                      .Aggregate(endpointAttribute.Endpoint, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
     return new MethodDescriptor(
-        MethodInfo: methodInfo,
+        Callable: parameters => methodInfo.Invoke(handlerDescriptor, parameters),
         EndpointAttribute: endpointAttribute,
         MethodParameterDescriptors: methodParameterDescriptors,
         RouterPath: routerPath,

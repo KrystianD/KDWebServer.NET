@@ -11,7 +11,7 @@ namespace KDWebServer.ClassHandler.Executor;
 
 internal static class ClassHandlerExecutor
 {
-  public static async Task<WebServerResponse> HandleRequest(HttpRequestContext ctx, object handler, MethodDescriptor methodDescriptor)
+  public static async Task<WebServerResponse> HandleRequest(HttpRequestContext ctx, MethodDescriptor methodDescriptor)
   {
     var pathParams = ctx.Params;
 
@@ -78,7 +78,7 @@ internal static class ClassHandlerExecutor
     }
 
     try {
-      var res = methodDescriptor.MethodInfo.Invoke(handler, call.ToArray());
+      var res = methodDescriptor.Callable(call.ToArray());
       if (res is Task task) {
         await task;
 
