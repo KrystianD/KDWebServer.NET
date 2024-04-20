@@ -61,8 +61,8 @@ public static class ClassHandlerCreator
         methodInfo.GetParameters()
                   .Select(parameterInfo => new MethodParameterDescriptor(
                               name: parameterInfo.Name!,
-                              parameterInfo: parameterInfo,
                               valueType: parameterInfo.ParameterType,
+                              isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
                               defaultValue: GetParameterDefaultValue(parameterInfo),
                               description: parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? ""))
                   .ToList();
@@ -98,7 +98,7 @@ public static class ClassHandlerCreator
         if (bodyTypeConverter == null && simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
         }
         else {
           if (bodyParameterDescriptor == null) {
@@ -124,7 +124,7 @@ public static class ClassHandlerCreator
         if (simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
         }
         else {
           throw new MethodDescriptorException($"query parameter {methodParameterDescriptor.Name} type is incorrect for query parameter: {methodParameterDescriptor.ValueType}");
