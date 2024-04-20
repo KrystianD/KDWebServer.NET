@@ -20,8 +20,8 @@ internal static class ClassHandlerExecutor
       var name = methodParameterDescriptor.Name;
       var type = methodParameterDescriptor.ValueType;
 
-      switch (methodParameterDescriptor.Type) {
-        case ParameterType.Path:
+      switch (methodParameterDescriptor.Kind) {
+        case ParameterKind.Path:
           var pathValue = (string)pathParams[methodParameterDescriptor.Name];
           try {
             call.Add(methodParameterDescriptor.PathTypeConverter!.FromStringConverter(pathValue));
@@ -32,7 +32,7 @@ internal static class ClassHandlerExecutor
           }
 
           break;
-        case ParameterType.Query:
+        case ParameterKind.Query:
           if (ctx.QueryString.TryGetString(methodParameterDescriptor.Name, out var queryValue)) {
             try {
               call.Add(methodParameterDescriptor.QueryTypeConverter!.FromStringConverter(queryValue));
@@ -54,7 +54,7 @@ internal static class ClassHandlerExecutor
           }
 
           break;
-        case ParameterType.Body:
+        case ParameterKind.Body:
           var jsonData = ctx.JsonData;
           if (jsonData is null) {
             return Response.StatusCode(400, "body is required");
@@ -69,7 +69,7 @@ internal static class ClassHandlerExecutor
 
           call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
           break;
-        case ParameterType.Context:
+        case ParameterKind.Context:
           call.Add(ctx);
           break;
         default:

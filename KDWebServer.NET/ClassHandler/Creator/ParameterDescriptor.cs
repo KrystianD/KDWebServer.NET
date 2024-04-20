@@ -11,7 +11,7 @@ internal class MethodParameterDescriptor
   public readonly DefaultValue DefaultValue;
   public readonly string Description;
 
-  public ParameterType? Type;
+  public ParameterKind? Kind;
 
   // for Path
   public SimpleTypeConverters.TypeConverter? PathTypeConverter;

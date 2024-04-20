@@ -1,6 +1,6 @@
 namespace KDWebServer.ClassHandler.Creator;
 
-internal enum ParameterType
+internal enum ParameterKind
 {
   Path, Query, Body,
   Context,

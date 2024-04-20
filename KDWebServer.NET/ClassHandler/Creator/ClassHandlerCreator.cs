@@ -78,31 +78,31 @@ public static class ClassHandlerCreator
       if (typeConverter == null)
         throw new MethodDescriptorException($"path parameter {pathParameterName} type is incorrect for path parameter: {methodParameterDescriptor.ValueType}");
 
-      methodParameterDescriptor.Type = ParameterType.Path;
+      methodParameterDescriptor.Kind = ParameterKind.Path;
       methodParameterDescriptor.PathTypeConverter = typeConverter;
     }
 
-    foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Type == null)) {
+    foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Kind == null)) {
       if (methodParameterDescriptor.ValueType == typeof(HttpRequestContext)) {
-        methodParameterDescriptor.Type = ParameterType.Context;
+        methodParameterDescriptor.Kind = ParameterKind.Context;
       }
     }
 
     // assign Query or Body to parameter descriptors
     MethodParameterDescriptor? bodyParameterDescriptor = null;
     JsonSchema? bodyJsonSchema = null;
-    foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Type == null)) {
+    foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Kind == null)) {
       var simpleTypeConverter = SimpleTypeConverters.GetConverterByType(methodParameterDescriptor.ValueType);
       if (hasBody) {
         var bodyTypeConverter = BodyTypeConverters.GetConverterByType(methodParameterDescriptor.ValueType);
         if (bodyTypeConverter == null && simpleTypeConverter != null) {
-          methodParameterDescriptor.Type = ParameterType.Query;
+          methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
         else {
           if (bodyParameterDescriptor == null) {
-            methodParameterDescriptor.Type = ParameterType.Body;
+            methodParameterDescriptor.Kind = ParameterKind.Body;
             bodyParameterDescriptor = methodParameterDescriptor;
 
             bodyJsonSchema = new JsonSchema();
@@ -122,7 +122,7 @@ public static class ClassHandlerCreator
       }
       else { // endpoint doesn't contain the body
         if (simpleTypeConverter != null) {
-          methodParameterDescriptor.Type = ParameterType.Query;
+          methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || NullabilityUtils.IsNullable(methodParameterDescriptor.ParameterInfo, out _);
         }
@@ -140,7 +140,7 @@ public static class ClassHandlerCreator
 
     var op = new OpenApiOperation();
 
-    foreach (var descriptor in methodParameterDescriptors.Where(x => x.Type == ParameterType.Path)) {
+    foreach (var descriptor in methodParameterDescriptors.Where(x => x.Kind == ParameterKind.Path)) {
       var p = new OpenApiParameter();
       p.Name = descriptor.Name;
       p.Kind = OpenApiParameterKind.Path;
@@ -152,7 +152,7 @@ public static class ClassHandlerCreator
       op.Parameters.Add(p);
     }
 
-    foreach (var descriptor in methodParameterDescriptors.Where(x => x.Type == ParameterType.Query)) {
+    foreach (var descriptor in methodParameterDescriptors.Where(x => x.Kind == ParameterKind.Query)) {
       var p = new OpenApiParameter();
       p.Name = descriptor.Name;
       p.Kind = OpenApiParameterKind.Query;
@@ -229,7 +229,7 @@ public static class ClassHandlerCreator
     item.Add(endpointAttribute.HttpMethod.ToString(), op);
 
     var routerPath = methodParameterDescriptors
-                     .Where(x => x.Type == ParameterType.Path)
+                     .Where(x => x.Kind == ParameterKind.Path)
                      .Aggregate(endpointAttribute.Endpoint, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
     return new MethodDescriptor(
