@@ -53,16 +53,18 @@ public class WebServer
     public readonly AsyncWebsocketEndpointHandler? WsCallback;
     public readonly HashSet<HttpMethod> Methods;
     public readonly bool SkipDocs;
+    public readonly Action<OpenApiOperation> DocsCreator;
 
     public bool IsWebsocket => WsCallback != null;
 
-    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs)
+    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs, Action<OpenApiOperation>? docsCreator)
     {
       Endpoint = endpoint;
       HttpCallback = httpCallback;
       WsCallback = wsCallback;
       Methods = methods;
       SkipDocs = skipDocs;
+      DocsCreator = docsCreator ?? (_ => { });
     }
   }
 
@@ -100,25 +102,28 @@ public class WebServer
     TrustedProxies = trustedProxies.ToHashSet();
   }
 
-  public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false) => AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods, skipDocs);
+  public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null)
+  {
+    AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods, skipDocs, docsCreator);
+  }
 
-  public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false)
+  public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
-    Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs)));
+    Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs, docsCreator)));
   }
 
-  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback)
+  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback, Action<OpenApiOperation>? docsCreator = null)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, false)));
+    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, false, docsCreator)));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get });
@@ -164,6 +169,8 @@ public class WebServer
         if (definition.IsWebsocket) {
           op.Summary = "websocket";
         }
+
+        definition.DocsCreator(op);
 
         item.Add(method.Method, op);
       }
