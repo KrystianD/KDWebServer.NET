@@ -21,51 +21,84 @@ public static class ClassHandlerCreator
   {
     prefix = prefix.TrimEnd('/');
 
-    var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
+    var endpoints = new List<EndpointDefinition>();
 
-    var handlerDescriptor = new HandlerDescriptor();
+    var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
     foreach (var methodInfo in methods) {
       var endpointAttribute = methodInfo.GetCustomAttribute<EndpointAttribute>();
       if (endpointAttribute == null)
         continue;
-      endpointAttribute.Endpoint = prefix + endpointAttribute.Endpoint;
-      var md = ProcessMethod(methodInfo, endpointAttribute, handlerDescriptor);
-      handlerDescriptor.Methods.Add(md);
-    }
 
-    foreach (var methodDescriptor in handlerDescriptor.Methods) {
-      foreach (var endpointAttributeHttpMethod in new[] { methodDescriptor.EndpointAttribute.HttpMethod }) {
-        srv.AddEndpoint(methodDescriptor.RouterPath,
-                        ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor),
-                        new HashSet<HttpMethod>() {
-                            endpointAttributeHttpMethod,
-                        },
-                        skipDocs: true);
+      var ret = methodInfo.ReturnType;
+      var retType = ret == typeof(Task)
+          ? typeof(void)
+          : ret.BaseType == typeof(Task)
+              ? ret.GenericTypeArguments[0]
+              : ret;
+
+      var endpointBuilder = EndpointDefinition.Create(prefix + endpointAttribute.Endpoint, endpointAttribute.HttpMethod,
+                                                      parameters => methodInfo.Invoke(handler, parameters))
+                                              .WithReturnType(retType);
+
+      foreach (var parameterInfo in methodInfo.GetParameters()) {
+        endpointBuilder.AddParameter(name: parameterInfo.Name!,
+                                     type: parameterInfo.ParameterType,
+                                     isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
+                                     parameterBuilder: builder => {
+                                       builder.WithDescription(parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? "");
+
+                                       var defaultValue = GetParameterDefaultValue(parameterInfo);
+                                       if (defaultValue.HasDefaultValue)
+                                         builder.WithDefaultValue(defaultValue.Value!);
+                                     });
       }
+
+      var categoryAttribute = methodInfo.GetCustomAttribute<CategoryAttribute>();
+      if (categoryAttribute != null) {
+        endpointBuilder.WithCategory(categoryAttribute.Category);
+      }
+
+      var descriptionAttribute = methodInfo.GetCustomAttribute<DescriptionAttribute>();
+      if (descriptionAttribute != null) {
+        endpointBuilder.WithDescription(descriptionAttribute.Description);
+      }
+
+      endpointBuilder.WithReturnDescription(methodInfo.GetCustomAttribute<ReturnDescriptionAttribute>()?.Let(x => x.Description) ?? "");
+
+      var responseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type);
+      if (responseType != null)
+        endpointBuilder.WithResponseType(responseType.Value);
+
+      endpoints.Add(endpointBuilder.Build());
     }
 
-    srv.AppendSwaggerDocument(handlerDescriptor.OpenApiDocument);
+    foreach (var endpointDef in endpoints) {
+      RegisterEndpoint(srv, endpointDef);
+    }
   }
 
-  private static MethodDescriptor ProcessMethod(MethodInfo methodInfo, EndpointAttribute endpointAttribute, HandlerDescriptor handlerDescriptor)
+  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition)
   {
-    var pathParametersNames = Regex.Matches(endpointAttribute.Endpoint, "{([^}]+)}")
+    var handlerDescriptor = new HandlerDescriptor();
+
+    var endpointPath = endpointDefinition.Path;
+
+    var pathParametersNames = Regex.Matches(endpointPath, "{([^}]+)}")
                                    .Select(x => x.Groups[1].Value)
                                    .ToHashSet();
 
-    var hasBody = endpointAttribute.HttpMethod != HttpMethod.Get;
+    var hasBody = endpointDefinition.HttpMethod != HttpMethod.Get;
 
     // get parameters of the actual code method
-    var methodParameterDescriptors =
-        methodInfo.GetParameters()
-                  .Select(parameterInfo => new MethodParameterDescriptor(
-                              name: parameterInfo.Name!,
-                              valueType: parameterInfo.ParameterType,
-                              isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
-                              defaultValue: GetParameterDefaultValue(parameterInfo),
-                              description: parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? ""))
-                  .ToList();
+    var methodParameterDescriptors = endpointDefinition.Parameters
+                                                       .Select(parameterInfo => new MethodParameterDescriptor(
+                                                                   name: parameterInfo.Name,
+                                                                   valueType: parameterInfo.Type,
+                                                                   isNullable: parameterInfo.IsNullable,
+                                                                   defaultValue: parameterInfo.ParameterBuilder.DefaultValue,
+                                                                   description: parameterInfo.ParameterBuilder.Description))
+                                                       .ToList();
 
     // match HTTP path parameters with the method parameters
     foreach (var pathParameterName in pathParametersNames) {
@@ -133,9 +166,9 @@ public static class ClassHandlerCreator
     }
 
     OpenApiPathItem? item;
-    if (!handlerDescriptor.OpenApiDocument.Paths.TryGetValue(endpointAttribute.Endpoint, out item)) {
+    if (!handlerDescriptor.OpenApiDocument.Paths.TryGetValue(endpointPath, out item)) {
       item = new OpenApiPathItem();
-      handlerDescriptor.OpenApiDocument.Paths[endpointAttribute.Endpoint] = item;
+      handlerDescriptor.OpenApiDocument.Paths[endpointPath] = item;
     }
 
     var op = new OpenApiOperation();
@@ -173,17 +206,12 @@ public static class ClassHandlerCreator
     }
 
     var response = new OpenApiResponse() {
-        Description = methodInfo.GetCustomAttribute<ReturnDescriptionAttribute>()?.Let(x => x.Description) ?? "",
+        Description = endpointDefinition.ReturnDescription,
     };
 
-    var ret = methodInfo.ReturnType;
-    var retType = ret == typeof(Task)
-        ? typeof(void)
-        : ret.BaseType == typeof(Task)
-            ? ret.GenericTypeArguments[0]
-            : ret;
+    var retType = endpointDefinition.ReturnType;
 
-    var methodResponseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type) ?? ResponseTypeEnum.Json;
+    var methodResponseType = endpointDefinition.ResponseType;
 
     if (methodResponseType == ResponseTypeEnum.Text) {
       if (retType == typeof(string)) {
@@ -213,32 +241,35 @@ public static class ClassHandlerCreator
 
     op.Responses.Add("200", response);
 
-    var categoryAttribute = methodInfo.GetCustomAttribute<CategoryAttribute>();
-    if (categoryAttribute != null) {
-      op.Tags = new List<string>() {
-          categoryAttribute.Category,
-      };
+    var category = endpointDefinition.Category;
+    if (category != "") {
+      op.Tags = new List<string>() { category };
     }
 
-    var descriptionAttribute = methodInfo.GetCustomAttribute<DescriptionAttribute>();
-    if (descriptionAttribute != null) {
-      op.Summary = descriptionAttribute.Description;
-      op.Description = descriptionAttribute.Description;
+    var description = endpointDefinition.Description;
+    if (description != "") {
+      op.Summary = description;
+      op.Description = description;
     }
 
-    item.Add(endpointAttribute.HttpMethod.ToString(), op);
+    item.Add(endpointDefinition.HttpMethod.ToString(), op);
 
     var routerPath = methodParameterDescriptors
                      .Where(x => x.Kind == ParameterKind.Path)
-                     .Aggregate(endpointAttribute.Endpoint, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
+                     .Aggregate(endpointPath, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
-    return new MethodDescriptor(
-        Callable: parameters => methodInfo.Invoke(handlerDescriptor, parameters),
-        EndpointAttribute: endpointAttribute,
+    var methodDescriptor = new MethodDescriptor(
+        Callable: endpointDefinition.Handler,
         MethodParameterDescriptors: methodParameterDescriptors,
-        RouterPath: routerPath,
         BodyJsonSchema: bodyJsonSchema,
         MethodResponseType: methodResponseType);
+
+    srv.AddEndpoint(routerPath,
+                    ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor),
+                    new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
+                    skipDocs: true);
+
+    srv.AppendSwaggerDocument(handlerDescriptor.OpenApiDocument);
   }
 
   private static DefaultValue GetParameterDefaultValue(ParameterInfo parameterInfo)
