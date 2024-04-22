@@ -66,6 +66,11 @@ public static class ClassHandlerCreator
 
       endpointBuilder.WithReturnDescription(methodInfo.GetCustomAttribute<ReturnDescriptionAttribute>()?.Let(x => x.Description) ?? "");
 
+      var obsoleteAttribute = methodInfo.GetCustomAttribute<ObsoleteAttribute>();
+      if (obsoleteAttribute != null) {
+        endpointBuilder.WithDeprecated(true);
+      }
+
       var responseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type);
       if (responseType != null)
         endpointBuilder.WithResponseType(responseType.Value);
@@ -250,6 +255,10 @@ public static class ClassHandlerCreator
     if (description != "") {
       op.Summary = description;
       op.Description = description;
+    }
+
+    if (endpointDefinition.IsDeprecated) {
+      op.IsDeprecated = true;
     }
 
     item.Add(endpointDefinition.HttpMethod.ToString(), op);

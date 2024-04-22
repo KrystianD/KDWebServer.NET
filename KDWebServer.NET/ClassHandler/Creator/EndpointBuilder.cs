@@ -19,6 +19,7 @@ public class EndpointDefinition
   public string Description = "";
   public string Category = "";
   public string ReturnDescription = "";
+  public bool IsDeprecated = false;
   public ResponseTypeEnum ResponseType = ResponseTypeEnum.Json;
   public readonly List<ParameterDefinition> Parameters = new();
 
@@ -71,6 +72,12 @@ public class EndpointBuilder
   public EndpointBuilder WithReturnDescription(string returnDescription)
   {
     Endpoint.ReturnDescription = returnDescription;
+    return this;
+  }
+
+  public EndpointBuilder WithDeprecated(bool deprecated = true)
+  {
+    Endpoint.IsDeprecated = deprecated;
     return this;
   }
 
