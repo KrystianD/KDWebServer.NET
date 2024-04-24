@@ -134,6 +134,11 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Default = defaultValueAttribute.Value;
       }
 
+      var descriptionAttribute = memberInfo.GetCustomAttribute<DescriptionAttribute>();
+      if (descriptionAttribute != null) {
+        jsonSchemaProperty.Description = descriptionAttribute.Description;
+      }
+
       DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
