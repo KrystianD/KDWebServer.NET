@@ -57,7 +57,12 @@ public class WebServer
 
     public bool IsWebsocket => WsCallback != null;
 
-    public EndpointDefinition(string endpoint, AsyncEndpointHandler? httpCallback, AsyncWebsocketEndpointHandler? wsCallback, HashSet<HttpMethod> methods, bool skipDocs, Action<OpenApiOperation>? docsCreator)
+    public EndpointDefinition(string endpoint,
+                              AsyncEndpointHandler? httpCallback,
+                              AsyncWebsocketEndpointHandler? wsCallback,
+                              HashSet<HttpMethod> methods,
+                              bool skipDocs,
+                              Action<OpenApiOperation>? docsCreator)
     {
       Endpoint = endpoint;
       HttpCallback = httpCallback;
