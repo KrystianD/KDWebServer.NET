@@ -72,6 +72,10 @@ public static class ClassHandlerCreator
         endpointBuilder.WithDeprecated(true);
       }
 
+      if (methodInfo.GetCustomAttribute<RunOnThreadPoolAttribute>() != null) {
+        endpointBuilder.WithRunOnThreadPool(true);
+      }
+
       var responseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type);
       if (responseType != null)
         endpointBuilder.WithResponseType(responseType.Value);
@@ -283,7 +287,8 @@ public static class ClassHandlerCreator
     srv.AddEndpoint(routerPath,
                     ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor),
                     new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
-                    skipDocs: true);
+                    skipDocs: true,
+                    runOnThreadPool: endpointDefinition.RunOnThreadPool);
 
     srv.AppendSwaggerDocument(handlerDescriptor.OpenApiDocument);
   }

@@ -19,6 +19,7 @@ public class EndpointDefinition
   public string ReturnDescription = "";
   public bool IsDeprecated = false;
   public ResponseTypeEnum ResponseType = ResponseTypeEnum.Json;
+  public bool RunOnThreadPool = false;
   public readonly List<ParameterDefinition> Parameters = new();
 
   private EndpointDefinition(string path, HttpMethod httpMethod)
@@ -80,6 +81,12 @@ public class EndpointBuilder
   public EndpointBuilder WithResponseType(ResponseTypeEnum responseType)
   {
     Endpoint.ResponseType = responseType;
+    return this;
+  }
+
+  public EndpointBuilder WithRunOnThreadPool(bool runOnThreadPool = true)
+  {
+    Endpoint.RunOnThreadPool = runOnThreadPool;
     return this;
   }
 

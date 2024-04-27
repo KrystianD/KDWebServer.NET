@@ -67,7 +67,9 @@ public class WebsocketClientHandler
           .Log();
 
     try {
-      if (WebServer.SynchronizationContext == null)
+      if (Match.Endpoint.RunOnThreadPool)
+        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
+      else if (WebServer.SynchronizationContext == null)
         await Match.Endpoint.WsCallback!(ctx).ConfigureAwait(false);
       else
         await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx)).ConfigureAwait(false);
