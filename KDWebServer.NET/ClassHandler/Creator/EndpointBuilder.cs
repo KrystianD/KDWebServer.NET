@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.ClassHandler.Attributes;
 
@@ -13,7 +12,6 @@ public class EndpointDefinition
 
   public readonly string Path;
   public readonly HttpMethod HttpMethod;
-  public readonly Func<object?[], object?> Handler;
 
   public Type ReturnType = typeof(object);
   public string Description = "";
@@ -23,15 +21,13 @@ public class EndpointDefinition
   public ResponseTypeEnum ResponseType = ResponseTypeEnum.Json;
   public readonly List<ParameterDefinition> Parameters = new();
 
-  private EndpointDefinition(string path, HttpMethod httpMethod, Func<object?[], object?> handler)
+  private EndpointDefinition(string path, HttpMethod httpMethod)
   {
     Path = path;
     HttpMethod = httpMethod;
-    Handler = handler;
   }
 
-  public static EndpointBuilder Create(string path, HttpMethod method, Func<object?[], object?> handler) => new(new EndpointDefinition(path, method, handler));
-  public static EndpointBuilder Create(string path, HttpMethod method, Func<object?[], Task<object?>> handler) => new(new EndpointDefinition(path, method, handler));
+  public static EndpointBuilder Create(string path, HttpMethod method) => new(new EndpointDefinition(path, method));
 }
 
 public class EndpointBuilder

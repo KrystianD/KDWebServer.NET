@@ -17,11 +17,13 @@ namespace KDWebServer.ClassHandler.Creator;
 
 public static class ClassHandlerCreator
 {
+  private record EndpointDefinitionWithHandler(EndpointDefinition EndpointDefinition, Func<object?[], object?> Handler);
+
   public static void RegisterHandler(WebServer srv, object handler, string prefix = "")
   {
     prefix = prefix.TrimEnd('/');
 
-    var endpoints = new List<EndpointDefinition>();
+    var endpoints = new List<EndpointDefinitionWithHandler>();
 
     var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
@@ -37,8 +39,7 @@ public static class ClassHandlerCreator
               ? ret.GenericTypeArguments[0]
               : ret;
 
-      var endpointBuilder = EndpointDefinition.Create(prefix + endpointAttribute.Endpoint, endpointAttribute.HttpMethod,
-                                                      parameters => methodInfo.Invoke(handler, parameters))
+      var endpointBuilder = EndpointDefinition.Create(prefix + endpointAttribute.Endpoint, endpointAttribute.HttpMethod)
                                               .WithReturnType(retType);
 
       foreach (var parameterInfo in methodInfo.GetParameters()) {
@@ -75,15 +76,21 @@ public static class ClassHandlerCreator
       if (responseType != null)
         endpointBuilder.WithResponseType(responseType.Value);
 
-      endpoints.Add(endpointBuilder.Build());
+      endpoints.Add(new EndpointDefinitionWithHandler(endpointBuilder.Build(),
+                                                      parameters => methodInfo.Invoke(handler, parameters)));
     }
 
     foreach (var endpointDef in endpoints) {
-      RegisterEndpoint(srv, endpointDef);
+      RegisterEndpoint(srv, endpointDef.EndpointDefinition, endpointDef.Handler);
     }
   }
 
-  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition)
+  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], Task<object?>> handler)
+  {
+    RegisterEndpoint(srv, endpointDefinition, (Func<object?[], object?>)handler);
+  }
+
+  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], object?> handler)
   {
     var handlerDescriptor = new HandlerDescriptor();
 
@@ -268,7 +275,7 @@ public static class ClassHandlerCreator
                      .Aggregate(endpointPath, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
     var methodDescriptor = new MethodDescriptor(
-        Callable: endpointDefinition.Handler,
+        Callable: handler,
         MethodParameterDescriptors: methodParameterDescriptors,
         BodyJsonSchema: bodyJsonSchema,
         MethodResponseType: methodResponseType);
