@@ -8,8 +8,7 @@ internal class MethodParameterDescriptor
 
   public readonly Type ValueType;
   public readonly bool IsNullable;
-  public readonly DefaultValue DefaultValue;
-  public readonly string Description;
+  public readonly MethodParameterBuilder ParameterBuilder;
 
   public ParameterKind? Kind;
 
@@ -20,12 +19,11 @@ internal class MethodParameterDescriptor
   public SimpleTypeConverters.TypeConverter? QueryTypeConverter;
   public bool? QueryIsNullable;
 
-  public MethodParameterDescriptor(string name, Type valueType, bool isNullable, DefaultValue defaultValue, string description)
+  public MethodParameterDescriptor(string name, Type valueType, bool isNullable, MethodParameterBuilder parameterBuilder)
   {
     Name = name;
     ValueType = valueType;
     IsNullable = isNullable;
-    DefaultValue = defaultValue;
-    Description = description;
+    ParameterBuilder = parameterBuilder;
   }
 }

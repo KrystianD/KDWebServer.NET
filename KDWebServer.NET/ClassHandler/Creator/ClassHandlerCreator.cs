@@ -112,8 +112,7 @@ public static class ClassHandlerCreator
                                                                    name: parameterInfo.Name,
                                                                    valueType: parameterInfo.Type,
                                                                    isNullable: parameterInfo.IsNullable,
-                                                                   defaultValue: parameterInfo.ParameterBuilder.DefaultValue,
-                                                                   description: parameterInfo.ParameterBuilder.Description))
+                                                                   parameterBuilder: parameterInfo.ParameterBuilder))
                                                        .ToList();
 
     // match HTTP path parameters with the method parameters
@@ -147,7 +146,7 @@ public static class ClassHandlerCreator
         if (bodyTypeConverter == null && simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
         }
         else {
           if (bodyParameterDescriptor == null) {
@@ -173,7 +172,7 @@ public static class ClassHandlerCreator
         if (simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
         }
         else {
           throw new MethodDescriptorException($"query parameter {methodParameterDescriptor.Name} type is incorrect for query parameter: {methodParameterDescriptor.ValueType}");
@@ -310,9 +309,9 @@ public static class ClassHandlerCreator
 
   private static void FillFromDesc(OpenApiParameter p, MethodParameterDescriptor pd)
   {
-    if (pd.DefaultValue.HasDefaultValue)
-      p.Default = pd.DefaultValue.Value;
+    if (pd.ParameterBuilder.DefaultValue.HasDefaultValue)
+      p.Default = pd.ParameterBuilder.DefaultValue.Value;
 
-    p.Description = pd.Description;
+    p.Description = pd.ParameterBuilder.Description;
   }
 }

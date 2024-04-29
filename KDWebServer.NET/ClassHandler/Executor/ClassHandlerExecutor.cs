@@ -42,8 +42,8 @@ internal static class ClassHandlerExecutor
               return Response.StatusCode(400, s);
             }
           }
-          else if (methodParameterDescriptor.DefaultValue.HasDefaultValue) {
-            call.Add(methodParameterDescriptor.DefaultValue.Value);
+          else if (methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue) {
+            call.Add(methodParameterDescriptor.ParameterBuilder.DefaultValue.Value);
           }
           else if (methodParameterDescriptor.QueryIsNullable!.Value) {
             call.Add(null);
