@@ -50,8 +50,6 @@ public class WebsocketRequestContext
   // WebSocket
   internal readonly AsyncProducerConsumerQueue<WebsocketOutgoingMessage> SenderQ;
 
-  internal readonly TaskCompletionSource<Exception> ErrorTcs = new();
-
   internal WebsocketRequestContext(HttpListenerContext httpContext,
                                    IPAddress remoteEndpoint,
                                    RequestDispatcher.RouteEndpointMatch match,

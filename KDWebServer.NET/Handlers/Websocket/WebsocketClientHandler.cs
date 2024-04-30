@@ -93,11 +93,9 @@ public class WebsocketClientHandler
             .Log();
 
       senderQueueToken.Cancel();
-      ctx.ErrorTcs.TrySetResult(new WebSocketError());
     }
     catch (OperationCanceledException) {
       senderQueueToken.Cancel();
-      ctx.ErrorTcs.TrySetResult(new WebSocketError());
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "server is being shut down", new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
@@ -114,7 +112,6 @@ public class WebsocketClientHandler
             .Log();
 
       senderQueueToken.Cancel();
-      ctx.ErrorTcs.TrySetResult(new WebSocketDisconnect());
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
