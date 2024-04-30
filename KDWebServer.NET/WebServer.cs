@@ -141,8 +141,12 @@ public class WebServer
 
   public void AppendSwaggerDocument(OpenApiDocument doc)
   {
-    foreach (var (key, value) in doc.Definitions) {
-      _openApiDocument.Definitions[key] = value;
+    foreach (var (name, jsonSchema) in doc.Definitions) {
+      if (!_openApiDocument.Definitions.TryAdd(name, jsonSchema)) {
+        if (!ReferenceEquals(jsonSchema, _openApiDocument.Definitions[name])) {
+          jsonSchema.Reference = _openApiDocument.Definitions[name];
+        }
+      }
     }
 
     foreach (var (path, newPathItem) in doc.Paths) {
