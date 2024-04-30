@@ -109,6 +109,18 @@ public static class ClassHandlerCreator
     srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
   }
 
+  public static void RegisterWebsocketEndpoint(WebServer srv, EndpointDefinition endpointDefinition, WebServer.AsyncWebsocketEndpointHandler handler)
+  {
+    var endpointDescriptor = CreateEndpointDescriptor(endpointDefinition);
+
+    srv.AddWsEndpoint(endpointDescriptor.RouterPath,
+                      handler,
+                      skipDocs: true,
+                      runOnThreadPool: endpointDefinition.RunOnThreadPool);
+
+    srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
+  }
+
   private static EndpointDescriptor CreateEndpointDescriptor(EndpointDefinition endpointDefinition)
   {
     var openApiDocument = new OpenApiDocument();
