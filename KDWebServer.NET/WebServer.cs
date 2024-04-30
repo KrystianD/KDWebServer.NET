@@ -42,7 +42,7 @@ public class WebServer
 
   public delegate WebServerResponse EndpointHandler(HttpRequestContext ctx);
 
-  public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx);
+  public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx, CancellationToken token);
 
   private HttpListener? _listener;
 

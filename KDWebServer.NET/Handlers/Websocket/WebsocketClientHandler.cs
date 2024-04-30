@@ -56,6 +56,10 @@ public class WebsocketClientHandler
         }
         catch (TaskCanceledException) {
         }
+        catch (WebSocketException) {
+          senderQueueToken.Cancel();
+          ctx.SenderQ.CompleteAdding();
+        }
       }
     }, senderQueueToken.Token);
 
@@ -68,11 +72,11 @@ public class WebsocketClientHandler
 
     try {
       if (Match.Endpoint.RunOnThreadPool)
-        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
+        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
       else if (WebServer.SynchronizationContext == null)
-        await Match.Endpoint.WsCallback!(ctx).ConfigureAwait(false);
+        await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false);
       else
-        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx)).ConfigureAwait(false);
+        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token)).ConfigureAwait(false);
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
@@ -94,15 +98,19 @@ public class WebsocketClientHandler
 
       senderQueueToken.Cancel();
     }
-    catch (OperationCanceledException) {
-      senderQueueToken.Cancel();
+    catch (WebSocketDisconnect) {
+      Logger.ForTraceEvent()
+            .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
+            .Properties(props)
+            .Log();
 
-      try {
-        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, "server is being shut down", new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
-      }
-      catch (Exception) {
-        ws.Abort();
-      }
+      senderQueueToken.Cancel();
+    }
+    catch (TaskCanceledException) when (senderQueueToken.IsCancellationRequested) {
+      Logger.ForTraceEvent()
+            .Message($"[{ClientId}] WS connection has been closed - {logSuffix}")
+            .Properties(props)
+            .Log();
     }
     catch (Exception e) {
       Logger.ForErrorEvent()
@@ -119,6 +127,15 @@ public class WebsocketClientHandler
       catch {
         ws.Abort();
       }
+    }
+    finally {
+      ctx.SenderQ.CompleteAdding();
+
+      // ReSharper disable MethodHasAsyncOverloadWithCancellation
+      while (ctx.SenderQ.OutputAvailable()) {
+        ctx.SenderQ.Dequeue();
+      }
+      // ReSharper restore MethodHasAsyncOverloadWithCancellation
     }
   }
 }

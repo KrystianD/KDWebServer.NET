@@ -119,7 +119,13 @@ public class WebsocketRequestContext
         MessageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary,
         OnSent = onSent,
     };
-    SenderQ.Enqueue(msg, token);
+
+    try {
+      SenderQ.Enqueue(msg, token);
+    }
+    catch (InvalidOperationException) {
+      throw new WebSocketDisconnect();
+    }
   }
 
   public async Task EnqueueAsync(string data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
@@ -135,7 +141,13 @@ public class WebsocketRequestContext
         MessageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary,
         OnSent = onSent,
     };
-    await SenderQ.EnqueueAsync(msg, token);
+
+    try {
+      await SenderQ.EnqueueAsync(msg, token);
+    }
+    catch (InvalidOperationException) {
+      throw new WebSocketDisconnect();
+    }
   }
 
   public async Task Close() => await Close(WebSocketCloseStatus.NormalClosure);
