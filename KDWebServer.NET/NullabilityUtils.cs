@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace KDWebServer;
 
+[PublicAPI]
 public static class NullabilityUtils
 {
   public static bool IsNullable(Type type, out Type innerType) =>
@@ -23,19 +24,15 @@ public static class NullabilityUtils
 
   public static bool IsNullable(MemberInfo memberInfo, out Type innerType)
   {
-    if (memberInfo is PropertyInfo propertyInfo) {
-      return IsNullable(propertyInfo, out innerType);
-    }
-    else if (memberInfo is FieldInfo fieldInfo) {
-      return IsNullable(fieldInfo, out innerType);
-    }
-    else {
-      throw new ArgumentException("memberInfo must be an instance of PropertyInfo or FieldInfo", nameof(memberInfo));
-    }
+    return memberInfo switch {
+        PropertyInfo propertyInfo => IsNullable(propertyInfo, out innerType),
+        FieldInfo fieldInfo => IsNullable(fieldInfo, out innerType),
+        _ => throw new ArgumentException("memberInfo must be an instance of PropertyInfo or FieldInfo", nameof(memberInfo)),
+    };
   }
 
   private static bool IsNullableHelper(Type memberType, MemberInfo? declaringType, IEnumerable<CustomAttributeData> customAttributes,
-                                       [NotNullWhen(true)] out Type innerType)
+                                       out Type innerType)
   {
     if (memberType.IsValueType) {
       var underlyingType = Nullable.GetUnderlyingType(memberType);
