@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using JetBrains.Annotations;
 using KDWebServer.Exceptions;
 using NLog;
 
@@ -9,6 +10,7 @@ namespace KDWebServer.Handlers;
 
 public class RequestDispatcher
 {
+  [PublicAPI]
   public record RouteEndpointMatch(
       WebServer.EndpointDefinition Endpoint,
       HttpMethod Method,

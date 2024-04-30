@@ -31,6 +31,7 @@ public class EndpointDefinition
   public static EndpointBuilder Create(string path, HttpMethod method) => new(new EndpointDefinition(path, method));
 }
 
+[PublicAPI]
 public class EndpointBuilder
 {
   private EndpointDefinition Endpoint { get; }
