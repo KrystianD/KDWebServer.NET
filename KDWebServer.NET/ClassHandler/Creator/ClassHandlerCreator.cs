@@ -197,6 +197,8 @@ public static class ClassHandlerCreator
       p.Schema = new JsonSchema();
       handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
       FillFromDesc(p, descriptor);
+      foreach (var value in descriptor.ParameterBuilder.DropdownItems)
+        p.Schema.Enumeration.Add(value);
       op.Parameters.Add(p);
     }
 
@@ -209,6 +211,8 @@ public static class ClassHandlerCreator
       p.Schema = new JsonSchema();
       handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
       FillFromDesc(p, descriptor);
+      foreach (var value in descriptor.ParameterBuilder.DropdownItems)
+        p.Schema.Enumeration.Add(value);
       op.Parameters.Add(p);
     }
 

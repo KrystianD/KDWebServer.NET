@@ -98,6 +98,7 @@ public class MethodParameterBuilder
 {
   internal string Description = "";
   internal DefaultValue DefaultValue = new(false, null);
+  internal List<object?> DropdownItems = new();
 
   public MethodParameterBuilder WithDescription(string description)
   {
@@ -108,6 +109,18 @@ public class MethodParameterBuilder
   public MethodParameterBuilder WithDefaultValue(object defaultValue)
   {
     DefaultValue = new(true, defaultValue);
+    return this;
+  }
+
+  public MethodParameterBuilder AddDropdownItem(object? value)
+  {
+    DropdownItems.Add(value);
+    return this;
+  }
+
+  public MethodParameterBuilder AddDropdownItems(IEnumerable<object?> values)
+  {
+    DropdownItems.AddRange(values);
     return this;
   }
 }
