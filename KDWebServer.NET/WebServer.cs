@@ -141,10 +141,20 @@ public class WebServer
 
   public void AppendSwaggerDocument(OpenApiDocument doc)
   {
-    foreach (var (key, value) in doc.Definitions)
+    foreach (var (key, value) in doc.Definitions) {
       _openApiDocument.Definitions[key] = value;
-    foreach (var (key, value) in doc.Paths)
-      _openApiDocument.Paths[key] = value;
+    }
+
+    foreach (var (path, newPathItem) in doc.Paths) {
+      if (!_openApiDocument.Paths.TryGetValue(path, out var pathItem)) {
+        pathItem = new OpenApiPathItem();
+        _openApiDocument.Paths[path] = pathItem;
+      }
+
+      foreach (var (method, openApiOperation) in newPathItem) {
+        pathItem.Add(method, openApiOperation);
+      }
+    }
   }
 
   public void AddSwaggerEndpoint(string endpoint)
