@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Exceptions;
 using KDWebServer.ClassHandler.Executor;
@@ -15,6 +16,7 @@ using NSwag;
 
 namespace KDWebServer.ClassHandler.Creator;
 
+[PublicAPI]
 public static class ClassHandlerCreator
 {
   private record EndpointDefinitionWithHandler(EndpointDefinition EndpointDefinition, Func<object?[], object?> Handler);
@@ -94,9 +96,23 @@ public static class ClassHandlerCreator
     RegisterEndpoint(srv, endpointDefinition, (Func<object?[], object?>)handler);
   }
 
-  private static MethodDescriptor CreateHandler(EndpointDefinition endpointDefinition)
+  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], object?> handler)
   {
-    var handlerDescriptor = new HandlerDescriptor();
+    var endpointDescriptor = CreateEndpointDescriptor(endpointDefinition);
+
+    srv.AddEndpoint(endpointDescriptor.RouterPath,
+                    ctx => ClassHandlerExecutor.HandleRequest(ctx, endpointDescriptor, handler),
+                    new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
+                    skipDocs: true,
+                    runOnThreadPool: endpointDefinition.RunOnThreadPool);
+
+    srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
+  }
+
+  private static EndpointDescriptor CreateEndpointDescriptor(EndpointDefinition endpointDefinition)
+  {
+    var openApiDocument = new OpenApiDocument();
+    var typeSchemaRegistry = new TypeSchemaRegistry(openApiDocument);
 
     var endpointPath = endpointDefinition.Path;
 
@@ -157,7 +173,7 @@ public static class ClassHandlerCreator
 
             if (bodyTypeConverter == null) {
               var type = methodParameterDescriptor.ValueType;
-              handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(type, bodyJsonSchema);
+              typeSchemaRegistry.ApplyTypeToJsonSchema(type, bodyJsonSchema);
             }
             else {
               bodyTypeConverter.ApplyToJsonSchema(bodyJsonSchema);
@@ -181,9 +197,9 @@ public static class ClassHandlerCreator
     }
 
     OpenApiPathItem? item;
-    if (!handlerDescriptor.OpenApiDocument.Paths.TryGetValue(endpointPath, out item)) {
+    if (!openApiDocument.Paths.TryGetValue(endpointPath, out item)) {
       item = new OpenApiPathItem();
-      handlerDescriptor.OpenApiDocument.Paths[endpointPath] = item;
+      openApiDocument.Paths[endpointPath] = item;
     }
 
     var op = new OpenApiOperation();
@@ -195,7 +211,7 @@ public static class ClassHandlerCreator
       p.IsRequired = true;
 
       p.Schema = new JsonSchema();
-      handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
+      typeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
       FillFromDesc(p, descriptor);
       foreach (var value in descriptor.ParameterBuilder.DropdownItems)
         p.Schema.Enumeration.Add(value);
@@ -209,7 +225,7 @@ public static class ClassHandlerCreator
       p.IsRequired = !descriptor.QueryIsNullable!.Value;
 
       p.Schema = new JsonSchema();
-      handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
+      typeSchemaRegistry.ApplyTypeToJsonSchema(descriptor.ValueType, p.Schema);
       FillFromDesc(p, descriptor);
       foreach (var value in descriptor.ParameterBuilder.DropdownItems)
         p.Schema.Enumeration.Add(value);
@@ -249,7 +265,7 @@ public static class ClassHandlerCreator
     else {
       if (retType != typeof(void)) {
         var jsonSchema = new JsonSchema();
-        handlerDescriptor.TypeSchemaRegistry.ApplyTypeToJsonSchema(retType, jsonSchema);
+        typeSchemaRegistry.ApplyTypeToJsonSchema(retType, jsonSchema);
         var od = new OpenApiMediaType() {
             Schema = jsonSchema,
         };
@@ -281,25 +297,13 @@ public static class ClassHandlerCreator
                      .Where(x => x.Kind == ParameterKind.Path)
                      .Aggregate(endpointDefinition.Path, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
-    return new MethodDescriptor(
-        HandlerDescriptor: handlerDescriptor,
+    return new EndpointDescriptor(
+        OpenApiDocument: openApiDocument,
+        TypeSchemaRegistry: typeSchemaRegistry,
         MethodParameterDescriptors: methodParameterDescriptors,
         RouterPath: routerPath,
         BodyJsonSchema: bodyJsonSchema,
         MethodResponseType: methodResponseType);
-  }
-
-  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], object?> handler)
-  {
-    var methodDescriptor = CreateHandler(endpointDefinition);
-
-    srv.AddEndpoint(methodDescriptor.RouterPath,
-                    ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor, handler),
-                    new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
-                    skipDocs: true,
-                    runOnThreadPool: endpointDefinition.RunOnThreadPool);
-
-    srv.AppendSwaggerDocument(methodDescriptor.HandlerDescriptor.OpenApiDocument);
   }
 
   private static DefaultValue GetParameterDefaultValue(ParameterInfo parameterInfo)

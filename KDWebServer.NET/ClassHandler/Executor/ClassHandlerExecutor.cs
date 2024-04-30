@@ -11,12 +11,12 @@ namespace KDWebServer.ClassHandler.Executor;
 
 internal static class ClassHandlerExecutor
 {
-  public static async Task<WebServerResponse> HandleRequest(HttpRequestContext ctx, MethodDescriptor methodDescriptor, Func<object?[], object?> handler)
+  public static async Task<WebServerResponse> HandleRequest(HttpRequestContext ctx, EndpointDescriptor endpointDescriptor, Func<object?[], object?> handler)
   {
     var pathParams = ctx.Params;
 
     var call = new List<object?>();
-    foreach (var methodParameterDescriptor in methodDescriptor.MethodParameterDescriptors) {
+    foreach (var methodParameterDescriptor in endpointDescriptor.MethodParameterDescriptors) {
       var name = methodParameterDescriptor.Name;
       var type = methodParameterDescriptor.ValueType;
 
@@ -60,7 +60,7 @@ internal static class ClassHandlerExecutor
             return Response.StatusCode(400, "body is required");
           }
 
-          var errors = methodDescriptor.BodyJsonSchema!.Validate(jsonData);
+          var errors = endpointDescriptor.BodyJsonSchema!.Validate(jsonData);
 
           if (errors.Count > 0) {
             var s = "validation errors:\n" + string.Join("\n", errors.Select(x => $"- {x}"));
@@ -97,7 +97,7 @@ internal static class ClassHandlerExecutor
       return res switch {
           WebServerResponse resp => resp,
           null => Response.StatusCode(200),
-          _ => methodDescriptor.MethodResponseType switch {
+          _ => endpointDescriptor.MethodResponseType switch {
               ResponseTypeEnum.Json => Response.Json(res),
               ResponseTypeEnum.Text => Response.Text((string)res),
               _ => throw new Exception("invalid enum value"),
