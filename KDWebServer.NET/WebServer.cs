@@ -124,14 +124,14 @@ public class WebServer
     Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs, docsCreator, runOnThreadPool)));
   }
 
-  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, false, docsCreator, runOnThreadPool)));
+    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, skipDocs, docsCreator, runOnThreadPool)));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback, Action<OpenApiOperation>? docsCreator = null) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get }, skipDocs: false, docsCreator);
