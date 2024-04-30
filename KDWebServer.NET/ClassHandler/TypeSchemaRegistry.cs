@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -118,10 +117,10 @@ internal class TypeSchemaRegistry
         AllowAdditionalProperties = false,
     };
 
-    var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(x => ((MemberInfo)x, x.FieldType))
-                      .Concat(type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(x => ((MemberInfo)x, x.PropertyType)));
+    var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x)
+                      .Concat(type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x));
 
-    foreach (var (memberInfo, fieldType) in members) {
+    foreach (var memberInfo in members) {
       var jsonSchemaProperty = new JsonSchemaProperty();
 
       var exampleAttribute = memberInfo.GetCustomAttribute<ExampleAttribute>();
@@ -218,6 +217,7 @@ internal class TypeSchemaRegistry
     }
   }
 
+  // ReSharper disable once UnusedParameter.Local
   private static void DeterminePropertiesFromDataMember(MemberInfo memberInfo, DataMemberAttribute dataMemberAttribute, JsonSchemaProperty jsonSchemaProperty, bool isNullable, out string name)
   {
     name = dataMemberAttribute.Name!;

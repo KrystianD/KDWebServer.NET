@@ -125,18 +125,18 @@ public class QueryStringValuesCollection
 
   public Value GetValue(string name)
   {
-    if (!_valuesCollections.ContainsKey(name))
+    if (!_valuesCollections.TryGetValue(name, out var collection))
       throw new KeyNotFoundException($"key /{name}/ is not present");
 
-    return _valuesCollections[name].GetSingleValue();
+    return collection.GetSingleValue();
   }
 
   public ValuesCollection GetValues(string name)
   {
-    if (!_valuesCollections.ContainsKey(name))
+    if (!_valuesCollections.TryGetValue(name, out var values))
       throw new IndexOutOfRangeException();
 
-    return _valuesCollections[name];
+    return values;
   }
 
   public string GetString(string name) => TryGetString(name, out var value) ? value : throw new IndexOutOfRangeException();

@@ -35,24 +35,11 @@ public static class SimpleTypeConverters
             x.Type = JsonObjectType.Boolean;
           },
           str => {
-            switch (str.ToLower()) {
-              case "1":
-              case "y":
-              case "yes":
-              case "on":
-              case "t":
-              case "true":
-                return true;
-              case "0":
-              case "n":
-              case "no":
-              case "off":
-              case "false":
-              case "f":
-                return false;
-              default:
-                throw new FormatException($"invalid boolean value: {str}");
-            }
+            return str.ToLower() switch {
+                "1" or "y" or "yes" or "on" or "t" or "true" => true,
+                "0" or "n" or "no" or "off" or "false" or "f" => false,
+                _ => throw new FormatException($"invalid boolean value: {str}"),
+            };
           }),
       new(typeof(string), "string",
           x => {
@@ -107,7 +94,7 @@ public static class SimpleTypeConverters
         var value = (Enum)enumValues.GetValue(i)!;
 
         FieldInfo fieldInfo = value.GetType().GetField(value.ToString())!;
-        var attribute = (EnumMemberAttribute)fieldInfo.GetCustomAttribute(typeof(EnumMemberAttribute))!;
+        var attribute = (EnumMemberAttribute?)fieldInfo.GetCustomAttribute(typeof(EnumMemberAttribute));
         if (attribute?.Value is null)
           throw new ArgumentException("all enum items must have EnumMember attribute set and not null");
 
@@ -135,12 +122,7 @@ public static class SimpleTypeConverters
                                  innerTypeConverter.ApplyToJsonSchema(x);
                                  x.IsNullableRaw = true;
                                },
-                               x => {
-                                 if (x == null!)
-                                   return null!;
-                                 else
-                                   return innerTypeConverter.FromStringConverter(x);
-                               });
+                               x => x == null! ? null! : innerTypeConverter.FromStringConverter(x));
     }
 
     return Converters.Find(x => x.Type == type);

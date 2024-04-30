@@ -173,6 +173,7 @@ public class WebsocketRequestContext
 
     ms.Seek(0, SeekOrigin.Begin);
 
+    // ReSharper disable once ConvertIfStatementToSwitchStatement
     if (result.MessageType == WebSocketMessageType.Close) {
       throw new WebSocketDisconnect();
     }

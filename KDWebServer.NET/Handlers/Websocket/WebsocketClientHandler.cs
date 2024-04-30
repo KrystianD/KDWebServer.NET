@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Nito.AsyncEx;
 using NLog;
-using NLog.Fluent;
 
 namespace KDWebServer.Handlers.Websocket;
 
