@@ -94,7 +94,7 @@ public static class ClassHandlerCreator
     RegisterEndpoint(srv, endpointDefinition, (Func<object?[], object?>)handler);
   }
 
-  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], object?> handler)
+  private static MethodDescriptor CreateHandler(EndpointDefinition endpointDefinition)
   {
     var handlerDescriptor = new HandlerDescriptor();
 
@@ -279,21 +279,27 @@ public static class ClassHandlerCreator
 
     var routerPath = methodParameterDescriptors
                      .Where(x => x.Kind == ParameterKind.Path)
-                     .Aggregate(endpointPath, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
+                     .Aggregate(endpointDefinition.Path, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
-    var methodDescriptor = new MethodDescriptor(
-        Callable: handler,
+    return new MethodDescriptor(
+        HandlerDescriptor: handlerDescriptor,
         MethodParameterDescriptors: methodParameterDescriptors,
+        RouterPath: routerPath,
         BodyJsonSchema: bodyJsonSchema,
         MethodResponseType: methodResponseType);
+  }
 
-    srv.AddEndpoint(routerPath,
-                    ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor),
+  public static void RegisterEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<object?[], object?> handler)
+  {
+    var methodDescriptor = CreateHandler(endpointDefinition);
+
+    srv.AddEndpoint(methodDescriptor.RouterPath,
+                    ctx => ClassHandlerExecutor.HandleRequest(ctx, methodDescriptor, handler),
                     new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
                     skipDocs: true,
                     runOnThreadPool: endpointDefinition.RunOnThreadPool);
 
-    srv.AppendSwaggerDocument(handlerDescriptor.OpenApiDocument);
+    srv.AppendSwaggerDocument(methodDescriptor.HandlerDescriptor.OpenApiDocument);
   }
 
   private static DefaultValue GetParameterDefaultValue(ParameterInfo parameterInfo)

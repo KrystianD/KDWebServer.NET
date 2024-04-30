@@ -6,7 +6,8 @@ using NJsonSchema;
 namespace KDWebServer.ClassHandler.Creator;
 
 internal record MethodDescriptor(
-    Func<object?[], object?> Callable,
+    HandlerDescriptor HandlerDescriptor,
     List<MethodParameterDescriptor> MethodParameterDescriptors,
+    string RouterPath,
     JsonSchema? BodyJsonSchema,
     ResponseTypeEnum MethodResponseType);
