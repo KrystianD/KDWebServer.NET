@@ -161,17 +161,23 @@ public class WebsocketRequestContext
 
     ms.Seek(0, SeekOrigin.Begin);
 
-    if (result.MessageType == WebSocketMessageType.Text) {
+    if (result.MessageType == WebSocketMessageType.Close) {
+      throw new WebSocketDisconnect();
+    }
+    else if (result.MessageType == WebSocketMessageType.Text) {
       using var reader = new StreamReader(ms, Encoding.UTF8);
 
       return new WebsocketMessage() {
           Text = await reader.ReadToEndAsync(),
       };
     }
-    else {
+    else if (result.MessageType == WebSocketMessageType.Binary) {
       return new WebsocketMessage() {
           Data = ms.ToArray(),
       };
+    }
+    else {
+      throw new InvalidOperationException();
     }
   }
 }
