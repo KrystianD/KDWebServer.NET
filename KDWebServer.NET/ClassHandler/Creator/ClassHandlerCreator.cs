@@ -5,12 +5,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Exceptions;
 using KDWebServer.ClassHandler.Executor;
 using KDWebServer.Handlers.Http;
+using KDWebServer.Handlers.Websocket;
 using NJsonSchema;
 using NSwag;
 
@@ -112,12 +114,15 @@ public static class ClassHandlerCreator
     srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
   }
 
-  public static void RegisterWebsocketEndpoint(WebServer srv, EndpointDefinition endpointDefinition, WebServer.AsyncWebsocketEndpointHandler handler)
+  public static void RegisterWebsocketEndpoint(WebServer srv, EndpointDefinition endpointDefinition, Func<WebsocketRequestContext, object?[], CancellationToken, Task> handler)
   {
     var endpointDescriptor = CreateEndpointDescriptor(endpointDefinition);
 
     srv.AddWsEndpoint(endpointDescriptor.RouterPath,
-                      handler,
+                      async (ctx, token) => {
+                        var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
+                        await handler(ctx, args, token);
+                      },
                       skipDocs: true,
                       runOnThreadPool: endpointDefinition.RunOnThreadPool);
 
