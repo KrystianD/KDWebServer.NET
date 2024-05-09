@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -27,16 +28,18 @@ internal struct WebsocketOutgoingMessage
 }
 
 [PublicAPI]
-public class WebsocketRequestContext
+public class WebsocketRequestContext : IRequestContext
 {
   private readonly WebSocket _webSocket;
 
-  public readonly HttpListenerContext HttpContext;
-  public readonly CancellationToken Token;
+  public HttpListenerContext HttpContext { get; }
+  public CancellationToken Token { get; }
 
   public string Path => HttpContext.Request.Url!.AbsolutePath;
   public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
   public IPAddress RemoteEndpoint { get; }
+
+  public HttpMethod HttpMethod => HttpMethod.Get;
 
   // Routing
   public Dictionary<string, object> Params { get; set; }

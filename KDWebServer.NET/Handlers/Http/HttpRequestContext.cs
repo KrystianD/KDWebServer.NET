@@ -9,10 +9,10 @@ using Newtonsoft.Json.Linq;
 namespace KDWebServer.Handlers.Http;
 
 [PublicAPI]
-public class HttpRequestContext
+public class HttpRequestContext : IRequestContext
 {
-  public readonly HttpListenerContext HttpContext;
-  public readonly CancellationToken Token;
+  public HttpListenerContext HttpContext { get; }
+  public CancellationToken Token { get; }
 
   public string Path => HttpContext.Request.Url!.AbsolutePath;
   public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
