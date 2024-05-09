@@ -96,7 +96,7 @@ public static class SimpleTypeConverters
         FieldInfo fieldInfo = value.GetType().GetField(value.ToString())!;
         var attribute = (EnumMemberAttribute?)fieldInfo.GetCustomAttribute(typeof(EnumMemberAttribute));
         if (attribute?.Value is null)
-          throw new ArgumentException("all enum items must have EnumMember attribute set and not null");
+          throw new ArgumentException($"all enum ({type}) items must have EnumMember attribute set and not null");
 
         enumStrs.Add(attribute.Value, value);
       }
