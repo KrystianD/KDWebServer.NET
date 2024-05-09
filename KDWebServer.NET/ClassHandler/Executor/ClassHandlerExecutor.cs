@@ -11,7 +11,7 @@ namespace KDWebServer.ClassHandler.Executor;
 
 internal static class ClassHandlerExecutor
 {
-  public static async Task<WebServerResponse> HandleRequest(HttpRequestContext ctx, EndpointDescriptor endpointDescriptor, Func<object?[], object?> handler)
+  public static object?[] ParseArgs(HttpRequestContext ctx, EndpointDescriptor endpointDescriptor)
   {
     var pathParams = ctx.Params;
 
@@ -28,7 +28,7 @@ internal static class ClassHandlerExecutor
           }
           catch {
             var s = $"error during parsing path parameter: /{name}/, expected type: /{type}/, got value of: /{pathValue}/";
-            return Response.StatusCode(400, s);
+            throw Response.StatusCode(400, s);
           }
 
           break;
@@ -39,7 +39,7 @@ internal static class ClassHandlerExecutor
             }
             catch {
               var s = $"error during parsing query parameter: /{name}/, expected type: /{type}/, got value of: /{queryValue}/";
-              return Response.StatusCode(400, s);
+              throw Response.StatusCode(400, s);
             }
           }
           else if (methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue) {
@@ -50,21 +50,21 @@ internal static class ClassHandlerExecutor
           }
           else {
             var s = $"no param {methodParameterDescriptor.Name}";
-            return Response.StatusCode(400, s);
+            throw Response.StatusCode(400, s);
           }
 
           break;
         case ParameterKind.Body:
           var jsonData = ctx.JsonData;
           if (jsonData is null) {
-            return Response.StatusCode(400, "body is required");
+            throw Response.StatusCode(400, "body is required");
           }
 
           var errors = endpointDescriptor.BodyJsonSchema!.Validate(jsonData);
 
           if (errors.Count > 0) {
             var s = "validation errors:\n" + string.Join("\n", errors.Select(x => $"- {x}"));
-            return Response.StatusCode(400, s);
+            throw Response.StatusCode(400, s);
           }
 
           call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
@@ -77,8 +77,13 @@ internal static class ClassHandlerExecutor
       }
     }
 
+    return call.ToArray();
+  }
+
+  public static async Task<WebServerResponse> ExecuteHandler(EndpointDescriptor endpointDescriptor, object?[] args, Func<object?[], object?> handler)
+  {
     try {
-      var res = handler(call.ToArray());
+      var res = handler(args);
       if (res is Task task) {
         await task;
 

@@ -101,7 +101,10 @@ public static class ClassHandlerCreator
     var endpointDescriptor = CreateEndpointDescriptor(endpointDefinition);
 
     srv.AddEndpoint(endpointDescriptor.RouterPath,
-                    ctx => ClassHandlerExecutor.HandleRequest(ctx, endpointDescriptor, handler),
+                    async ctx => {
+                      var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
+                      return await ClassHandlerExecutor.ExecuteHandler(endpointDescriptor, args, handler);
+                    },
                     new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
                     skipDocs: true,
                     runOnThreadPool: endpointDefinition.RunOnThreadPool);
