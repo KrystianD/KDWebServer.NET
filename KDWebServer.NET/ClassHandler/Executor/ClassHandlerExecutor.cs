@@ -5,13 +5,14 @@ using System.Reflection;
 using System.Threading.Tasks;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Creator;
+using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 
 namespace KDWebServer.ClassHandler.Executor;
 
 internal static class ClassHandlerExecutor
 {
-  public static object?[] ParseArgs(HttpRequestContext ctx, EndpointDescriptor endpointDescriptor)
+  public static object?[] ParseArgs(IRequestContext ctx, EndpointDescriptor endpointDescriptor)
   {
     var pathParams = ctx.Params;
 
@@ -55,19 +56,25 @@ internal static class ClassHandlerExecutor
 
           break;
         case ParameterKind.Body:
-          var jsonData = ctx.JsonData;
-          if (jsonData is null) {
-            throw Response.StatusCode(400, "body is required");
+          if (ctx is HttpRequestContext httpRequestContext) {
+            var jsonData = httpRequestContext.JsonData;
+            if (jsonData is null) {
+              throw Response.StatusCode(400, "body is required");
+            }
+
+            var errors = endpointDescriptor.BodyJsonSchema!.Validate(jsonData);
+
+            if (errors.Count > 0) {
+              var s = "validation errors:\n" + string.Join("\n", errors.Select(x => $"- {x}"));
+              throw Response.StatusCode(400, s);
+            }
+
+            call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
+          }
+          else {
+            throw new ArgumentException("invalid parameter type");
           }
 
-          var errors = endpointDescriptor.BodyJsonSchema!.Validate(jsonData);
-
-          if (errors.Count > 0) {
-            var s = "validation errors:\n" + string.Join("\n", errors.Select(x => $"- {x}"));
-            throw Response.StatusCode(400, s);
-          }
-
-          call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
           break;
         case ParameterKind.Context:
           call.Add(ctx);
