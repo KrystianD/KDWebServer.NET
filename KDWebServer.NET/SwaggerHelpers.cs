@@ -9,6 +9,8 @@ internal static class SwaggerHelpers
     var title = name?.Let(x => x + " - Swagger UI") ?? "SwaggerUI";
     var description = name ?? "SwaggerUI";
 
+    const string SwaggerVersion = "5.17.10";
+    
     var html = @"<html lang=""en"">
 <head>
   <meta charset=""utf-8"" />
@@ -19,11 +21,11 @@ internal static class SwaggerHelpers
   />
   <title>%TITLE%</title>
   <link rel=""shortcut icon"" href=""https://fastapi.tiangolo.com/img/favicon.png"" />
-  <link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css"" />
+  <link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/swagger-ui-dist@%SWAGGER_VERSION%/swagger-ui.css"" />
 </head>
 <body>
 <div id=""swagger-ui""></div>
-<script src=""https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"" crossorigin></script>
+<script src=""https://cdn.jsdelivr.net/npm/swagger-ui-dist@%SWAGGER_VERSION%/swagger-ui-bundle.js"" crossorigin></script>
 <script>
   window.onload = () => {
     window.ui = SwaggerUIBundle({
@@ -43,6 +45,7 @@ internal static class SwaggerHelpers
 </body>
 </html>";
 
+    html = html.Replace("%SWAGGER_VERSION%", SwaggerVersion);
     html = html.Replace("%TITLE%", HttpUtility.HtmlEncode(title));
     html = html.Replace("%DESCRIPTION%", HttpUtility.HtmlEncode(description));
 
