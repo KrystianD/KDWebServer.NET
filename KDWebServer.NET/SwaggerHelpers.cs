@@ -35,6 +35,12 @@ internal static class SwaggerHelpers
       deepLinking: true,
       showExtensions: true,
       showCommonExtensions: true,
+      filter: true,
+      syntaxHighlight: true,
+      tryItOutEnabled: true,
+      displayRequestDuration: true,
+      defaultModelExpandDepth: 2,
+      defaultModelsExpandDepth: 2,
       presets: [
         SwaggerUIBundle.presets.apis,
         SwaggerUIBundle.SwaggerUIStandalonePreset
