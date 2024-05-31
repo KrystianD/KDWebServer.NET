@@ -19,6 +19,7 @@ public class HttpClientHandler
   private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
 
   private readonly HttpListenerContext _httpContext;
+  private readonly DateTime _connectionTime;
   private readonly Stopwatch _requestTimer;
   private readonly RequestDispatcher.RouteEndpointMatch Match;
   public long HandlerTime;
@@ -29,9 +30,10 @@ public class HttpClientHandler
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
+  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, DateTime connectionTime, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
+    _connectionTime = connectionTime;
     _requestTimer = requestTimer;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
@@ -78,6 +80,7 @@ public class HttpClientHandler
     Logger.ForInfoEvent()
           .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
           .Properties(props)
+          .Property("time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     Stopwatch timer = new Stopwatch();

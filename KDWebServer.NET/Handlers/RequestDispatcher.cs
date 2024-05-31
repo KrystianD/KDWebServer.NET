@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
@@ -25,7 +26,7 @@ public class RequestDispatcher
     Logger = webServer.LogFactory?.GetLogger("webserver.dispatcher") ?? LogManager.LogFactory.CreateNullLogger();
   }
 
-  public async void DispatchRequest(HttpListenerContext httpContext, Stopwatch requestTimer)
+  public async void DispatchRequest(HttpListenerContext httpContext, DateTime connectionTime, Stopwatch requestTimer)
   {
     string shortId = WebServerUtils.GenerateRandomString(4);
     var remoteEndpoint = WebServerUtils.GetClientIp(httpContext, WebServer.TrustedProxies);
@@ -43,7 +44,7 @@ public class RequestDispatcher
 
     foreach (var observer in WebServer.Observers)
       observer.OnNewRequest(httpContext);
-    
+
     using (ScopeContext.PushProperty("method", request.HttpMethod))
     using (ScopeContext.PushProperty("path", request.Url?.AbsolutePath))
     using (ScopeContext.PushProperty("client_id", clientId))
@@ -89,7 +90,7 @@ public class RequestDispatcher
 
       if (match.Endpoint.IsWebsocket) {
         if (request.IsWebSocketRequest) {
-          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, requestTimer, match);
+          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, connectionTime, requestTimer, match);
           await wsHandler.Handle(loggingProps).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
@@ -114,7 +115,7 @@ public class RequestDispatcher
           Helpers.CloseStream(response, 405);
         }
         else {
-          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, requestTimer, clientId, match);
+          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, connectionTime, requestTimer, clientId, match);
           await httpHandler.Handle(loggingProps).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }

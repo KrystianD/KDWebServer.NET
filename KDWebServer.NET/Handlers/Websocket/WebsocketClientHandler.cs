@@ -17,6 +17,7 @@ namespace KDWebServer.Handlers.Websocket;
 public class WebsocketClientHandler
 {
   private readonly HttpListenerContext _httpContext;
+  private readonly DateTime _connectionTime;
   private readonly RequestDispatcher.RouteEndpointMatch Match;
 
   private WebServer WebServer { get; }
@@ -24,9 +25,10 @@ public class WebsocketClientHandler
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal WebsocketClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
+  internal WebsocketClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, DateTime connectionTime, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
+    _connectionTime = connectionTime;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.ws") ?? LogManager.LogFactory.CreateNullLogger();
 
@@ -67,6 +69,7 @@ public class WebsocketClientHandler
     Logger.ForTraceEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
           .Properties(props)
+          .Property("time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     try {
