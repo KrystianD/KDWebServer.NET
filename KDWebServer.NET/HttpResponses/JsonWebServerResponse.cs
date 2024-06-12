@@ -31,7 +31,6 @@ public class JsonWebServerResponse : WebServerResponse
     byte[] resp = Encoding.UTF8.GetBytes(_json);
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
     response.ContentType = "application/json";
     response.ContentLength64 = resp.LongLength;
 

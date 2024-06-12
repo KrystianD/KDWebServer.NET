@@ -31,7 +31,6 @@ public class TextWebServerResponse : WebServerResponse
     byte[] resp = Encoding.UTF8.GetBytes(_text);
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
     response.ContentType = _contentType;
     response.ContentLength64 = resp.LongLength;
 

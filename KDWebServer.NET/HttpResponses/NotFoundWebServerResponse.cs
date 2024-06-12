@@ -67,7 +67,6 @@ public class NotFoundWebServerResponse : WebServerResponse
 
     response.StatusCode = StatusCode;
     if (resp != null) {
-      response.SendChunked = true;
       response.ContentLength64 = resp.LongLength;
       return response.OutputStream.WriteAsync(resp, 0, resp.Length);
     }

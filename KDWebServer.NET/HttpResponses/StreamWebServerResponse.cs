@@ -40,11 +40,14 @@ public class StreamWebServerResponse : WebServerResponse
            .Log();
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
     response.ContentType = _mimeType;
 
-    if (lengthToSend != -1)
+    if (lengthToSend == -1) {
+      response.SendChunked = true;
+    }
+    else {
       response.ContentLength64 = lengthToSend;
+    }
 
     await _stream.CopyToAsync(response.OutputStream);
     if (_closeAfter)

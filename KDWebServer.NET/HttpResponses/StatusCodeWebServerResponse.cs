@@ -43,7 +43,6 @@ public class StatusCodeWebServerResponse : WebServerResponse
     }
     else {
       byte[] resp = Encoding.UTF8.GetBytes(_text);
-      response.SendChunked = true;
       response.ContentType = "text/plain";
       response.ContentLength64 = resp.LongLength;
 

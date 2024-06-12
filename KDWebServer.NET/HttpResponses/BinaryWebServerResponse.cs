@@ -28,7 +28,6 @@ public class BinaryWebServerResponse : WebServerResponse
            .Log();
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
     response.ContentType = _mimeType;
     response.ContentLength64 = _data.LongLength;
 

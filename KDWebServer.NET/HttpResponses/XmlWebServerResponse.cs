@@ -29,7 +29,6 @@ public class XmlWebServerResponse : WebServerResponse
     byte[] resp = Encoding.UTF8.GetBytes(_xml);
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
     response.ContentType = "text/xml";
     response.ContentLength64 = resp.LongLength;
 
