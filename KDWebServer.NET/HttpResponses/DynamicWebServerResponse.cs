@@ -36,8 +36,14 @@ public class DynamicWebServerResponse : WebServerResponse
     var s = Stopwatch.StartNew();
     
     await _builder(response.OutputStream);
-    await response.OutputStream.FlushAsync();
-    
+
+    try {
+      await response.OutputStream.FlushAsync();
+    }
+    catch (ObjectDisposedException) {
+      // stream may be already closed by the user, which is fine
+    }
+
     var duration = s.ElapsedMilliseconds;
 
     handler.Logger.ForTraceEvent()
