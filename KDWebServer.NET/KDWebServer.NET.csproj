@@ -8,6 +8,8 @@
         <Authors>Krystian Dużyński</Authors>
         <LangVersion>10</LangVersion>
         <Nullable>enable</Nullable>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
