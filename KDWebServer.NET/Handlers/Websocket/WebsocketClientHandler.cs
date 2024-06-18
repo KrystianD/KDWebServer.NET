@@ -70,7 +70,7 @@ public class WebsocketClientHandler
     Logger.ForTraceEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
           .Properties(advLogProperties)
-          .Property("time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
+          .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     try {

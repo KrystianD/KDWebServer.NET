@@ -24,8 +24,8 @@ public class JsonWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending JSON response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
-           .Property("data", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_json, 1000) : "<skipped>")
-           .Property("status_code", StatusCode)
+           .Property("webserver.data", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_json, 1000) : "<skipped>")
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_json);

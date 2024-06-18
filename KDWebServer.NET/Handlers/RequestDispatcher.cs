@@ -39,21 +39,21 @@ public class RequestDispatcher
     var logSuffix = $"{request.HttpMethod} {request.Url?.AbsolutePath}";
 
     var advLogProperties = new Dictionary<string, object?>() {
-        ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
+        ["webserver.query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
     foreach (var observer in WebServer.Observers)
       observer.OnNewRequest(httpContext);
 
-    using (ScopeContext.PushProperty("method", request.HttpMethod))
-    using (ScopeContext.PushProperty("path", request.Url?.AbsolutePath))
-    using (ScopeContext.PushProperty("short_id", shortId))
-    using (ScopeContext.PushProperty("remote_ip", remoteEndpoint)) {
+    using (ScopeContext.PushProperty("webserver.method", request.HttpMethod))
+    using (ScopeContext.PushProperty("webserver.path", request.Url?.AbsolutePath))
+    using (ScopeContext.PushProperty("webserver.short_id", shortId))
+    using (ScopeContext.PushProperty("webserver.remote_ip", remoteEndpoint)) {
       if (remoteEndpoint == null || request.Url is null) {
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid request - {logSuffix}")
               .Properties(advLogProperties)
-              .Property("status_code", 400)
+              .Property("webserver.status_code", 400)
               .Log();
 
         Helpers.CloseStream(response, 400, "invalid request");
@@ -67,7 +67,7 @@ public class RequestDispatcher
           Logger.ForTraceEvent()
                 .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
                 .Properties(advLogProperties)
-                .Property("status_code", 404)
+                .Property("webserver.status_code", 404)
                 .Log();
 
           Helpers.CloseStream(response, 404);
@@ -78,7 +78,7 @@ public class RequestDispatcher
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid route parameters provided - {logSuffix}")
               .Properties(advLogProperties)
-              .Property("status_code", 400)
+              .Property("webserver.status_code", 400)
               .Log();
 
         Helpers.CloseStream(response, 400, e.Message);
@@ -98,7 +98,7 @@ public class RequestDispatcher
           Logger.ForInfoEvent()
                 .Message($"[{clientId}] HTTP request to WS endpoint - {logSuffix}")
                 .Properties(advLogProperties)
-                .Property("status_code", 426)
+                .Property("webserver.status_code", 426)
                 .Log();
 
           Helpers.CloseStream(response, 426);
@@ -109,7 +109,7 @@ public class RequestDispatcher
           Logger.ForInfoEvent()
                 .Message($"[{clientId}] WS request to HTTP endpoint - {logSuffix}")
                 .Properties(advLogProperties)
-                .Property("status_code", 405)
+                .Property("webserver.status_code", 405)
                 .Log();
 
           Helpers.CloseStream(response, 405);

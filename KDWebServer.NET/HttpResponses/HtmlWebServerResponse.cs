@@ -24,8 +24,8 @@ public class HtmlWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending HTML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
-           .Property("body", loggerConfig.LogPayloads ? WebServerUtils.LimitText(text, 1000) : "<skipped>")
-           .Property("status_code", StatusCode)
+           .Property("webserver.body", loggerConfig.LogPayloads ? WebServerUtils.LimitText(text, 1000) : "<skipped>")
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_html);

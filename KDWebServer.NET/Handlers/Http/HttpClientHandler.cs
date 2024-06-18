@@ -53,8 +53,8 @@ public class HttpClientHandler
     HttpRequestContext ctx;
 
     var props = new Dictionary<string, object?>(advLogProperties);
-    props.Add("content_type", _httpContext.Request.ContentType);
-    props.Add("content_length", _httpContext.Request.ContentLength64);
+    props.Add("webserver.content_type", _httpContext.Request.ContentType);
+    props.Add("webserver.content_length", _httpContext.Request.ContentLength64);
     try {
       var rawData = await ReadPayload(_httpContext, serverShutdownToken).ConfigureAwait(false);
 
@@ -69,7 +69,7 @@ public class HttpClientHandler
       Logger.ForInfoEvent()
             .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath} - {e.Message}")
             .Properties(props)
-            .Property("status_code", 400)
+            .Property("webserver.status_code", 400)
             .Log();
 
       Helpers.SetResponse(_httpContext.Response, 400);
@@ -81,7 +81,7 @@ public class HttpClientHandler
     Logger.ForInfoEvent()
           .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
           .Properties(props)
-          .Property("time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
+          .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     Stopwatch timer = new Stopwatch();
@@ -133,7 +133,7 @@ public class HttpClientHandler
       Logger.ForErrorEvent()
             .Message($"[{ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
             .Properties(props)
-            .Property("status_code", 500)
+            .Property("webserver.status_code", 500)
             .Exception(e)
             .Log();
 

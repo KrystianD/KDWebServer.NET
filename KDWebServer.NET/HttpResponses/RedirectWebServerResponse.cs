@@ -22,8 +22,8 @@ public class RedirectWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending Redirect response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) (to {_location})")
            .Properties(loggingProps)
-           .Property("location", _location)
-           .Property("status_code", StatusCode)
+           .Property("webserver.location", _location)
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     response.StatusCode = StatusCode;

@@ -23,8 +23,8 @@ public class BinaryWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending binary response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.BytesToString(_data.Length)})")
            .Properties(loggingProps)
-           .Property("data_length", _data.Length)
-           .Property("status_code", StatusCode)
+           .Property("webserver.data_length", _data.Length)
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     response.StatusCode = StatusCode;

@@ -33,13 +33,13 @@ public class NotFoundWebServerResponse : WebServerResponse
                                        Dictionary<string, object?> loggingProps)
   {
     var logMsg = handler.Logger.ForTraceEvent()
-                        .Property("status_code", StatusCode);
+                        .Property("webserver.status_code", StatusCode);
 
     byte[]? resp = null;
     if (_text != null) {
       logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_text, 30).Replace("\n", " ")})")
             .Properties(loggingProps)
-            .Property("text", WebServerUtils.LimitText(_text, 1000));
+            .Property("webserver.text", WebServerUtils.LimitText(_text, 1000));
 
       resp = Encoding.UTF8.GetBytes(_text);
       response.ContentType = "text/plain";
@@ -47,7 +47,7 @@ public class NotFoundWebServerResponse : WebServerResponse
     else if (_json != null) {
       logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
             .Properties(loggingProps)
-            .Property("data", WebServerUtils.LimitText(_json, 1000));
+            .Property("webserver.data", WebServerUtils.LimitText(_json, 1000));
 
       resp = Encoding.UTF8.GetBytes(_json);
       response.ContentType = "application/json";
@@ -57,7 +57,7 @@ public class NotFoundWebServerResponse : WebServerResponse
 
       logMsg.Message($"[{handler.ClientId}] sending NotFound response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(text, 30).Replace("\n", " ")})")
             .Properties(loggingProps)
-            .Property("body", WebServerUtils.LimitText(text, 1000));
+            .Property("webserver.body", WebServerUtils.LimitText(text, 1000));
 
       resp = Encoding.UTF8.GetBytes(_html);
       response.ContentType = "text/html";

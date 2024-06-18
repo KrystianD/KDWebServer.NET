@@ -26,7 +26,7 @@ public class DynamicWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] starting dynamic response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
-           .Property("status_code", StatusCode)
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     response.StatusCode = StatusCode;
@@ -49,7 +49,7 @@ public class DynamicWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] finished dynamic response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms, dynamic: {duration}ms)")
            .Properties(loggingProps)
-           .Property("status_code", StatusCode)
+           .Property("webserver.status_code", StatusCode)
            .Log();
   }
 }

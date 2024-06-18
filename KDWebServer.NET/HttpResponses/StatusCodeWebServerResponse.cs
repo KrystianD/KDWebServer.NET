@@ -33,8 +33,8 @@ public class StatusCodeWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
-           .Property("text", _text)
-           .Property("status_code", StatusCode)
+           .Property("webserver.text", _text)
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     response.StatusCode = StatusCode;

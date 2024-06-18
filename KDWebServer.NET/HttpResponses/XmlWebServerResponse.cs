@@ -22,8 +22,8 @@ public class XmlWebServerResponse : WebServerResponse
     handler.Logger.ForTraceEvent()
            .Message($"[{handler.ClientId}] sending XML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_xml, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
-           .Property("xml", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_xml, 1000) : "<skipped>")
-           .Property("status_code", StatusCode)
+           .Property("webserver.xml", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_xml, 1000) : "<skipped>")
+           .Property("webserver.status_code", StatusCode)
            .Log();
 
     byte[] resp = Encoding.UTF8.GetBytes(_xml);
