@@ -222,7 +222,7 @@ public class WebServer
     _listener = new HttpListener();
 
     if (sslConfig == null) {
-      _logger.Info($"Starting HTTP server on {host}:{port}");
+      _logger.Info($"Starting HTTP server on http://{host}:{port}");
       _listener.Prefixes.Add($"http://*:{port}/");
     }
     else {
