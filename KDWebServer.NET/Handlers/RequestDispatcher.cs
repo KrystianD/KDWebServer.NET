@@ -38,7 +38,7 @@ public class RequestDispatcher
     var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
     var logSuffix = $"{request.HttpMethod} {request.Url?.AbsolutePath}";
 
-    var loggingProps = new Dictionary<string, object?>() {
+    var advLogProperties = new Dictionary<string, object?>() {
         ["query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
     };
 
@@ -52,7 +52,7 @@ public class RequestDispatcher
       if (remoteEndpoint == null || request.Url is null) {
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid request - {logSuffix}")
-              .Properties(loggingProps)
+              .Properties(advLogProperties)
               .Property("status_code", 400)
               .Log();
 
@@ -66,7 +66,7 @@ public class RequestDispatcher
         if (match == null) {
           Logger.ForTraceEvent()
                 .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
-                .Properties(loggingProps)
+                .Properties(advLogProperties)
                 .Property("status_code", 404)
                 .Log();
 
@@ -77,7 +77,7 @@ public class RequestDispatcher
       catch (RouteInvalidValueProvidedException e) {
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid route parameters provided - {logSuffix}")
-              .Properties(loggingProps)
+              .Properties(advLogProperties)
               .Property("status_code", 400)
               .Log();
 
@@ -91,13 +91,13 @@ public class RequestDispatcher
       if (match.Endpoint.IsWebsocket) {
         if (request.IsWebSocketRequest) {
           var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, connectionTime, requestTimer, match);
-          await wsHandler.Handle(loggingProps).ConfigureAwait(false);
+          await wsHandler.Handle(advLogProperties).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
         else { // HTTP request to WS endpoint
           Logger.ForInfoEvent()
                 .Message($"[{clientId}] HTTP request to WS endpoint - {logSuffix}")
-                .Properties(loggingProps)
+                .Properties(advLogProperties)
                 .Property("status_code", 426)
                 .Log();
 
@@ -108,7 +108,7 @@ public class RequestDispatcher
         if (request.IsWebSocketRequest) { // WS request to HTTP endpoint
           Logger.ForInfoEvent()
                 .Message($"[{clientId}] WS request to HTTP endpoint - {logSuffix}")
-                .Properties(loggingProps)
+                .Properties(advLogProperties)
                 .Property("status_code", 405)
                 .Log();
 
@@ -116,7 +116,7 @@ public class RequestDispatcher
         }
         else {
           var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, connectionTime, requestTimer, clientId, match);
-          await httpHandler.Handle(loggingProps).ConfigureAwait(false);
+          await httpHandler.Handle(advLogProperties).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
       }

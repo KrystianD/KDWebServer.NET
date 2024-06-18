@@ -43,7 +43,7 @@ public class HttpClientHandler
     Match = match;
   }
 
-  public async Task Handle(Dictionary<string, object?> loggingProps)
+  public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
     var serverShutdownToken = WebServer.ServerShutdownToken;
 
@@ -51,7 +51,7 @@ public class HttpClientHandler
 
     HttpRequestContext ctx;
 
-    var props = new Dictionary<string, object?>(loggingProps);
+    var props = new Dictionary<string, object?>(advLogProperties);
     props.Add("content_type", _httpContext.Request.ContentType);
     props.Add("content_length", _httpContext.Request.ContentLength64);
     try {
@@ -108,7 +108,7 @@ public class HttpClientHandler
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
 
-      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, loggingProps);
+      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, advLogProperties);
 
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);

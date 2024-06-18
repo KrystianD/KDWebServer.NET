@@ -37,7 +37,7 @@ public class WebsocketClientHandler
     Match = match;
   }
 
-  public async Task Handle(Dictionary<string, object?> props)
+  public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
     var wsCtx = await _httpContext.AcceptWebSocketAsync(null!).ConfigureAwait(false);
 
@@ -68,7 +68,7 @@ public class WebsocketClientHandler
 
     Logger.ForTraceEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
-          .Properties(props)
+          .Properties(advLogProperties)
           .Property("time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
@@ -89,13 +89,13 @@ public class WebsocketClientHandler
 
       Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS handler finished gracefully - {logSuffix}")
-            .Properties(props)
+            .Properties(advLogProperties)
             .Log();
     }
     catch (WebSocketException) {
       Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
-            .Properties(props)
+            .Properties(advLogProperties)
             .Log();
 
       senderQueueToken.Cancel();
@@ -103,7 +103,7 @@ public class WebsocketClientHandler
     catch (WebSocketDisconnect) {
       Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
-            .Properties(props)
+            .Properties(advLogProperties)
             .Log();
 
       senderQueueToken.Cancel();
@@ -111,13 +111,13 @@ public class WebsocketClientHandler
     catch (TaskCanceledException) when (senderQueueToken.IsCancellationRequested) {
       Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS connection has been closed - {logSuffix}")
-            .Properties(props)
+            .Properties(advLogProperties)
             .Log();
     }
     catch (Exception e) {
       Logger.ForErrorEvent()
             .Message($"[{ClientId}] Error during handling WS connection - {logSuffix}")
-            .Properties(props)
+            .Properties(advLogProperties)
             .Exception(e)
             .Log();
 
