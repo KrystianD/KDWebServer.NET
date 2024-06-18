@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Threading;
@@ -88,12 +89,19 @@ public class HttpClientHandler
     try {
       WebServerResponse response;
       try {
-        if (ep.RunOnThreadPool)
+        if (ep.RunOnThreadPool) {
           response = await Task.Run(async () => await ep.HttpCallback!(ctx).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
-        else if (WebServer.SynchronizationContext == null)
+        }
+        else if (WebServer.SynchronizationContext == null) {
           response = await ep.HttpCallback!(ctx).ConfigureAwait(false);
-        else
-          response = await WebServer.SynchronizationContext.PostAsync(async () => await ep.HttpCallback!(ctx).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        else {
+          var scope = ScopeContext.GetAllProperties().ToArray();
+          response = await WebServer.SynchronizationContext.PostAsync(async () => {
+            using var _ = ScopeContext.PushProperties(scope);
+            return await ep.HttpCallback!(ctx).ConfigureAwait(false);
+          }).ConfigureAwait(false);
+        }
       }
       catch (WebServerResponse r) {
         response = r;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -73,12 +74,19 @@ public class WebsocketClientHandler
           .Log();
 
     try {
-      if (Match.Endpoint.RunOnThreadPool)
+      if (Match.Endpoint.RunOnThreadPool) {
         await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
-      else if (WebServer.SynchronizationContext == null)
+      }
+      else if (WebServer.SynchronizationContext == null) {
         await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false);
-      else
-        await WebServer.SynchronizationContext.PostAsync(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token)).ConfigureAwait(false);
+      }
+      else {
+        var scope = ScopeContext.GetAllProperties().ToArray();
+        await WebServer.SynchronizationContext.PostAsync(async () => {
+          using var _ = ScopeContext.PushProperties(scope);
+          await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token);
+        }).ConfigureAwait(false);
+      }
 
       try {
         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
