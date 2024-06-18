@@ -47,7 +47,7 @@ public class RequestDispatcher
 
     using (ScopeContext.PushProperty("method", request.HttpMethod))
     using (ScopeContext.PushProperty("path", request.Url?.AbsolutePath))
-    using (ScopeContext.PushProperty("client_id", clientId))
+    using (ScopeContext.PushProperty("short_id", shortId))
     using (ScopeContext.PushProperty("remote_ip", remoteEndpoint)) {
       if (remoteEndpoint == null || request.Url is null) {
         Logger.ForInfoEvent()
