@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -144,6 +145,12 @@ internal class TypeSchemaRegistry
         foreach (var value in allowedValuesAttribute.AllowedValues) {
           jsonSchemaProperty.Enumeration.Add(value);
         }
+      }
+
+      var rangeAttribute = memberInfo.GetCustomAttribute<RangeAttribute>();
+      if (rangeAttribute != null) {
+        jsonSchemaProperty.Minimum = rangeAttribute.Minimum is int val1 ? val1 : (decimal)rangeAttribute.Minimum;
+        jsonSchemaProperty.Maximum = rangeAttribute.Maximum is int val2 ? val2 : (decimal)rangeAttribute.Maximum;
       }
 
       DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
