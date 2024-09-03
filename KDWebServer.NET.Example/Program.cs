@@ -101,7 +101,7 @@ namespace KDWebServer.Example
         return Response.Stream(str, true);
       });
 
-      server.AddWsEndpoint("/ws", async ctx => {
+      server.AddWsEndpoint("/ws", async (ctx, token) => {
         while (true) {
           var msg = await ctx.ReceiveMessageAsync(CancellationToken.None);
           Console.WriteLine($"got ws message: {msg.Text}");
