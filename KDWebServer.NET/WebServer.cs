@@ -156,7 +156,9 @@ public class WebServer
       }
 
       foreach (var (method, openApiOperation) in newPathItem) {
-        pathItem.Add(method, openApiOperation);
+        if (!pathItem.TryAdd(method, openApiOperation)) {
+          throw new ArgumentException($"duplicated {method} on {path}");
+        }
       }
     }
   }
