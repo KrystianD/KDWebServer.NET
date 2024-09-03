@@ -184,7 +184,8 @@ public class WebsocketRequestContext : IRequestContext
       using var reader = new StreamReader(ms, Encoding.UTF8);
 
       return new WebsocketMessage() {
-          Text = await reader.ReadToEndAsync(),
+          // ReSharper disable once MethodHasAsyncOverload
+          Text = reader.ReadToEnd(),
       };
     }
     else if (result.MessageType == WebSocketMessageType.Binary) {
