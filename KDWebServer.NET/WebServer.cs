@@ -256,6 +256,18 @@ public class WebServer
           continue;
         }
 
+        // workaround: access to httpContext.Request sometimes gives NullReferenceException for some reason
+        try {
+          _ = httpContext.Request;
+        }
+        catch (NullReferenceException) {
+          try { httpContext.Response.Close(); }
+          catch { // ignored
+          }
+
+          continue;
+        }
+
         var rq = new RequestDispatcher(this);
         rq.DispatchRequest(httpContext, connectionTime, requestTimer);
       }
