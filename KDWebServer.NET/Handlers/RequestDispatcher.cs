@@ -35,8 +35,10 @@ public class RequestDispatcher
     var request = httpContext.Request;
     var response = httpContext.Response;
 
+    var path = Uri.UnescapeDataString(request.Url?.AbsolutePath ?? "");
+
     var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
-    var logSuffix = $"{request.HttpMethod} {request.Url?.AbsolutePath}";
+    var logSuffix = $"{request.HttpMethod} {path}";
 
     var advLogProperties = new Dictionary<string, object?>() {
         ["webserver.query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
@@ -46,7 +48,7 @@ public class RequestDispatcher
       observer.OnNewRequest(httpContext);
 
     using (ScopeContext.PushProperty("webserver.method", request.HttpMethod))
-    using (ScopeContext.PushProperty("webserver.path", request.Url?.AbsolutePath))
+    using (ScopeContext.PushProperty("webserver.path", path))
     using (ScopeContext.PushProperty("webserver.short_id", shortId))
     using (ScopeContext.PushProperty("webserver.remote_ip", remoteEndpoint)) {
       if (remoteEndpoint == null || request.Url is null) {
@@ -62,7 +64,7 @@ public class RequestDispatcher
 
       RouteEndpointMatch? match;
       try {
-        match = MatchRoutes(request.Url.AbsolutePath, new HttpMethod(request.HttpMethod));
+        match = MatchRoutes(path, new HttpMethod(request.HttpMethod));
         if (match == null) {
           Logger.ForTraceEvent()
                 .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
