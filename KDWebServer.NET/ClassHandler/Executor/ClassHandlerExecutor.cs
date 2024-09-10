@@ -69,7 +69,7 @@ internal static class ClassHandlerExecutor
               throw Response.StatusCode(400, s);
             }
 
-            call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType)!);
+            call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType, Consts.DefaultSerializer)!);
           }
           else {
             throw new ArgumentException("invalid parameter type");

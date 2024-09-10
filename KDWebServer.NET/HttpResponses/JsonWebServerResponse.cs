@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -15,7 +14,7 @@ public class JsonWebServerResponse : WebServerResponse
 
   internal JsonWebServerResponse(object data, bool indented)
   {
-    _json = JToken.FromObject(data).ToString(indented ? Formatting.Indented : Formatting.None);
+    _json = JsonConvert.SerializeObject(data, indented ? Formatting.Indented : Formatting.None, Consts.DefaultSerializerSettings);
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
