@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
 using NJsonSchema;
@@ -82,6 +83,15 @@ public static class SimpleTypeConverters
             x.Format = "double";
           },
           str => double.Parse(str)),
+      new(typeof(DateTime), "datetime",
+          x => {
+            x.Type = JsonObjectType.String;
+            x.Format = "date-time";
+          },
+          str => DateTime.SpecifyKind(DateTime.ParseExact(str, 
+                                                          Consts.DefaultDateTimeFormat,
+                                                          CultureInfo.InvariantCulture,
+                                                          DateTimeStyles.None), DateTimeKind.Utc)),
   };
 
   public static TypeConverter? GetConverterByType(Type type)
