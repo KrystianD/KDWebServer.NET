@@ -18,4 +18,10 @@ public abstract class WebServerResponse : System.Exception
 
   public void SetHeader(HttpResponseHeader header, string value) => Headers.Add(header, value);
   public void SetHeader(string name, string value) => Headers.Add(name, value);
+
+  public WebServerResponse WithStatusCode(int statusCode)
+  {
+    StatusCode = statusCode;
+    return this;
+  }
 }
