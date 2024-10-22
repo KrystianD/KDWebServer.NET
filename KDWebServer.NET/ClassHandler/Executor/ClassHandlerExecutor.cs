@@ -121,16 +121,27 @@ internal static class ClassHandlerExecutor
 
   public static async Task<WebServerResponse> ExecuteHandler(EndpointDescriptor endpointDescriptor, object?[] args, Func<object?[], object?> handler)
   {
-    var res = await InvokeHandler(args, handler);
+    try {
+      var res = await InvokeHandler(args, handler);
 
-    return res switch {
-        WebServerResponse webServerResponse => webServerResponse,
-        null => Response.StatusCode(200),
-        _ => endpointDescriptor.MethodResponseType switch {
-            ResponseTypeEnum.Json => Response.Json(res),
-            ResponseTypeEnum.Text => Response.Text((string)res),
-            _ => throw new Exception("invalid enum value"),
-        },
-    };
+      return res switch {
+          WebServerResponse webServerResponse => webServerResponse,
+          null => Response.StatusCode(200),
+          _ => endpointDescriptor.MethodResponseType switch {
+              ResponseTypeEnum.Json => Response.Json(res),
+              ResponseTypeEnum.Text => Response.Text((string)res),
+              _ => throw new Exception("invalid enum value"),
+          },
+      };
+    }
+    catch (Exception e) {
+      if (endpointDescriptor.Definition.ErrorHandlerMiddlewareFactory != null) {
+        var errorHandlerMiddleware = endpointDescriptor.Definition.ErrorHandlerMiddlewareFactory();
+        return errorHandlerMiddleware.Process(e);
+      }
+      else {
+        throw;
+      }
+    }
   }
 }

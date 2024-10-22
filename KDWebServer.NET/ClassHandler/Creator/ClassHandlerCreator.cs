@@ -80,6 +80,11 @@ public static class ClassHandlerCreator
         endpointBuilder.WithRunOnThreadPool(true);
       }
 
+      var errorHandlerMiddlewareAttribute = methodInfo.GetCustomAttribute<ErrorHandlerMiddlewareAttribute>();
+      if (errorHandlerMiddlewareAttribute != null) {
+        endpointBuilder.WithErrorHandlerMiddleware(errorHandlerMiddlewareAttribute.Factory);
+      }
+
       var responseType = methodInfo.GetCustomAttribute<ResponseTypeAttribute>()?.Let(x => x.Type);
       if (responseType != null)
         endpointBuilder.WithResponseType(responseType.Value);

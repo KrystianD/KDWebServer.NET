@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using JetBrains.Annotations;
 using KDWebServer.ClassHandler.Attributes;
+using KDWebServer.Middleware;
 
 namespace KDWebServer.ClassHandler.Creator;
 
@@ -21,6 +22,8 @@ public class EndpointDefinition
   public ResponseTypeEnum ResponseType = ResponseTypeEnum.Json;
   public bool RunOnThreadPool = false;
   public readonly List<ParameterDefinition> Parameters = new();
+
+  public Func<ErrorHandlerMiddleware>? ErrorHandlerMiddlewareFactory;
 
   private EndpointDefinition(string path, HttpMethod httpMethod)
   {
@@ -88,6 +91,12 @@ public class EndpointBuilder
   public EndpointBuilder WithRunOnThreadPool(bool runOnThreadPool = true)
   {
     Endpoint.RunOnThreadPool = runOnThreadPool;
+    return this;
+  }
+
+  public EndpointBuilder WithErrorHandlerMiddleware(Func<ErrorHandlerMiddleware> errorHandlerMiddlewareFactory)
+  {
+    Endpoint.ErrorHandlerMiddlewareFactory = errorHandlerMiddlewareFactory;
     return this;
   }
 
