@@ -6,6 +6,7 @@ using NSwag;
 namespace KDWebServer.ClassHandler.Creator;
 
 internal record EndpointDescriptor(
+    EndpointDefinition Definition,
     OpenApiDocument OpenApiDocument,
     TypeSchemaRegistry TypeSchemaRegistry,
     List<MethodParameterDescriptor> MethodParameterDescriptors,

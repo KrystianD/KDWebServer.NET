@@ -318,6 +318,7 @@ public static class ClassHandlerCreator
                      .Aggregate(endpointDefinition.Path, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
 
     return new EndpointDescriptor(
+        Definition: endpointDefinition,
         OpenApiDocument: openApiDocument,
         TypeSchemaRegistry: typeSchemaRegistry,
         MethodParameterDescriptors: methodParameterDescriptors,
