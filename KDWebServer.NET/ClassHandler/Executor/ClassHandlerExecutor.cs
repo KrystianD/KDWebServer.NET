@@ -87,11 +87,11 @@ internal static class ClassHandlerExecutor
     return call.ToArray();
   }
 
-  public static async Task<WebServerResponse> ExecuteHandler(EndpointDescriptor endpointDescriptor, object?[] args, Func<object?[], object?> handler)
+  private static async Task<object?> InvokeHandler(object?[] args, Func<object?[], object?> handler)
   {
     try {
-      var res = handler(args);
-      if (res is Task task) {
+      var resp = handler(args);
+      if (resp is Task task) {
         await task;
 
         var taskType = task.GetType();
@@ -99,22 +99,15 @@ internal static class ClassHandlerExecutor
             (taskType.GetGenericTypeDefinition() == typeof(Task<>) || // for async Task<> without an async operation
              taskType.GetGenericTypeDefinition().DeclaringType == typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder<>)) && // for async Task<> with an async operation
             taskType.GetGenericArguments()[0] != Type.GetType("System.Threading.Tasks.VoidTaskResult")) {
-          res = ((dynamic)task).Result;
+          return ((dynamic)task).Result;
         }
         else {
-          res = null;
+          return null;
         }
       }
-
-      return res switch {
-          WebServerResponse resp => resp,
-          null => Response.StatusCode(200),
-          _ => endpointDescriptor.MethodResponseType switch {
-              ResponseTypeEnum.Json => Response.Json(res),
-              ResponseTypeEnum.Text => Response.Text((string)res),
-              _ => throw new Exception("invalid enum value"),
-          },
-      };
+      else {
+        return resp;
+      }
     }
     catch (TargetInvocationException e) {
       if (e.InnerException == null) {
@@ -124,5 +117,20 @@ internal static class ClassHandlerExecutor
         throw e.InnerException;
       }
     }
+  }
+
+  public static async Task<WebServerResponse> ExecuteHandler(EndpointDescriptor endpointDescriptor, object?[] args, Func<object?[], object?> handler)
+  {
+    var res = await InvokeHandler(args, handler);
+
+    return res switch {
+        WebServerResponse webServerResponse => webServerResponse,
+        null => Response.StatusCode(200),
+        _ => endpointDescriptor.MethodResponseType switch {
+            ResponseTypeEnum.Json => Response.Json(res),
+            ResponseTypeEnum.Text => Response.Text((string)res),
+            _ => throw new Exception("invalid enum value"),
+        },
+    };
   }
 }
