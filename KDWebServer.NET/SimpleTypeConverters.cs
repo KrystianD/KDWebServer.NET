@@ -91,7 +91,7 @@ public static class SimpleTypeConverters
           str => DateTime.SpecifyKind(DateTime.ParseExact(str, 
                                                           Consts.DefaultDateTimeFormat,
                                                           CultureInfo.InvariantCulture,
-                                                          DateTimeStyles.None), DateTimeKind.Utc)),
+                                                          DateTimeStyles.AdjustToUniversal), DateTimeKind.Utc)),
   };
 
   public static TypeConverter? GetConverterByType(Type type)
