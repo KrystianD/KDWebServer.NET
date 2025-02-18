@@ -49,6 +49,7 @@ public class RequestDispatcher
 
     using (ScopeContext.PushProperty("webserver.method", request.HttpMethod))
     using (ScopeContext.PushProperty("webserver.path", path))
+    using (ScopeContext.PushProperty("webserver.url", request.Url?.ToString()))
     using (ScopeContext.PushProperty("webserver.short_id", shortId))
     using (ScopeContext.PushProperty("webserver.remote_ip", remoteEndpoint)) {
       if (remoteEndpoint == null || request.Url is null) {
