@@ -43,6 +43,8 @@ public class StreamWebServerResponse : WebServerResponse
     response.StatusCode = StatusCode;
     response.ContentType = _mimeType;
 
+    var s = Stopwatch.StartNew();
+
     if (lengthToSend == -1) {
       response.SendChunked = true;
     }
@@ -53,5 +55,13 @@ public class StreamWebServerResponse : WebServerResponse
     await _stream.CopyToAsync(response.OutputStream);
     if (_closeAfter)
       _stream.Close();
+    
+    var duration = s.ElapsedMilliseconds;
+
+    handler.Logger.ForInfoEvent()
+           .Message($"[{handler.ClientId}] finished stream response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms, dynamic: {duration}ms)")
+           .Properties(loggingProps)
+           .Property("webserver.status_code", StatusCode)
+           .Log();
   }
 }
