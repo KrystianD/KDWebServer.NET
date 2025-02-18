@@ -21,7 +21,7 @@ public class HtmlWebServerResponse : WebServerResponse
   {
     var text = WebServerUtils.ExtractSimpleHtmlText(_html);
 
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending HTML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("webserver.body", loggerConfig.LogPayloads ? WebServerUtils.LimitText(text, 1000) : "<skipped>")

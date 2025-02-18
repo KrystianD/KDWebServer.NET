@@ -23,7 +23,7 @@ public class DynamicWebServerResponse : WebServerResponse
   public override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                              Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] starting dynamic response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
            .Property("webserver.status_code", StatusCode)
@@ -46,7 +46,7 @@ public class DynamicWebServerResponse : WebServerResponse
 
     var duration = s.ElapsedMilliseconds;
 
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] finished dynamic response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms, dynamic: {duration}ms)")
            .Properties(loggingProps)
            .Property("webserver.status_code", StatusCode)

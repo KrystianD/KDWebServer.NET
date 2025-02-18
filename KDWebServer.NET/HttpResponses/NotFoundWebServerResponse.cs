@@ -32,7 +32,7 @@ public class NotFoundWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    var logMsg = handler.Logger.ForInfoEvent()
+    var logMsg = handler.LoggerResponse.ForInfoEvent()
                         .Property("webserver.status_code", StatusCode);
 
     byte[]? resp = null;

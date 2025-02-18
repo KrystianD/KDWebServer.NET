@@ -28,6 +28,7 @@ public class HttpClientHandler
 
   private WebServer WebServer { get; }
   public ILogger Logger { get; }
+  public ILogger LoggerResponse { get; }
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
@@ -38,6 +39,7 @@ public class HttpClientHandler
     _requestTimer = requestTimer;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
+    LoggerResponse = webServer.LogFactory?.GetLogger("webserver.http.response") ?? LogManager.LogFactory.CreateNullLogger();
 
     RemoteEndpoint = remoteEndpoint;
     ClientId = clientId;

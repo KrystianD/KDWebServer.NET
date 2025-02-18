@@ -34,7 +34,7 @@ public class StreamWebServerResponse : WebServerResponse
       lengthToSendStr = WebServerUtils.BytesToString(lengthToSend);
     }
 
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending stream response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({lengthToSendStr})")
            .Properties(loggingProps)
            .Property("webserver.status_code", StatusCode)
@@ -58,7 +58,7 @@ public class StreamWebServerResponse : WebServerResponse
     
     var duration = s.ElapsedMilliseconds;
 
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] finished stream response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms, dynamic: {duration}ms)")
            .Properties(loggingProps)
            .Property("webserver.status_code", StatusCode)

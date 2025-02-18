@@ -21,7 +21,7 @@ public class TextWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending text response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_text, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("webserver.text", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_text, 1000) : "<skipped>")

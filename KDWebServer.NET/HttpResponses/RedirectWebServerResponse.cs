@@ -19,7 +19,7 @@ public class RedirectWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForInfoEvent()
+    handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending Redirect response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) (to {_location})")
            .Properties(loggingProps)
            .Property("webserver.location", _location)
