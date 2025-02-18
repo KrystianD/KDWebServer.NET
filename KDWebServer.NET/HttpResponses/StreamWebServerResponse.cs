@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ public class StreamWebServerResponse : WebServerResponse
       lengthToSendStr = WebServerUtils.BytesToString(lengthToSend);
     }
 
-    handler.Logger.ForTraceEvent()
+    handler.Logger.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending stream response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({lengthToSendStr})")
            .Properties(loggingProps)
            .Property("webserver.status_code", StatusCode)

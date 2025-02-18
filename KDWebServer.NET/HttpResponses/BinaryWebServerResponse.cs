@@ -20,7 +20,7 @@ public class BinaryWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForTraceEvent()
+    handler.Logger.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending binary response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.BytesToString(_data.Length)})")
            .Properties(loggingProps)
            .Property("webserver.data_length", _data.Length)

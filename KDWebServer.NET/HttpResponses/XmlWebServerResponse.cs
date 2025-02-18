@@ -19,7 +19,7 @@ public class XmlWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForTraceEvent()
+    handler.Logger.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending XML response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_xml, 30).Replace("\n", " ")})")
            .Properties(loggingProps)
            .Property("webserver.xml", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_xml, 1000) : "<skipped>")

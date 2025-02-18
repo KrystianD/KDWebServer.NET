@@ -30,7 +30,7 @@ public class StatusCodeWebServerResponse : WebServerResponse
     if (_text != "")
       textStr = $" with text: /{WebServerUtils.LimitText(_text, 30)}/";
 
-    handler.Logger.ForTraceEvent()
+    handler.Logger.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending {code} code response{textStr} ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
            .Property("webserver.text", _text)

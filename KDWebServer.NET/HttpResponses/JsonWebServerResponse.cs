@@ -20,7 +20,7 @@ public class JsonWebServerResponse : WebServerResponse
   public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
-    handler.Logger.ForTraceEvent()
+    handler.Logger.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending JSON response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
            .Properties(loggingProps)
            .Property("webserver.data", loggerConfig.LogPayloads ? WebServerUtils.LimitText(_json, 1000) : "<skipped>")
