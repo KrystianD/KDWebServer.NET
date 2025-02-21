@@ -47,7 +47,7 @@ public class WebsocketClientHandler
     var ws = wsCtx.WebSocket;
     WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength, serverShutdownToken);
 
-    var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
+    using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
 
     _ = Task.Run(async () => {
       while (!senderQueueToken.Token.IsCancellationRequested) {
