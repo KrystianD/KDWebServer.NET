@@ -49,7 +49,8 @@ public class WebsocketClientHandler
 
     using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
 
-    _ = Task.Run(async () => {
+    // ReSharper disable AccessToDisposedClosure
+    var senderTask = Task.Run(async () => {
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
           var msg = ctx.SenderQ.Dequeue(senderQueueToken.Token);
@@ -64,6 +65,7 @@ public class WebsocketClientHandler
         }
       }
     }, senderQueueToken.Token);
+    // ReSharper restore AccessToDisposedClosure
 
     var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
 
@@ -146,6 +148,8 @@ public class WebsocketClientHandler
         ctx.SenderQ.Dequeue();
       }
       // ReSharper restore MethodHasAsyncOverloadWithCancellation
+
+      await senderTask;
     }
   }
 }
