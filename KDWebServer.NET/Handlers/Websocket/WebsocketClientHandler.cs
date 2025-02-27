@@ -53,7 +53,7 @@ public class WebsocketClientHandler
     var senderTask = Task.Run(async () => {
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
-          var msg = ctx.SenderQ.Dequeue(senderQueueToken.Token);
+          var msg = await ctx.SenderQ.DequeueAsync(senderQueueToken.Token);
           await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }
