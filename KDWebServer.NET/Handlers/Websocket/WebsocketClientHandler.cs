@@ -53,7 +53,7 @@ public class WebsocketClientHandler
     var senderTask = Task.Run(async () => {
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
-          var msg = await ctx.SenderQ.DequeueAsync(senderQueueToken.Token);
+          var msg = await ctx.SenderQ.DequeueAsync(senderQueueToken.Token).ConfigureAwait(false);
           await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }
@@ -143,13 +143,13 @@ public class WebsocketClientHandler
     finally {
       ctx.SenderQ.CompleteAdding();
 
-      // ReSharper disable MethodHasAsyncOverloadWithCancellation
-      while (ctx.SenderQ.OutputAvailable()) {
-        ctx.SenderQ.Dequeue();
+      // ReSharper disable MethodSupportsCancellation
+      while (await ctx.SenderQ.OutputAvailableAsync().ConfigureAwait(false)) {
+        await ctx.SenderQ.DequeueAsync().ConfigureAwait(false);
       }
-      // ReSharper restore MethodHasAsyncOverloadWithCancellation
+      // ReSharper restore MethodSupportsCancellation
 
-      await senderTask;
+      await senderTask.ConfigureAwait(false);
     }
   }
 }

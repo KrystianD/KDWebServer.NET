@@ -247,7 +247,7 @@ public class WebServer
     while (!_serverShutdownTokenSource!.IsCancellationRequested) {
       HttpListenerContext? httpContext = null;
       try {
-        httpContext = await _listener!.GetContextAsync();
+        httpContext = await _listener!.GetContextAsync().ConfigureAwait(false);
         var connectionTime = DateTime.UtcNow;
         var requestTimer = Stopwatch.StartNew();
 

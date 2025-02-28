@@ -118,7 +118,7 @@ public class HttpClientHandler
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
 
-      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, advLogProperties);
+      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, advLogProperties).ConfigureAwait(false);
 
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);
