@@ -90,6 +90,7 @@ public class WebServer
 
   public int WebsocketSenderQueueLength = 10;
 
+  private Thread _listenerThread;
   private CancellationTokenSource? _serverShutdownTokenSource;
   internal CancellationToken ServerShutdownToken => _serverShutdownTokenSource!.Token;
 
@@ -208,15 +209,19 @@ public class WebServer
 
   public void RunSync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
-    Start(host, port, sslConfig);
-    // ReSharper disable once MethodSupportsCancellation
-    Task.Run(InternalRun).Wait(ServerShutdownToken);
+    RunAsync(host, port, sslConfig);
+
+    _listenerThread.Join();
   }
 
   public void RunAsync(string host, int port, WebServerSslConfig? sslConfig = null)
   {
     Start(host, port, sslConfig);
-    Task.Run(InternalRun, ServerShutdownToken);
+
+    _listenerThread = new Thread(InternalRun);
+    _listenerThread.Name = "WebServer";
+    _listenerThread.IsBackground = true;
+    _listenerThread.Start();
   }
 
   private void Start(string host, int port, WebServerSslConfig? sslConfig)
@@ -242,12 +247,12 @@ public class WebServer
   }
 
   [SuppressMessage("ReSharper", "FunctionNeverReturns")]
-  private async Task InternalRun()
+  private void InternalRun()
   {
     while (!_serverShutdownTokenSource!.IsCancellationRequested) {
       HttpListenerContext? httpContext = null;
       try {
-        httpContext = await _listener!.GetContextAsync().ConfigureAwait(false);
+        httpContext = _listener!.GetContext();
         var connectionTime = DateTime.UtcNow;
         var requestTimer = Stopwatch.StartNew();
 
@@ -268,8 +273,11 @@ public class WebServer
           continue;
         }
 
-        var rq = new RequestDispatcher(this);
-        rq.DispatchRequest(httpContext, connectionTime, requestTimer);
+        // run handler in the thread pool
+        Task.Run(() => {
+          var rq = new RequestDispatcher(this);
+          rq.DispatchRequest(httpContext, connectionTime, requestTimer);
+        }, ServerShutdownToken);
       }
       catch (ObjectDisposedException) {
       }
