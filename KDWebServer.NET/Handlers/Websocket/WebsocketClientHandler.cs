@@ -57,7 +57,7 @@ public class WebsocketClientHandler
           await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }
-        catch (TaskCanceledException) {
+        catch (OperationCanceledException) {
         }
         catch (WebSocketException) {
           senderQueueToken.Cancel();
@@ -90,15 +90,18 @@ public class WebsocketClientHandler
         }).ConfigureAwait(false);
       }
 
-      try {
-        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
-      }
-      catch {
-        ws.Abort();
+      if (ws.State != WebSocketState.Closed) {
+        try {
+          using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+          await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, cts.Token).ConfigureAwait(false);
+        }
+        catch {
+          ws.Abort();
+        }
       }
 
       Logger.ForTraceEvent()
-            .Message($"[{ClientId}] WS handler finished gracefully - {logSuffix}")
+            .Message($"[{ClientId}] WS handler finished gracefully, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
     }
@@ -118,7 +121,7 @@ public class WebsocketClientHandler
 
       senderQueueToken.Cancel();
     }
-    catch (TaskCanceledException) when (senderQueueToken.IsCancellationRequested) {
+    catch (OperationCanceledException) when (senderQueueToken.IsCancellationRequested) {
       Logger.ForTraceEvent()
             .Message($"[{ClientId}] WS connection has been closed - {logSuffix}")
             .Properties(advLogProperties)
@@ -132,23 +135,20 @@ public class WebsocketClientHandler
             .Log();
 
       senderQueueToken.Cancel();
+      ctx.SenderQ.CompleteAdding();
+      await senderTask.ConfigureAwait(false);
 
       try {
-        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token).ConfigureAwait(false);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await ws.CloseAsync(WebSocketCloseStatus.InternalServerError, null, cts.Token).ConfigureAwait(false);
       }
       catch {
         ws.Abort();
       }
     }
     finally {
+      senderQueueToken.Cancel();
       ctx.SenderQ.CompleteAdding();
-
-      // ReSharper disable MethodSupportsCancellation
-      while (await ctx.SenderQ.OutputAvailableAsync().ConfigureAwait(false)) {
-        await ctx.SenderQ.DequeueAsync().ConfigureAwait(false);
-      }
-      // ReSharper restore MethodSupportsCancellation
-
       await senderTask.ConfigureAwait(false);
     }
   }
