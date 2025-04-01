@@ -13,6 +13,7 @@ using KDWebServer.ClassHandler.Exceptions;
 using KDWebServer.ClassHandler.Executor;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
+using KDWebServer.HttpResponses;
 using NJsonSchema;
 using NSwag;
 
@@ -109,8 +110,13 @@ public static class ClassHandlerCreator
 
     srv.AddEndpoint(endpointDescriptor.RouterPath,
                     async ctx => {
-                      var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
-                      return await ClassHandlerExecutor.ExecuteHandler(endpointDescriptor, args, handler);
+                      try {
+                        var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
+                        return await ClassHandlerExecutor.ExecuteHandler(endpointDescriptor, args, handler);
+                      }
+                      catch (ClassHandlerExecutor.ParserException parserException) {
+                        return Response.StatusCode(400, parserException.Message);
+                      }
                     },
                     new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
                     skipDocs: true,
@@ -125,8 +131,13 @@ public static class ClassHandlerCreator
 
     srv.AddWsEndpoint(endpointDescriptor.RouterPath,
                       async (ctx, token) => {
-                        var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
-                        await handler(ctx, args, token);
+                        try {
+                          var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
+                          await handler(ctx, args, token);
+                        }
+                        catch (ClassHandlerExecutor.ParserException parserException) {
+                          await ctx.Close(1011, parserException.Message);
+                        }
                       },
                       skipDocs: true,
                       runOnThreadPool: endpointDefinition.RunOnThreadPool);

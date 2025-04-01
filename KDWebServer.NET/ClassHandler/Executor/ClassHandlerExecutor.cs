@@ -12,6 +12,13 @@ namespace KDWebServer.ClassHandler.Executor;
 
 internal static class ClassHandlerExecutor
 {
+  public class ParserException : Exception
+  {
+    public ParserException(string message) : base(message)
+    {
+    }
+  }
+
   public static object?[] ParseArgs(IRequestContext ctx, EndpointDescriptor endpointDescriptor)
   {
     var pathParams = ctx.Params;
@@ -29,7 +36,7 @@ internal static class ClassHandlerExecutor
           }
           catch {
             var s = $"error during parsing path parameter: /{name}/, expected type: /{type}/, got value of: /{pathValue}/";
-            throw Response.StatusCode(400, s);
+            throw new ParserException(s);
           }
 
           break;
@@ -40,7 +47,7 @@ internal static class ClassHandlerExecutor
             }
             catch {
               var s = $"error during parsing query parameter: /{name}/, expected type: /{type}/, got value of: /{queryValue}/";
-              throw Response.StatusCode(400, s);
+              throw new ParserException(s);
             }
           }
           else if (methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue) {
@@ -51,7 +58,7 @@ internal static class ClassHandlerExecutor
           }
           else {
             var s = $"no param {methodParameterDescriptor.Name}";
-            throw Response.StatusCode(400, s);
+            throw new ParserException(s);
           }
 
           break;
@@ -59,14 +66,14 @@ internal static class ClassHandlerExecutor
           if (ctx is HttpRequestContext httpRequestContext) {
             var jsonData = httpRequestContext.JsonData;
             if (jsonData is null) {
-              throw Response.StatusCode(400, "body is required");
+              throw new ParserException("body is required");
             }
 
             var errors = endpointDescriptor.BodyJsonSchema!.Validate(jsonData);
 
             if (errors.Count > 0) {
               var s = "validation errors:\n" + string.Join("\n", errors.Select(x => $"- {x}"));
-              throw Response.StatusCode(400, s);
+              throw new ParserException(s);
             }
 
             call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType, Consts.DefaultSerializer)!);
