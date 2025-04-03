@@ -38,6 +38,7 @@ public class WebsocketClientHandler
     Match = match;
   }
 
+  // ReSharper disable AccessToDisposedClosure
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
     var wsCtx = await _httpContext.AcceptWebSocketAsync(null!).ConfigureAwait(false);
@@ -75,6 +76,7 @@ public class WebsocketClientHandler
           .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
+    // ReSharper disable AccessToDisposedClosure
     try {
       if (Match.Endpoint.RunOnThreadPool) {
         await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
