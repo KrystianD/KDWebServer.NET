@@ -60,7 +60,7 @@ public class WebsocketClientHandler
         }
         catch (OperationCanceledException) {
         }
-        catch (WebSocketException) {
+        catch (Exception) {
           senderQueueToken.Cancel();
           ctx.SenderQ.CompleteAdding();
         }
