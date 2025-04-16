@@ -64,7 +64,7 @@ public class HttpClientHandler
 
       if (_httpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
-        props.Add("content", WebServer.LoggerConfig.LogPayloads ? parsedContent : "<skipped>");
+        props.Add("content", WebServer.Config.Logger.LogPayloads ? parsedContent : "<skipped>");
       }
     }
     catch (Exception e) {
@@ -118,7 +118,7 @@ public class HttpClientHandler
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
 
-      await response.WriteToResponse(this, _httpContext.Response, WebServer.LoggerConfig, advLogProperties).ConfigureAwait(false);
+      await response.WriteToResponse(this, _httpContext.Response, WebServer.Config.Logger, advLogProperties).ConfigureAwait(false);
 
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);

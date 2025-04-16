@@ -30,6 +30,12 @@ public class WebServerSslConfig
 }
 
 [PublicAPI]
+public class WebServerConfig
+{
+  public WebServerLoggerConfig Logger = new();
+}
+
+[PublicAPI]
 public class WebServerLoggerConfig
 {
   public bool LogPayloads = true;
@@ -81,7 +87,7 @@ public class WebServer
 
   internal LogFactory? LogFactory { get; }
   internal SynchronizationContext? SynchronizationContext { get; }
-  internal WebServerLoggerConfig LoggerConfig { get; }
+  internal WebServerConfig Config { get; }
 
   private readonly ILogger _logger;
 
@@ -98,11 +104,11 @@ public class WebServer
       SchemaType = SchemaType.OpenApi3,
   };
 
-  public WebServer(LogFactory? factory, WebServerLoggerConfig? loggerConfig = null, SynchronizationContext? synchronizationContext = null)
+  public WebServer(LogFactory? factory, WebServerConfig? config = null, SynchronizationContext? synchronizationContext = null)
   {
     LogFactory = factory;
     SynchronizationContext = synchronizationContext;
-    LoggerConfig = loggerConfig ?? new WebServerLoggerConfig();
+    Config = config ?? new WebServerConfig();
     _logger = factory?.GetLogger("webserver") ?? LogManager.LogFactory.CreateNullLogger();
   }
 
