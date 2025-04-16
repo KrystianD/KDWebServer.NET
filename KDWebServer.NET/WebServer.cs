@@ -32,7 +32,15 @@ public class WebServerSslConfig
 [PublicAPI]
 public class WebServerConfig
 {
+  public WebServerRouterConfig Router = new();
   public WebServerLoggerConfig Logger = new();
+}
+
+[PublicAPI]
+public class WebServerRouterConfig
+{
+  public bool AllowTrailingSlash = false;
+  public bool AllowDuplicatedSlashes = false;
 }
 
 [PublicAPI]
@@ -127,7 +135,7 @@ public class WebServer
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
-    var route = Router.CompileRoute(endpoint);
+    var route = Router.CompileRoute(endpoint, Config.Router);
     Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs, docsCreator, runOnThreadPool)));
   }
 
@@ -136,7 +144,7 @@ public class WebServer
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
-    var route = Router.CompileRoute(endpoint);
+    var route = Router.CompileRoute(endpoint, Config.Router);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
     Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, skipDocs, docsCreator, runOnThreadPool)));
   }

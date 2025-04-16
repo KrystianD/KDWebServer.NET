@@ -57,7 +57,7 @@ internal static class Router
     }
   }
 
-  public static RouteDescriptor CompileRoute(string route)
+  public static RouteDescriptor CompileRoute(string route, WebServerRouterConfig config)
   {
     const string ParamRegex = "<(?<type>[a-z]+):(?<name>[a-zA-Z0-9_-]+)>";
 
@@ -69,7 +69,14 @@ internal static class Router
       score = 50;
     }
     else {
-      routeRegex = $"^{Regex.Escape(route)}$";
+      if (config.AllowTrailingSlash)
+        routeRegex = $"^{Regex.Escape(route)}/?$";
+      else
+        routeRegex = $"^{Regex.Escape(route)}$";
+    }
+
+    if (config.AllowDuplicatedSlashes) {
+      routeRegex = routeRegex.Replace("/", "(?:/+)");
     }
 
     var paramsDict = new Dictionary<string, SimpleTypeConverters.TypeConverter>();
