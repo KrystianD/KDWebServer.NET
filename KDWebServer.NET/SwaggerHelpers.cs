@@ -22,6 +22,9 @@ internal static class SwaggerHelpers
   <title>%TITLE%</title>
   <link rel=""shortcut icon"" href=""https://fastapi.tiangolo.com/img/favicon.png"" />
   <link rel=""stylesheet"" href=""https://cdn.jsdelivr.net/npm/swagger-ui-dist@%SWAGGER_VERSION%/swagger-ui.css"" />
+  <style>
+  .copy-to-clipboard { width: 24px !important; margin-right: 0 !important; }
+  </style>
 </head>
 <body>
 <div id=""swagger-ui""></div>
