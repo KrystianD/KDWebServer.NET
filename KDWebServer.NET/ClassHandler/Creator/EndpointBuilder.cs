@@ -107,7 +107,7 @@ public class EndpointBuilder
 public class MethodParameterBuilder
 {
   internal string Description = "";
-  internal DefaultValue DefaultValue = new(false, null);
+  internal DefaultValue DefaultValue = new(false, false, null);
   internal List<object?> DropdownItems = new();
 
   public MethodParameterBuilder WithDescription(string description)
@@ -116,9 +116,9 @@ public class MethodParameterBuilder
     return this;
   }
 
-  public MethodParameterBuilder WithDefaultValue(object defaultValue)
+  public MethodParameterBuilder WithDefaultValue(object defaultValue, bool onlyForSwagger)
   {
-    DefaultValue = new(true, defaultValue);
+    DefaultValue = new(true, onlyForSwagger: onlyForSwagger, defaultValue);
     return this;
   }
 

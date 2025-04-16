@@ -56,7 +56,7 @@ public static class ClassHandlerCreator
 
                                        var defaultValue = GetParameterDefaultValue(parameterInfo);
                                        if (defaultValue.HasDefaultValue)
-                                         builder.WithDefaultValue(defaultValue.Value!);
+                                         builder.WithDefaultValue(defaultValue.Value!, defaultValue.OnlyForSwagger);
                                      });
       }
 
@@ -198,7 +198,7 @@ public static class ClassHandlerCreator
         if (bodyTypeConverter == null && simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue is { HasDefaultValue: true, OnlyForSwagger: false } || methodParameterDescriptor.IsNullable;
         }
         else {
           if (bodyParameterDescriptor == null) {
@@ -224,7 +224,7 @@ public static class ClassHandlerCreator
         if (simpleTypeConverter != null) {
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
-          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue is { HasDefaultValue: true, OnlyForSwagger: false } || methodParameterDescriptor.IsNullable;
         }
         else {
           throw new MethodDescriptorException($"query parameter {methodParameterDescriptor.Name} type is incorrect for query parameter: {methodParameterDescriptor.ValueType}");
@@ -348,13 +348,13 @@ public static class ClassHandlerCreator
     var defaultValueAttribute = parameterInfo.GetCustomAttribute<DefaultValueAttribute>();
 
     if (defaultValueAttribute != null) {
-      return new DefaultValue(true, defaultValueAttribute.Value);
+      return new DefaultValue(hasDefaultValue: true, onlyForSwagger: false, value: defaultValueAttribute.Value);
     }
     else if (parameterInfo.DefaultValue is not DBNull) {
-      return new DefaultValue(true, parameterInfo.DefaultValue);
+      return new DefaultValue(hasDefaultValue: true, onlyForSwagger: false, value: parameterInfo.DefaultValue);
     }
     else {
-      return new DefaultValue(false, null);
+      return new DefaultValue(hasDefaultValue: false, onlyForSwagger: false, value: null);
     }
   }
 

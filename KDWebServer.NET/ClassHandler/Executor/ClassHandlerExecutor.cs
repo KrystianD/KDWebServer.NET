@@ -50,8 +50,8 @@ internal static class ClassHandlerExecutor
               throw new ParserException(s);
             }
           }
-          else if (methodParameterDescriptor.ParameterBuilder.DefaultValue.HasDefaultValue) {
-            call.Add(methodParameterDescriptor.ParameterBuilder.DefaultValue.Value);
+          else if (methodParameterDescriptor.ParameterBuilder.DefaultValue is { HasDefaultValue: true, OnlyForSwagger: false } def) {
+            call.Add(def.Value);
           }
           else if (methodParameterDescriptor.QueryIsNullable!.Value) {
             call.Add(null);
