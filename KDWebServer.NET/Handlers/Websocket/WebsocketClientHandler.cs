@@ -70,7 +70,7 @@ public class WebsocketClientHandler
 
     var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
 
-    Logger.ForTraceEvent()
+    Logger.ForInfoEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")
           .Properties(advLogProperties)
           .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
@@ -102,13 +102,13 @@ public class WebsocketClientHandler
         }
       }
 
-      Logger.ForTraceEvent()
+      Logger.ForInfoEvent()
             .Message($"[{ClientId}] WS handler finished gracefully, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
     }
     catch (WebSocketException) {
-      Logger.ForTraceEvent()
+      Logger.ForInfoEvent()
             .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
@@ -116,7 +116,7 @@ public class WebsocketClientHandler
       senderQueueToken.Cancel();
     }
     catch (WebSocketDisconnect) {
-      Logger.ForTraceEvent()
+      Logger.ForInfoEvent()
             .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
@@ -124,7 +124,7 @@ public class WebsocketClientHandler
       senderQueueToken.Cancel();
     }
     catch (OperationCanceledException) when (senderQueueToken.IsCancellationRequested) {
-      Logger.ForTraceEvent()
+      Logger.ForInfoEvent()
             .Message($"[{ClientId}] WS connection has been closed - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
