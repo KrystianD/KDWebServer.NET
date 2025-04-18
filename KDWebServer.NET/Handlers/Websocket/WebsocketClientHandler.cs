@@ -54,7 +54,7 @@ public class WebsocketClientHandler
     var senderTask = Task.Run(async () => {
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
-          var msg = await ctx.SenderQ.DequeueAsync(senderQueueToken.Token).ConfigureAwait(false);
+          var msg = await ctx.SenderQ.Reader.ReadAsync(senderQueueToken.Token).ConfigureAwait(false);
           await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }
@@ -62,7 +62,7 @@ public class WebsocketClientHandler
         }
         catch (Exception) {
           senderQueueToken.Cancel();
-          ctx.SenderQ.CompleteAdding();
+          ctx.SenderQ.Writer.TryComplete();
         }
       }
     }, senderQueueToken.Token);
@@ -137,7 +137,7 @@ public class WebsocketClientHandler
             .Log();
 
       senderQueueToken.Cancel();
-      ctx.SenderQ.CompleteAdding();
+      ctx.SenderQ.Writer.TryComplete();
       await senderTask.ConfigureAwait(false);
 
       try {
@@ -150,7 +150,7 @@ public class WebsocketClientHandler
     }
     finally {
       senderQueueToken.Cancel();
-      ctx.SenderQ.CompleteAdding();
+      ctx.SenderQ.Writer.TryComplete();
       await senderTask.ConfigureAwait(false);
     }
   }

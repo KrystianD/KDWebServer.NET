@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Nito.AsyncEx;
@@ -51,7 +52,7 @@ public class WebsocketRequestContext : IRequestContext
   public QueryStringValuesCollection Headers { get; }
 
   // WebSocket
-  internal readonly AsyncProducerConsumerQueue<WebsocketOutgoingMessage> SenderQ;
+  internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
 
   internal WebsocketRequestContext(HttpListenerContext httpContext,
                                    IPAddress remoteEndpoint,
@@ -73,7 +74,7 @@ public class WebsocketRequestContext : IRequestContext
 
     RemoteEndpoint = remoteEndpoint;
 
-    SenderQ = new(senderQueueLength);
+    SenderQ = Channel.CreateBounded<WebsocketOutgoingMessage>(senderQueueLength);
   }
 
   public async Task<WebsocketMessage> ReceiveMessageAsync(CancellationToken token)
@@ -81,40 +82,28 @@ public class WebsocketRequestContext : IRequestContext
     return await ReceiveMessage(_webSocket, token);
   }
 
-  public void SendTextWait(string data, CancellationToken token) => Enqueue(data, null, true, true, token);
-  public void SendTextWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, true, true, token);
-  public void SendTextWait(string data, TimeSpan timeout) => Enqueue(data, null, true, true, new CancellationTokenSource(timeout).Token);
-  public void SendTextWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, true, true, new CancellationTokenSource(timeout).Token);
+  public bool TrySendText(string data) => TryEnqueue(data, null, true, true);
+  public bool TrySendText(ReadOnlyMemory<byte> data) => TryEnqueue(data, null, true, true);
   public async Task SendTextAsync(string data, CancellationToken token) => await EnqueueAsync(data, null, true, true, token);
   public async Task SendTextAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, true, true, token);
-  public async Task SendTextAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, null, true, true, new CancellationTokenSource(timeout).Token);
-  public async Task SendTextAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, true, true, new CancellationTokenSource(timeout).Token);
 
-  public void SendTextPartialWait(string data, CancellationToken token) => Enqueue(data, null, false, true, token);
-  public void SendTextPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, false, true, token);
-  public void SendTextPartialWait(string data, TimeSpan timeout) => Enqueue(data, null, false, true, new CancellationTokenSource(timeout).Token);
-  public void SendTextPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, false, true, new CancellationTokenSource(timeout).Token);
+  public bool TrySendTextPartial(string data) => TryEnqueue(data, null, false, true);
+  public bool TrySendTextPartial(ReadOnlyMemory<byte> data) => TryEnqueue(data, null, false, true);
   public async Task SendTextPartialAsync(string data, CancellationToken token) => await EnqueueAsync(data, null, false, true, token);
   public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, false, true, token);
-  public async Task SendTextPartialAsync(string data, TimeSpan timeout) => await EnqueueAsync(data, null, false, true, new CancellationTokenSource(timeout).Token);
-  public async Task SendTextPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, false, true, new CancellationTokenSource(timeout).Token);
 
-  public void SendBinaryWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, true, false, token);
-  public void SendBinaryWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, true, false, new CancellationTokenSource(timeout).Token);
+  public bool TrySendBinary(ReadOnlyMemory<byte> data) => TryEnqueue(data, null, true, false);
   public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, true, false, token);
-  public async Task SendBinaryAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, true, false, new CancellationTokenSource(timeout).Token);
 
-  public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, CancellationToken token) => Enqueue(data, null, false, false, token);
-  public void SendBinaryPartialWait(ReadOnlyMemory<byte> data, TimeSpan timeout) => Enqueue(data, null, false, false, new CancellationTokenSource(timeout).Token);
+  public bool TrySendBinaryPartial(ReadOnlyMemory<byte> data) => TryEnqueue(data, null, false, false);
   public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, CancellationToken token) => await EnqueueAsync(data, null, false, false, token);
-  public async Task SendBinaryPartialAsync(ReadOnlyMemory<byte> data, TimeSpan timeout) => await EnqueueAsync(data, null, false, false, new CancellationTokenSource(timeout).Token);
 
-  public void Enqueue(string data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
+  public bool TryEnqueue(string data, Action? onSent, bool isEnd, bool isText)
   {
-    Enqueue(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText, token);
+    return TryEnqueue(Encoding.UTF8.GetBytes(data), onSent, isEnd, isText);
   }
 
-  public void Enqueue(ReadOnlyMemory<byte> data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
+  public bool TryEnqueue(ReadOnlyMemory<byte> data, Action? onSent, bool isEnd, bool isText)
   {
     var msg = new WebsocketOutgoingMessage() {
         Buffer = data,
@@ -123,12 +112,13 @@ public class WebsocketRequestContext : IRequestContext
         OnSent = onSent,
     };
 
-    try {
-      SenderQ.Enqueue(msg, token);
-    }
-    catch (InvalidOperationException) {
+    var res = SenderQ.Writer.TryWrite(msg);
+    
+    if (!res && SenderQ.Reader.Completion.IsCompleted) {
       throw new WebSocketDisconnect();
     }
+
+    return res;
   }
 
   public async Task EnqueueAsync(string data, Action? onSent, bool isEnd, bool isText, CancellationToken token)
@@ -146,9 +136,9 @@ public class WebsocketRequestContext : IRequestContext
     };
 
     try {
-      await SenderQ.EnqueueAsync(msg, token);
+      await SenderQ.Writer.WriteAsync(msg, token);
     }
-    catch (InvalidOperationException) {
+    catch (ChannelClosedException) {
       throw new WebSocketDisconnect();
     }
   }
