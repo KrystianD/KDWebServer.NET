@@ -53,6 +53,7 @@ public class WebsocketRequestContext : IRequestContext
 
   // WebSocket
   internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
+  public int SenderQueueSize => SenderQ.Reader.Count;
 
   internal WebsocketRequestContext(HttpListenerContext httpContext,
                                    IPAddress remoteEndpoint,
