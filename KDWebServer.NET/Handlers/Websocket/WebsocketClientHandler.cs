@@ -55,6 +55,7 @@ public class WebsocketClientHandler
       while (!senderQueueToken.Token.IsCancellationRequested) {
         try {
           var msg = await ctx.SenderQ.Reader.ReadAsync(senderQueueToken.Token).ConfigureAwait(false);
+          Interlocked.Add(ref ctx._senderQueueBytes, -msg.Buffer.Length);
           await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
           msg.OnSent?.Invoke();
         }

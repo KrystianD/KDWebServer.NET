@@ -52,8 +52,10 @@ public class WebsocketRequestContext : IRequestContext
   public QueryStringValuesCollection Headers { get; }
 
   // WebSocket
+  internal int _senderQueueBytes;
   internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
-  public int SenderQueueSize => SenderQ.Reader.Count;
+  public int SenderQueueBytes => _senderQueueBytes;
+  public int SenderQueueCount => SenderQ.Reader.Count;
 
   internal WebsocketRequestContext(HttpListenerContext httpContext,
                                    IPAddress remoteEndpoint,
@@ -114,7 +116,8 @@ public class WebsocketRequestContext : IRequestContext
     };
 
     var res = SenderQ.Writer.TryWrite(msg);
-    
+    Interlocked.Add(ref _senderQueueBytes, data.Length);
+
     if (!res && SenderQ.Reader.Completion.IsCompleted) {
       throw new WebSocketDisconnect();
     }
@@ -138,6 +141,7 @@ public class WebsocketRequestContext : IRequestContext
 
     try {
       await SenderQ.Writer.WriteAsync(msg, token);
+      Interlocked.Add(ref _senderQueueBytes, data.Length);
     }
     catch (ChannelClosedException) {
       throw new WebSocketDisconnect();
