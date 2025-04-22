@@ -129,6 +129,9 @@ public class HttpClientHandler
     catch (HttpListenerException e) when (e.ErrorCode == -2146232800) { // Unable to write data to the transport connection: Broken pipe.
       // transport is already closed
     }
+    catch (HttpListenerException e) when (e is { ErrorCode: 64, NativeErrorCode: 64 }) { // The specified network name is no longer available.
+      // transport is already closed
+    }
     catch (Exception e) {
       ProcessingTime = _requestTimer.ElapsedMilliseconds;
 
