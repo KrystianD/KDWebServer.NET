@@ -52,9 +52,9 @@ public class WebsocketRequestContext : IRequestContext
   public QueryStringValuesCollection Headers { get; }
 
   // WebSocket
-  internal int _senderQueueBytes;
+  internal long _senderQueueBytes;
   internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
-  public int SenderQueueBytes => _senderQueueBytes;
+  public long SenderQueueBytes => _senderQueueBytes;
   public int SenderQueueCount => SenderQ.Reader.Count;
 
   internal WebsocketRequestContext(HttpListenerContext httpContext,
