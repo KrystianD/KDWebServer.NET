@@ -52,19 +52,20 @@ public class WebsocketClientHandler
 
     // ReSharper disable AccessToDisposedClosure
     var senderTask = Task.Run(async () => {
-      while (!senderQueueToken.Token.IsCancellationRequested) {
-        try {
-          var msg = await ctx.SenderQ.Reader.ReadAsync(senderQueueToken.Token).ConfigureAwait(false);
-          Interlocked.Add(ref ctx._senderQueueBytes, -msg.Buffer.Length);
-          await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
-          msg.OnSent?.Invoke();
+      try {
+        while (await ctx.SenderQ.Reader.WaitToReadAsync(senderQueueToken.Token)) {
+          while (ctx.SenderQ.Reader.TryRead(out var msg)) {
+            Interlocked.Add(ref ctx._senderQueueBytes, -msg.Buffer.Length);
+            await ws.SendAsync(msg.Buffer, msg.MessageType, msg.EndOfMessage, senderQueueToken.Token).ConfigureAwait(false);
+            msg.OnSent?.Invoke();
+          }
         }
-        catch (OperationCanceledException) {
-        }
-        catch (Exception) {
-          senderQueueToken.Cancel();
-          ctx.SenderQ.Writer.TryComplete();
-        }
+      }
+      catch (OperationCanceledException) {
+      }
+      catch (Exception) {
+        senderQueueToken.Cancel();
+        ctx.SenderQ.Writer.TryComplete();
       }
     }, senderQueueToken.Token);
     // ReSharper restore AccessToDisposedClosure
