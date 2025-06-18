@@ -152,7 +152,11 @@ public class WebsocketRequestContext : IRequestContext
   public async Task Close(ushort code) => await Close(code, "");
   public async Task Close(WebSocketCloseStatus code) => await Close(code, "");
   public async Task Close(ushort code, string reason) => await Close((WebSocketCloseStatus)code, reason);
-  public async Task Close(WebSocketCloseStatus code, string reason) => await _webSocket.CloseAsync(code, reason, CancellationToken.None);
+  public async Task Close(WebSocketCloseStatus code, string reason)
+  {
+    if (_webSocket.State == WebSocketState.Open)
+      await _webSocket.CloseAsync(code, reason, CancellationToken.None);
+  }
 
   public void Abort() => _webSocket.Abort();
 
