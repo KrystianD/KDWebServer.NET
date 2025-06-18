@@ -10,15 +10,15 @@ using KDWebServer.Handlers.Http;
 
 namespace KDWebServer.ClassHandler.Executor;
 
+public class ParserException : Exception
+{
+  public ParserException(string message) : base(message)
+  {
+  }
+}
+
 internal static class ClassHandlerExecutor
 {
-  public class ParserException : Exception
-  {
-    public ParserException(string message) : base(message)
-    {
-    }
-  }
-
   public static object?[] ParseArgs(IRequestContext ctx, EndpointDescriptor endpointDescriptor)
   {
     var pathParams = ctx.Params;

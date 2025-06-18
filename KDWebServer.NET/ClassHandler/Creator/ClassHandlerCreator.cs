@@ -114,7 +114,7 @@ public static class ClassHandlerCreator
                         var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
                         return await ClassHandlerExecutor.ExecuteHandler(endpointDescriptor, args, handler);
                       }
-                      catch (ClassHandlerExecutor.ParserException parserException) {
+                      catch (ParserException parserException) {
                         return Response.StatusCode(400, parserException.Message);
                       }
                     },
@@ -135,7 +135,7 @@ public static class ClassHandlerCreator
                           var args = ClassHandlerExecutor.ParseArgs(ctx, endpointDescriptor);
                           await handler(ctx, args, token);
                         }
-                        catch (ClassHandlerExecutor.ParserException parserException) {
+                        catch (ParserException parserException) {
                           await ctx.Close(1011, parserException.Message);
                         }
                       },
