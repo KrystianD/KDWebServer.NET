@@ -70,6 +70,11 @@ public static class ClassHandlerCreator
         endpointBuilder.WithDescription(descriptionAttribute.Description);
       }
 
+      var summaryAttribute = methodInfo.GetCustomAttribute<SummaryAttribute>();
+      if (summaryAttribute != null) {
+        endpointBuilder.WithSummary(summaryAttribute.Value);
+      }
+
       endpointBuilder.WithReturnDescription(methodInfo.GetCustomAttribute<ReturnDescriptionAttribute>()?.Let(x => x.Description) ?? "");
 
       var obsoleteAttribute = methodInfo.GetCustomAttribute<ObsoleteAttribute>();
@@ -321,6 +326,11 @@ public static class ClassHandlerCreator
     if (description != "") {
       op.Summary = description;
       op.Description = description;
+    }
+
+    var summary = endpointDefinition.Summary;
+    if (summary != "") {
+      op.Summary = summary;
     }
 
     if (endpointDefinition.IsDeprecated) {

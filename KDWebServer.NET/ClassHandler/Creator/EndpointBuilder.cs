@@ -15,6 +15,7 @@ public class EndpointDefinition
   public readonly HttpMethod HttpMethod;
 
   public Type ReturnType = typeof(object);
+  public string Summary = "";
   public string Description = "";
   public string Category = "";
   public string ReturnDescription = "";
@@ -61,6 +62,12 @@ public class EndpointBuilder
   public EndpointBuilder WithDescription(string description)
   {
     Endpoint.Description = description;
+    return this;
+  }
+
+  public EndpointBuilder WithSummary(string summary)
+  {
+    Endpoint.Summary = summary;
     return this;
   }
 
