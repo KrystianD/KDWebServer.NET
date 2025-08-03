@@ -26,11 +26,17 @@ public static class WebServerUtils
 
   internal static IPAddress? GetClientIp(HttpListenerContext httpContext, HashSet<IPAddress>? trustedProxies = null)
   {
-    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-    return GetClientIp(httpContext.Request.RemoteEndPoint?.Address,
-                       httpContext.Request.Headers["X-Forwarded-For"]?.Split(','),
-                       httpContext.Request.Headers["X-Real-IP"],
-                       trustedProxies);
+    try {
+      // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+      return GetClientIp(httpContext.Request.RemoteEndPoint?.Address,
+                         httpContext.Request.Headers["X-Forwarded-For"]?.Split(','),
+                         httpContext.Request.Headers["X-Real-IP"],
+                         trustedProxies);
+    }
+    catch (NullReferenceException) {
+      // HttpListener occasionally raises NullReferenceException here, probably when client disconnects before request info manages to be filled up.
+      return null;
+    }
   }
 
   private static IPAddress? GetClientIp(IPAddress? clientIp, IReadOnlyList<string>? xForwardedFor, string? realIp, HashSet<IPAddress>? trustedProxies = null)
