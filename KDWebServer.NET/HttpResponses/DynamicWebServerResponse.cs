@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -20,7 +21,7 @@ public class DynamicWebServerResponse : WebServerResponse
     _builder = builder;
   }
 
-  public override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override async Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                              Dictionary<string, object?> loggingProps)
   {
     handler.LoggerResponse.ForInfoEvent()
@@ -30,15 +31,15 @@ public class DynamicWebServerResponse : WebServerResponse
            .Log();
 
     response.StatusCode = StatusCode;
-    response.SendChunked = true;
+    // response.SendChunked = true;
     response.ContentType = _mimeType;
 
     var s = Stopwatch.StartNew();
-
-    await _builder(response.OutputStream);
+    
+    await _builder(response.Body);
 
     try {
-      await response.OutputStream.FlushAsync();
+      await response.Body.FlushAsync();
     }
     catch (ObjectDisposedException) {
       // stream may be already closed by the user, which is fine

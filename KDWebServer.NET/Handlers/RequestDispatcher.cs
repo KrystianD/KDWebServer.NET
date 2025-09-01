@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.Exceptions;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.Handlers;
@@ -26,19 +28,22 @@ public class RequestDispatcher
     Logger = webServer.LogFactory?.GetLogger("webserver.dispatcher") ?? LogManager.LogFactory.CreateNullLogger();
   }
 
-  public async void DispatchRequest(HttpListenerContext httpContext, DateTime connectionTime, Stopwatch requestTimer)
+  public async Task DispatchRequest(HttpContext httpContext, DateTime connectionTime, Stopwatch requestTimer)
   {
     string shortId = WebServerUtils.GenerateRandomString(4);
     var remoteEndpoint = WebServerUtils.GetClientIp(httpContext, WebServer.TrustedProxies);
     var clientId = $"{remoteEndpoint} {shortId}";
+    var rawUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}/{httpContext.Request.Path}{httpContext.Request.QueryString}";
 
     var request = httpContext.Request;
     var response = httpContext.Response;
 
-    var path = Uri.UnescapeDataString(request.Url?.AbsolutePath ?? "");
+    var isWS = httpContext.WebSockets.IsWebSocketRequest;
 
-    var reqTypeStr = request.IsWebSocketRequest ? "WS" : "HTTP";
-    var logSuffix = $"{request.HttpMethod} {path}";
+    var path = Uri.UnescapeDataString(request.Path.Value ?? "");
+
+    var reqTypeStr = isWS ? "WS" : "HTTP";
+    var logSuffix = $"{request.Method} {path}";
 
     var advLogProperties = new Dictionary<string, object?>() {
         ["webserver.query"] = QueryStringValuesCollection.FromNameValueCollection(request.QueryString).GetAsDictionary(),
@@ -47,12 +52,12 @@ public class RequestDispatcher
     foreach (var observer in WebServer.Observers)
       observer.OnNewRequest(httpContext);
 
-    using (ScopeContext.PushProperty("webserver.method", request.HttpMethod))
+    using (ScopeContext.PushProperty("webserver.method", request.Method))
     using (ScopeContext.PushProperty("webserver.path", path))
-    using (ScopeContext.PushProperty("webserver.url", request.Url?.ToString()))
+    using (ScopeContext.PushProperty("webserver.url", rawUrl))
     using (ScopeContext.PushProperty("webserver.short_id", shortId))
     using (ScopeContext.PushProperty("webserver.remote_ip", remoteEndpoint)) {
-      if (remoteEndpoint == null || request.Url is null) {
+      if (remoteEndpoint == null) {
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid request - {logSuffix}")
               .Properties(advLogProperties)
@@ -65,7 +70,7 @@ public class RequestDispatcher
 
       RouteEndpointMatch? match;
       try {
-        match = MatchRoutes(path, new HttpMethod(request.HttpMethod));
+        match = MatchRoutes(path, new HttpMethod(request.Method));
         if (match == null) {
           Logger.ForTraceEvent()
                 .Message($"[{clientId}] Not found {reqTypeStr} request - {logSuffix}")
@@ -92,8 +97,8 @@ public class RequestDispatcher
         observer.OnRequestMatch(httpContext, match);
 
       if (match.Endpoint.IsWebsocket) {
-        if (request.IsWebSocketRequest) {
-          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, clientId, connectionTime, requestTimer, match);
+        if (isWS) {
+          var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, rawUrl, clientId, connectionTime, requestTimer, match);
           await wsHandler.Handle(advLogProperties).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }
@@ -108,7 +113,7 @@ public class RequestDispatcher
         }
       }
       else {
-        if (request.IsWebSocketRequest) { // WS request to HTTP endpoint
+        if (isWS) { // WS request to HTTP endpoint
           Logger.ForInfoEvent()
                 .Message($"[{clientId}] WS request to HTTP endpoint - {logSuffix}")
                 .Properties(advLogProperties)
@@ -118,7 +123,7 @@ public class RequestDispatcher
           Helpers.CloseStream(response, 405);
         }
         else {
-          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, connectionTime, requestTimer, clientId, match);
+          var httpHandler = new Http.HttpClientHandler(WebServer, httpContext, remoteEndpoint, rawUrl, connectionTime, requestTimer, clientId, match);
           await httpHandler.Handle(advLogProperties).ConfigureAwait(false);
           Helpers.CloseStream(response);
         }

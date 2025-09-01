@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -21,7 +22,7 @@ public class StreamWebServerResponse : WebServerResponse
     _mimeType = mimeType;
   }
 
-  public override async Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override async Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                              Dictionary<string, object?> loggingProps)
   {
     long lengthToSend = -1;
@@ -46,13 +47,13 @@ public class StreamWebServerResponse : WebServerResponse
     var s = Stopwatch.StartNew();
 
     if (lengthToSend == -1) {
-      response.SendChunked = true;
+      // response.SendChunked = true;
     }
     else {
-      response.ContentLength64 = lengthToSend;
+      response.ContentLength = lengthToSend;
     }
 
-    await _stream.CopyToAsync(response.OutputStream);
+    await _stream.CopyToAsync(response.Body);
     if (_closeAfter)
       _stream.Close();
     

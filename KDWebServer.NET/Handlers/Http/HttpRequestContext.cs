@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Xml.Linq;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 
 namespace KDWebServer.Handlers.Http;
@@ -11,12 +12,12 @@ namespace KDWebServer.Handlers.Http;
 [PublicAPI]
 public class HttpRequestContext : IRequestContext
 {
-  public HttpListenerContext HttpContext { get; }
+  public HttpContext HttpContext { get; }
   public CancellationToken Token { get; }
 
-  public string Path => HttpContext.Request.Url!.AbsolutePath;
-  public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
+  public string Path => HttpContext.Request.Path.Value;
   public IPAddress RemoteEndpoint { get; }
+  public string RawUrl { get; }
 
   public HttpMethod HttpMethod { get; }
 
@@ -26,32 +27,28 @@ public class HttpRequestContext : IRequestContext
   // Params
   public QueryStringValuesCollection QueryString { get; }
 
-  // Headers
-  public QueryStringValuesCollection Headers { get; }
-
   // Content
   public byte[] RawData { get; set; }
   public QueryStringValuesCollection? FormData { get; set; }
   public JToken? JsonData { get; set; }
   public XDocument? XmlData { get; set; }
 
-  internal HttpRequestContext(HttpListenerContext httpContext, IPAddress remoteEndpoint, RequestDispatcher.RouteEndpointMatch match, byte[] rawData, CancellationToken token)
+  internal HttpRequestContext(HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, RequestDispatcher.RouteEndpointMatch match, byte[] rawData, CancellationToken token)
   {
     HttpContext = httpContext;
     Token = token;
 
-    HttpMethod = new HttpMethod(httpContext.Request.HttpMethod);
+    HttpMethod = new HttpMethod(httpContext.Request.Method);
 
     Params = match.RouteParams;
 
-    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
-
-    Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
+    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Query);
 
     RemoteEndpoint = remoteEndpoint;
+    RawUrl = rawUrl;
 
     RawData = rawData;
   }
 
-  public string ReadAsString() => HttpContext.Request.ContentEncoding.GetString(RawData);
+  // public string ReadAsString() => HttpContext.Request.ContentEncoding.GetString(RawData);
 }

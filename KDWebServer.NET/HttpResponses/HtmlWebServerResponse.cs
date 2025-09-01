@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -16,7 +17,7 @@ public class HtmlWebServerResponse : WebServerResponse
     _html = html;
   }
 
-  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
     var text = WebServerUtils.ExtractSimpleHtmlText(_html);
@@ -32,8 +33,8 @@ public class HtmlWebServerResponse : WebServerResponse
 
     response.StatusCode = StatusCode;
     response.ContentType = "text/html";
-    response.ContentLength64 = resp.LongLength;
+    response.ContentLength = resp.LongLength;
 
-    return response.OutputStream.WriteAsync(resp, 0, resp.Length);
+    return response.Body.WriteAsync(resp, 0, resp.Length);
   }
 }

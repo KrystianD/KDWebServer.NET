@@ -8,6 +8,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 using Nito.AsyncEx;
 using NLog;
 
@@ -17,16 +18,17 @@ namespace KDWebServer.Handlers.Websocket;
 [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
 public class WebsocketClientHandler
 {
-  private readonly HttpListenerContext _httpContext;
+  private readonly HttpContext _httpContext;
   private readonly DateTime _connectionTime;
   private readonly RequestDispatcher.RouteEndpointMatch Match;
 
   private WebServer WebServer { get; }
   public ILogger Logger { get; }
+  public string RawUrl { get; }
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal WebsocketClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, string clientId, DateTime connectionTime, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
+  internal WebsocketClientHandler(WebServer webServer, HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, string clientId, DateTime connectionTime, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
     _connectionTime = connectionTime;
@@ -34,6 +36,7 @@ public class WebsocketClientHandler
     Logger = webServer.LogFactory?.GetLogger("webserver.ws") ?? LogManager.LogFactory.CreateNullLogger();
 
     RemoteEndpoint = remoteEndpoint;
+    RawUrl = rawUrl;
     ClientId = clientId;
     Match = match;
   }
@@ -41,12 +44,12 @@ public class WebsocketClientHandler
   // ReSharper disable AccessToDisposedClosure
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
-    var wsCtx = await _httpContext.AcceptWebSocketAsync(null!).ConfigureAwait(false);
+    var wsCtx = await _httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
 
     var serverShutdownToken = WebServer.ServerShutdownToken;
 
-    var ws = wsCtx.WebSocket;
-    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, Match, ws, WebServer.WebsocketSenderQueueLength, serverShutdownToken);
+    var ws = wsCtx;
+    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, ws, WebServer.WebsocketSenderQueueLength, serverShutdownToken);
 
     using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
 
@@ -70,7 +73,7 @@ public class WebsocketClientHandler
     }, senderQueueToken.Token);
     // ReSharper restore AccessToDisposedClosure
 
-    var logSuffix = $"{_httpContext.Request.Url!.AbsolutePath}";
+    var logSuffix = $"{_httpContext.Request.Path.Value}";
 
     Logger.ForInfoEvent()
           .Message($"[{ClientId}] New WS request - {logSuffix}")

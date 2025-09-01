@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 using Nito.AsyncEx;
 
 namespace KDWebServer.Handlers.Websocket;
@@ -33,12 +34,12 @@ public class WebsocketRequestContext : IRequestContext
 {
   private readonly WebSocket _webSocket;
 
-  public HttpListenerContext HttpContext { get; }
+  public HttpContext HttpContext { get; }
   public CancellationToken Token { get; }
 
-  public string Path => HttpContext.Request.Url!.AbsolutePath;
-  public string? ForwardedUri => Headers.TryGetString("X-Forwarded-Uri", out var value) ? value : null;
+  public string Path => HttpContext.Request.Path.Value;
   public IPAddress RemoteEndpoint { get; }
+  public string RawUrl { get; }
 
   public HttpMethod HttpMethod => HttpMethod.Get;
 
@@ -48,17 +49,15 @@ public class WebsocketRequestContext : IRequestContext
   // Params
   public QueryStringValuesCollection QueryString { get; }
 
-  // Headers
-  public QueryStringValuesCollection Headers { get; }
-
   // WebSocket
   internal long _senderQueueBytes;
   internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
   public long SenderQueueBytes => _senderQueueBytes;
   public int SenderQueueCount => SenderQ.Reader.Count;
 
-  internal WebsocketRequestContext(HttpListenerContext httpContext,
+  internal WebsocketRequestContext(HttpContext httpContext,
                                    IPAddress remoteEndpoint,
+                                   string rawUrl,
                                    RequestDispatcher.RouteEndpointMatch match,
                                    WebSocket webSocket,
                                    int senderQueueLength,
@@ -71,11 +70,10 @@ public class WebsocketRequestContext : IRequestContext
 
     Params = match.RouteParams;
 
-    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.QueryString);
-
-    Headers = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Headers);
+    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Query);
 
     RemoteEndpoint = remoteEndpoint;
+    RawUrl = rawUrl;
 
     SenderQ = Channel.CreateBounded<WebsocketOutgoingMessage>(senderQueueLength);
   }
@@ -152,6 +150,7 @@ public class WebsocketRequestContext : IRequestContext
   public async Task Close(ushort code) => await Close(code, "");
   public async Task Close(WebSocketCloseStatus code) => await Close(code, "");
   public async Task Close(ushort code, string reason) => await Close((WebSocketCloseStatus)code, reason);
+
   public async Task Close(WebSocketCloseStatus code, string reason)
   {
     if (_webSocket.State == WebSocketState.Open)

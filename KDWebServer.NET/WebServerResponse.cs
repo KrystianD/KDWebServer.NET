@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace KDWebServer;
 
@@ -13,7 +14,7 @@ public abstract class WebServerResponse : System.Exception
 
   internal readonly WebHeaderCollection Headers = new();
 
-  public abstract Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public abstract Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps);
 
   public void SetHeader(HttpResponseHeader header, string value) => Headers.Add(header, value);

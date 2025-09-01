@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -16,7 +17,7 @@ public class RedirectWebServerResponse : WebServerResponse
     _location = location;
   }
 
-  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
     handler.LoggerResponse.ForInfoEvent()
@@ -27,7 +28,7 @@ public class RedirectWebServerResponse : WebServerResponse
            .Log();
 
     response.StatusCode = StatusCode;
-    response.RedirectLocation = _location;
+    response.Redirect( _location);
 
     return Task.CompletedTask;
   }

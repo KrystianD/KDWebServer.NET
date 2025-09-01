@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -29,7 +30,7 @@ public class NotFoundWebServerResponse : WebServerResponse
     StatusCode = 404;
   }
 
-  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
     var logMsg = handler.LoggerResponse.ForInfoEvent()
@@ -67,8 +68,8 @@ public class NotFoundWebServerResponse : WebServerResponse
 
     response.StatusCode = StatusCode;
     if (resp != null) {
-      response.ContentLength64 = resp.LongLength;
-      return response.OutputStream.WriteAsync(resp, 0, resp.Length);
+      response.ContentLength = resp.LongLength;
+      return response.Body.WriteAsync(resp, 0, resp.Length);
     }
     else {
       return Task.CompletedTask;

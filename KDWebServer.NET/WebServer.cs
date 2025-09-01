@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,9 +14,17 @@ using JetBrains.Annotations;
 using KDWebServer.Handlers;
 using KDWebServer.Handlers.Http;
 using KDWebServer.Handlers.Websocket;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NJsonSchema;
 using NLog;
 using NSwag;
+using ILogger = NLog.ILogger;
 
 namespace KDWebServer;
 
@@ -58,7 +67,7 @@ public class WebServer
 
   public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx, CancellationToken token);
 
-  private HttpListener? _listener;
+  private WebApplication _listener;
 
   public class EndpointDefinition
   {
@@ -104,7 +113,6 @@ public class WebServer
 
   public int WebsocketSenderQueueLength = 10;
 
-  private Thread _listenerThread;
   private CancellationTokenSource? _serverShutdownTokenSource;
   internal CancellationToken ServerShutdownToken => _serverShutdownTokenSource!.Token;
 
@@ -114,9 +122,11 @@ public class WebServer
 
   public WebServer(LogFactory? factory, WebServerConfig? config = null, SynchronizationContext? synchronizationContext = null)
   {
+    config ??= new WebServerConfig();
+
     LogFactory = factory;
     SynchronizationContext = synchronizationContext;
-    Config = config ?? new WebServerConfig();
+    Config = config;
     _logger = factory?.GetLogger("webserver") ?? LogManager.LogFactory.CreateNullLogger();
   }
 
@@ -221,87 +231,59 @@ public class WebServer
     AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(schemaJson));
   }
 
-  public void RunSync(string host, int port, WebServerSslConfig? sslConfig = null)
+  public class NoopConsoleLifetime : IHostLifetime
   {
-    RunAsync(host, port, sslConfig);
-
-    _listenerThread.Join();
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task WaitForStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
   }
 
-  public void RunAsync(string host, int port, WebServerSslConfig? sslConfig = null)
+  public void Start(string host, int port)
   {
-    Start(host, port, sslConfig);
+    var builder = WebApplication.CreateBuilder();
+    builder.Services.AddLogging(x => x.ClearProviders());
+    builder.Services.AddSingleton<IHostLifetime, NoopConsoleLifetime>();
 
-    _listenerThread = new Thread(InternalRun);
-    _listenerThread.Name = "WebServer";
-    _listenerThread.IsBackground = true;
-    _listenerThread.Start();
-  }
+    builder.Services.Configure<KestrelServerOptions>(options => {
+      options.AllowSynchronousIO = true;
+    });
 
-  private void Start(string host, int port, WebServerSslConfig? sslConfig)
-  {
-    _listener = new HttpListener();
+    builder.WebHost.UseKestrel(options => {
+      options.Listen(IPAddress.Any, port);
+    });
+    _listener = builder.Build();
 
-    if (sslConfig == null) {
-      _logger.Info($"Starting HTTP server on http://{host}:{port}");
-      _listener.Prefixes.Add($"http://*:{port}/");
-    }
-    else {
-      throw new ArgumentException("ssl not supported");
-    }
+    _listener.UseWebSockets(new WebSocketOptions() {
+    });
+    _listener.Use(async (HttpContext context, Func<Task> next) => {
+      await HandlerRequest(context);
+    });
 
-    _listener.Start();
+    _logger.Info($"Starting HTTP server on http://{host}:{port}");
+
     _serverShutdownTokenSource = new();
+    _listener.RunAsync(_serverShutdownTokenSource.Token);
   }
 
   public void Stop()
   {
-    _listener?.Stop();
+    _listener?.StopAsync();
     _serverShutdownTokenSource?.Cancel();
   }
 
   [SuppressMessage("ReSharper", "FunctionNeverReturns")]
-  private void InternalRun()
+  private async Task HandlerRequest(HttpContext httpContext)
   {
-    while (!_serverShutdownTokenSource!.IsCancellationRequested) {
-      HttpListenerContext? httpContext = null;
-      try {
-        httpContext = _listener!.GetContext();
-        var connectionTime = DateTime.UtcNow;
-        var requestTimer = Stopwatch.StartNew();
+    try {
+      var connectionTime = DateTime.UtcNow;
+      var requestTimer = Stopwatch.StartNew();
 
-        // C# HTTP server automatically sends back /Length Required/ error response
-        if (httpContext.Response.StatusCode == 411) {
-          continue;
-        }
-
-        // workaround: access to httpContext.Request sometimes gives NullReferenceException for some reason
-        try {
-          _ = httpContext.Request;
-        }
-        catch (NullReferenceException) {
-          try { httpContext.Response.Close(); }
-          catch { // ignored
-          }
-
-          continue;
-        }
-
-        // run handler in the thread pool
-        Task.Run(() => {
-          var rq = new RequestDispatcher(this);
-          rq.DispatchRequest(httpContext, connectionTime, requestTimer);
-        }, ServerShutdownToken);
-      }
-      catch (ObjectDisposedException) {
-      }
-      catch (Exception e) {
-        _logger.Error(e, "An error occurred during handling webserver client");
-        if (httpContext != null) {
-          httpContext.Response.StatusCode = 500;
-          httpContext.Response.Close();
-        }
-      }
+      var rq = new RequestDispatcher(this);
+      await rq.DispatchRequest(httpContext, connectionTime, requestTimer);
+    }
+    catch (Exception e) {
+      _logger.Error(e, "An error occurred during handling webserver client");
+      httpContext.Response.StatusCode = 500;
+      await httpContext.Response.CompleteAsync();
     }
   }
 }

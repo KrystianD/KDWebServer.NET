@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
+using Microsoft.AspNetCore.Http;
 using NLog;
 
 namespace KDWebServer.HttpResponses;
@@ -17,7 +18,7 @@ public class BinaryWebServerResponse : WebServerResponse
     _mimeType = mimeType;
   }
 
-  public override Task WriteToResponse(HttpClientHandler handler, HttpListenerResponse response, WebServerLoggerConfig loggerConfig,
+  public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
                                        Dictionary<string, object?> loggingProps)
   {
     handler.LoggerResponse.ForInfoEvent()
@@ -29,8 +30,8 @@ public class BinaryWebServerResponse : WebServerResponse
 
     response.StatusCode = StatusCode;
     response.ContentType = _mimeType;
-    response.ContentLength64 = _data.LongLength;
+    response.ContentLength = _data.LongLength;
 
-    return response.OutputStream.WriteAsync(_data, 0, _data.Length);
+    return response.Body.WriteAsync(_data, 0, _data.Length);
   }
 }

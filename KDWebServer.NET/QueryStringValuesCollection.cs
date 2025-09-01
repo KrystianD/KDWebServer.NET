@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Web;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 
 namespace KDWebServer;
@@ -103,6 +104,34 @@ public class QueryStringValuesCollection
     return col;
   }
 
+  public static QueryStringValuesCollection FromNameValueCollection(IQueryCollection d)
+  {
+    var col = new QueryStringValuesCollection();
+    foreach (string key in d.Keys) {
+      var values = d[key].ToArray();
+      if (values == null)
+        continue;
+
+      var valuesCollection = new ValuesCollection();
+
+      if (key == null) {
+        var value = values[0];
+        // ReSharper disable once InlineTemporaryVariable
+        string actualKey = value;
+        valuesCollection.AddValue(new Value(null));
+        col._valuesCollections[actualKey] = valuesCollection;
+      }
+      else {
+        foreach (var value in values)
+          valuesCollection.AddValue(new Value(value));
+        col._valuesCollections[key] = valuesCollection;
+      }
+    }
+
+    return col;
+  }
+
+  public static QueryStringValuesCollection FromNameValueCollection(QueryString d) => d.HasValue ? FromNameValueCollection(HttpUtility.ParseQueryString(d.Value)) : new();
   public static QueryStringValuesCollection Parse(string qs) => FromNameValueCollection(HttpUtility.ParseQueryString(qs));
 
   public Dictionary<string, string> GetAsDictionarySingleValues()

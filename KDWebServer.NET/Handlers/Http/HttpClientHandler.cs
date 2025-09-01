@@ -5,12 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nito.AsyncEx;
+using Nito.Disposables;
 using NLog;
 
 namespace KDWebServer.Handlers.Http;
@@ -19,7 +22,7 @@ public class HttpClientHandler
 {
   private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
 
-  private readonly HttpListenerContext _httpContext;
+  private readonly HttpContext _httpContext;
   private readonly DateTime _connectionTime;
   private readonly Stopwatch _requestTimer;
   private readonly RequestDispatcher.RouteEndpointMatch Match;
@@ -29,10 +32,11 @@ public class HttpClientHandler
   private WebServer WebServer { get; }
   public ILogger Logger { get; }
   public ILogger LoggerResponse { get; }
+  public string RawUrl { get; }
   public string ClientId { get; }
   private IPAddress RemoteEndpoint { get; }
 
-  internal HttpClientHandler(WebServer webServer, HttpListenerContext httpContext, IPAddress remoteEndpoint, DateTime connectionTime, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
+  internal HttpClientHandler(WebServer webServer, HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, DateTime connectionTime, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
   {
     _httpContext = httpContext;
     _connectionTime = connectionTime;
@@ -42,6 +46,7 @@ public class HttpClientHandler
     LoggerResponse = webServer.LogFactory?.GetLogger("webserver.http.response") ?? LogManager.LogFactory.CreateNullLogger();
 
     RemoteEndpoint = remoteEndpoint;
+    RawUrl = rawUrl;
     ClientId = clientId;
     Match = match;
   }
@@ -50,17 +55,17 @@ public class HttpClientHandler
   {
     var serverShutdownToken = WebServer.ServerShutdownToken;
 
-    _httpContext.Response.AppendHeader("Access-Control-Allow-Origin", "*");
+    _httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
     HttpRequestContext ctx;
 
     var props = new Dictionary<string, object?>(advLogProperties);
     props.Add("webserver.content_type", _httpContext.Request.ContentType);
-    props.Add("webserver.content_length", _httpContext.Request.ContentLength64);
+    props.Add("webserver.content_length", _httpContext.Request.ContentLength);
     try {
       var rawData = await ReadPayload(_httpContext, serverShutdownToken).ConfigureAwait(false);
 
-      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, Match, rawData, serverShutdownToken);
+      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, rawData, serverShutdownToken);
 
       if (_httpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
@@ -69,7 +74,7 @@ public class HttpClientHandler
     }
     catch (Exception e) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath} - {e.Message}")
+            .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.Method} {_httpContext.Request.Path.Value} - {e.Message}")
             .Properties(props)
             .Property("webserver.status_code", 400)
             .Log();
@@ -81,7 +86,7 @@ public class HttpClientHandler
     var ep = Match.Endpoint;
 
     Logger.ForInfoEvent()
-          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url!.AbsolutePath}")
+          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
           .Properties(props)
           .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
@@ -136,7 +141,7 @@ public class HttpClientHandler
       ProcessingTime = _requestTimer.ElapsedMilliseconds;
 
       Logger.ForErrorEvent()
-            .Message($"[{ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_httpContext.Request.HttpMethod} {_httpContext.Request.Url.AbsolutePath}")
+            .Message($"[{ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
             .Properties(props)
             .Property("webserver.status_code", 500)
             .Exception(e)
@@ -146,14 +151,14 @@ public class HttpClientHandler
     }
   }
 
-  private static async Task<byte[]> ReadPayload(HttpListenerContext httpContext, CancellationToken token)
+  private static async Task<byte[]> ReadPayload(HttpContext httpContext, CancellationToken token)
   {
-    if (!httpContext.Request.HasEntityBody)
-      return Array.Empty<byte>();
+    // if (!httpContext.Request.HasEntityBody)
+    //   return Array.Empty<byte>();
 
     using var ms = new MemoryStream();
 
-    await httpContext.Request.InputStream.CopyToAsync(ms, token);
+    await httpContext.Request.Body.CopyToAsync(ms, token);
 
     return ms.ToArray();
   }
@@ -178,28 +183,28 @@ public class HttpClientHandler
 
     switch (ct.MediaType) {
       case "application/x-www-form-urlencoded":
-        if (!httpContext.Request.HasEntityBody)
-          return "(empty)";
+        // if (!httpContext.Request.HasFormContentType)
+        //   return "(empty)";
 
-        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+        payload = Encoding.UTF8.GetString(ctx.RawData);
 
         ctx.FormData = QueryStringValuesCollection.Parse(payload);
         return ctx.FormData;
 
       case "application/json":
-        if (!httpContext.Request.HasEntityBody)
-          return "(empty)";
+        // if (!httpContext.Request.HasFormContentType)
+        //   return "(empty)";
 
-        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+        payload = Encoding.UTF8.GetString(ctx.RawData);
 
         ctx.JsonData = JsonConvert.DeserializeObject<JToken>(payload, JsonSerializerSettings)!;
         return ctx.JsonData;
 
       case "text/xml":
-        if (!httpContext.Request.HasEntityBody)
-          return "(empty)";
+        // if (!httpContext.Request.HasFormContentType)
+        //   return "(empty)";
 
-        payload = httpContext.Request.ContentEncoding.GetString(ctx.RawData);
+        payload = Encoding.UTF8.GetString(ctx.RawData);
 
         ctx.XmlData = XDocument.Parse(payload);
         return ctx.XmlData;

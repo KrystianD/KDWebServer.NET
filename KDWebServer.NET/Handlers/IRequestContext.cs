@@ -3,18 +3,19 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 
 namespace KDWebServer.Handlers;
 
 [PublicAPI]
 public interface IRequestContext
 {
-  public HttpListenerContext HttpContext { get; }
+  public HttpContext HttpContext { get; }
   public CancellationToken Token { get; }
 
   public string Path { get; }
-  public string? ForwardedUri { get; }
   public IPAddress RemoteEndpoint { get; }
+  public string RawUrl { get; }
 
   public HttpMethod HttpMethod { get; }
 
@@ -23,7 +24,4 @@ public interface IRequestContext
 
   // Params
   public QueryStringValuesCollection QueryString { get; }
-
-  // Headers
-  public QueryStringValuesCollection Headers { get; }
 }
