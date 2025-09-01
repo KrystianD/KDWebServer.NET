@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +19,7 @@ public class HtmlWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     var text = WebServerUtils.ExtractSimpleHtmlText(_html);
 
@@ -35,6 +36,6 @@ public class HtmlWebServerResponse : WebServerResponse
     response.ContentType = "text/html";
     response.ContentLength = resp.LongLength;
 
-    return response.Body.WriteAsync(resp, 0, resp.Length);
+    return response.Body.WriteAsync(resp, 0, resp.Length, token);
   }
 }

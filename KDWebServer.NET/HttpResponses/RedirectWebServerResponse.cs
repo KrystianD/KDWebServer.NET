@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +19,7 @@ public class RedirectWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending Redirect response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) (to {_location})")

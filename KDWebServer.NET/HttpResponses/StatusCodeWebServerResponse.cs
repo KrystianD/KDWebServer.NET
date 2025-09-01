@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -23,7 +24,7 @@ public class StatusCodeWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     HttpStatusCode code = (HttpStatusCode)StatusCode;
 
@@ -47,7 +48,7 @@ public class StatusCodeWebServerResponse : WebServerResponse
       response.ContentType = "text/plain";
       response.ContentLength = resp.LongLength;
 
-      return response.Body.WriteAsync(resp, 0, resp.Length);
+      return response.Body.WriteAsync(resp, 0, resp.Length, token);
     }
   }
 }

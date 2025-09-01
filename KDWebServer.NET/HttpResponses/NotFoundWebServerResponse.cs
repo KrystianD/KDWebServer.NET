@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ public class NotFoundWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     var logMsg = handler.LoggerResponse.ForInfoEvent()
                         .Property("webserver.status_code", StatusCode);
@@ -69,7 +70,7 @@ public class NotFoundWebServerResponse : WebServerResponse
     response.StatusCode = StatusCode;
     if (resp != null) {
       response.ContentLength = resp.LongLength;
-      return response.Body.WriteAsync(resp, 0, resp.Length);
+      return response.Body.WriteAsync(resp, 0, resp.Length, token);
     }
     else {
       return Task.CompletedTask;

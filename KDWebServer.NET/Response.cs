@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.HttpResponses;
@@ -33,10 +34,16 @@ public static class Response
   public static StreamWebServerResponse Stream(Stream stream, bool closeAfter) => new(stream, closeAfter);
   public static StreamWebServerResponse Stream(Stream stream, bool closeAfter, string mimeType) => new(stream, closeAfter, mimeType);
 
-  public static DynamicWebServerResponse Dynamic(string mimeType, Action<Stream> builder) => new(mimeType, stream => {
+  public static DynamicWebServerResponse Dynamic(string mimeType, Action<Stream, CancellationToken> builder) => new(mimeType, (stream, token) => {
+    builder(stream, token);
+    return Task.CompletedTask;
+  });
+
+  public static DynamicWebServerResponse Dynamic(string mimeType, Action<Stream> builder) => new(mimeType, (stream, _) => {
     builder(stream);
     return Task.CompletedTask;
   });
 
-  public static DynamicWebServerResponse Dynamic(string mimeType, Func<Stream, Task> builder) => new(mimeType, builder);
+  public static DynamicWebServerResponse Dynamic(string mimeType, Func<Stream, CancellationToken, Task> builder) => new(mimeType, builder);
+  public static DynamicWebServerResponse Dynamic(string mimeType, Func<Stream, Task> builder) => new(mimeType, (stream, _) => builder(stream));
 }

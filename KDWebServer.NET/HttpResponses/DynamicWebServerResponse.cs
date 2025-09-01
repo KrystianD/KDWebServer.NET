@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -13,16 +14,16 @@ namespace KDWebServer.HttpResponses;
 public class DynamicWebServerResponse : WebServerResponse
 {
   private readonly string _mimeType;
-  private readonly Func<Stream, Task> _builder;
+  private readonly Func<Stream, CancellationToken, Task> _builder;
 
-  internal DynamicWebServerResponse(string mimeType, Func<Stream, Task> builder)
+  internal DynamicWebServerResponse(string mimeType, Func<Stream, CancellationToken, Task> builder)
   {
     _mimeType = mimeType;
     _builder = builder;
   }
 
   public override async Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                             Dictionary<string, object?> loggingProps)
+                                             Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] starting dynamic response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms)")
@@ -35,11 +36,11 @@ public class DynamicWebServerResponse : WebServerResponse
     response.ContentType = _mimeType;
 
     var s = Stopwatch.StartNew();
-    
-    await _builder(response.Body);
+  
+    await _builder(response.Body, token);
 
     try {
-      await response.Body.FlushAsync();
+      await response.Body.FlushAsync(token);
     }
     catch (ObjectDisposedException) {
       // stream may be already closed by the user, which is fine

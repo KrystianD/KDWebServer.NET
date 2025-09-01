@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +20,7 @@ public class BinaryWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending binary response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.BytesToString(_data.Length)})")
@@ -32,6 +33,6 @@ public class BinaryWebServerResponse : WebServerResponse
     response.ContentType = _mimeType;
     response.ContentLength = _data.LongLength;
 
-    return response.Body.WriteAsync(_data, 0, _data.Length);
+    return response.Body.WriteAsync(_data, 0, _data.Length, token);
   }
 }

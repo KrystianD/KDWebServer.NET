@@ -59,13 +59,15 @@ public class HttpClientHandler
 
     HttpRequestContext ctx;
 
+    var requestAbortedToken = _httpContext.Response.HttpContext.RequestAborted;
+
     var props = new Dictionary<string, object?>(advLogProperties);
     props.Add("webserver.content_type", _httpContext.Request.ContentType);
     props.Add("webserver.content_length", _httpContext.Request.ContentLength);
     try {
       var rawData = await ReadPayload(_httpContext, serverShutdownToken).ConfigureAwait(false);
 
-      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, rawData, serverShutdownToken);
+      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, rawData, requestAbortedToken);
 
       if (_httpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
@@ -94,21 +96,25 @@ public class HttpClientHandler
     Stopwatch timer = new Stopwatch();
     timer.Start();
     try {
+      using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(requestAbortedToken, serverShutdownToken);
+
       WebServerResponse response;
       try {
+        // ReSharper disable AccessToDisposedClosure
         if (ep.RunOnThreadPool) {
-          response = await Task.Run(async () => await ep.HttpCallback!(ctx).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
+          response = await Task.Run(async () => await ep.HttpCallback!(ctx, requestCancellationCts.Token).ConfigureAwait(false), requestCancellationCts.Token).ConfigureAwait(false);
         }
         else if (WebServer.SynchronizationContext == null) {
-          response = await ep.HttpCallback!(ctx).ConfigureAwait(false);
+          response = await ep.HttpCallback!(ctx, requestCancellationCts.Token).ConfigureAwait(false);
         }
         else {
           var scope = ScopeContext.GetAllProperties().ToArray();
           response = await WebServer.SynchronizationContext.PostAsync(async () => {
             using var _ = ScopeContext.PushProperties(scope);
-            return await ep.HttpCallback!(ctx).ConfigureAwait(false);
+            return await ep.HttpCallback!(ctx, requestCancellationCts.Token).ConfigureAwait(false);
           }).ConfigureAwait(false);
         }
+        // ReSharper restore AccessToDisposedClosure
       }
       catch (WebServerResponse r) {
         response = r;
@@ -123,13 +129,19 @@ public class HttpClientHandler
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
 
-      await response.WriteToResponse(this, _httpContext.Response, WebServer.Config.Logger, advLogProperties).ConfigureAwait(false);
+      await response.WriteToResponse(this, _httpContext.Response, WebServer.Config.Logger, advLogProperties, requestAbortedToken).ConfigureAwait(false);
 
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);
     }
-    catch (OperationCanceledException) {
+    catch (OperationCanceledException) when (serverShutdownToken.IsCancellationRequested) {
       Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");
+    }
+    catch (OperationCanceledException) when (requestAbortedToken.IsCancellationRequested) {
+      Logger.ForInfoEvent()
+            .Message($"[{ClientId}] Request aborted - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
+            .Properties(props)
+            .Log();
     }
     catch (HttpListenerException e) when (e.ErrorCode == -2146232800) { // Unable to write data to the transport connection: Broken pipe.
       // transport is already closed

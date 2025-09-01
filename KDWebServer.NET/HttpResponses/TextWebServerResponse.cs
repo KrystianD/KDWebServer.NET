@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +21,7 @@ public class TextWebServerResponse : WebServerResponse
   }
 
   public override Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps)
+                                       Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     handler.LoggerResponse.ForInfoEvent()
            .Message($"[{handler.ClientId}] sending text response ({handler.HandlerTime}ms,{handler.ProcessingTime}ms) ({WebServerUtils.LimitText(_text, 30).Replace("\n", " ")})")
@@ -35,6 +36,6 @@ public class TextWebServerResponse : WebServerResponse
     response.ContentType = _contentType;
     response.ContentLength = resp.LongLength;
 
-    return response.Body.WriteAsync(resp, 0, resp.Length);
+    return response.Body.WriteAsync(resp, 0, resp.Length, token);
   }
 }

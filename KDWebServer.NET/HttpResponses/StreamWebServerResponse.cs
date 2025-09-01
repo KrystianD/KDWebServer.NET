@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using KDWebServer.Handlers.Http;
 using Microsoft.AspNetCore.Http;
@@ -23,7 +24,7 @@ public class StreamWebServerResponse : WebServerResponse
   }
 
   public override async Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                             Dictionary<string, object?> loggingProps)
+                                             Dictionary<string, object?> loggingProps, CancellationToken token)
   {
     long lengthToSend = -1;
     var lengthToSendStr = "unknown length";
@@ -53,7 +54,7 @@ public class StreamWebServerResponse : WebServerResponse
       response.ContentLength = lengthToSend;
     }
 
-    await _stream.CopyToAsync(response.Body);
+    await _stream.CopyToAsync(response.Body, token);
     if (_closeAfter)
       _stream.Close();
     

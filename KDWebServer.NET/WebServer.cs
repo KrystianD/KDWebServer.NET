@@ -62,8 +62,10 @@ public class WebServerLoggerConfig
 public class WebServer
 {
   public delegate Task<WebServerResponse> AsyncEndpointHandler(HttpRequestContext ctx);
+  public delegate Task<WebServerResponse> AsyncEndpointHandlerWithCancellation(HttpRequestContext ctx, CancellationToken token);
 
   public delegate WebServerResponse EndpointHandler(HttpRequestContext ctx);
+  public delegate WebServerResponse EndpointHandlerWithCancellation(HttpRequestContext ctx, CancellationToken token);
 
   public delegate Task AsyncWebsocketEndpointHandler(WebsocketRequestContext ctx, CancellationToken token);
 
@@ -72,7 +74,7 @@ public class WebServer
   public class EndpointDefinition
   {
     public readonly string Endpoint;
-    public readonly AsyncEndpointHandler? HttpCallback;
+    public readonly AsyncEndpointHandlerWithCancellation? HttpCallback;
     public readonly AsyncWebsocketEndpointHandler? WsCallback;
     public readonly HashSet<HttpMethod> Methods;
     public readonly bool SkipDocs;
@@ -82,7 +84,7 @@ public class WebServer
     public bool IsWebsocket => WsCallback != null;
 
     public EndpointDefinition(string endpoint,
-                              AsyncEndpointHandler? httpCallback,
+                              AsyncEndpointHandlerWithCancellation? httpCallback,
                               AsyncWebsocketEndpointHandler? wsCallback,
                               HashSet<HttpMethod> methods,
                               bool skipDocs,
@@ -141,6 +143,11 @@ public class WebServer
   }
 
   public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  {
+    AddEndpoint(endpoint, (x, _) => callback(x), methods, skipDocs, docsCreator, runOnThreadPool);
+  }
+
+  public void AddEndpoint(string endpoint, AsyncEndpointHandlerWithCancellation callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using KDWebServer.Handlers.Http;
@@ -15,7 +16,8 @@ public abstract class WebServerResponse : System.Exception
   internal readonly WebHeaderCollection Headers = new();
 
   public abstract Task WriteToResponse(HttpClientHandler handler, HttpResponse response, WebServerLoggerConfig loggerConfig,
-                                       Dictionary<string, object?> loggingProps);
+                                       Dictionary<string, object?> loggingProps,
+                                       CancellationToken token);
 
   public void SetHeader(HttpResponseHeader header, string value) => Headers.Add(header, value);
   public void SetHeader(string name, string value) => Headers.Add(name, value);
