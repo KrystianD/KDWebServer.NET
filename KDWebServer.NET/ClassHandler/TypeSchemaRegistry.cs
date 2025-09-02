@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Exceptions;
-using KDWebServer.ClassHandler.Validators;
 using Newtonsoft.Json;
 using NJsonSchema;
 using NSwag;
@@ -142,7 +141,7 @@ internal class TypeSchemaRegistry
 
       var allowedValuesAttribute = memberInfo.GetCustomAttribute<AllowedValuesAttribute>();
       if (allowedValuesAttribute != null) {
-        foreach (var value in allowedValuesAttribute.AllowedValues) {
+        foreach (var value in allowedValuesAttribute.Values) {
           jsonSchemaProperty.Enumeration.Add(value);
         }
       }
