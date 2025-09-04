@@ -156,6 +156,16 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Maximum = rangeAttribute.Maximum is int val2 ? val2 : (decimal)rangeAttribute.Maximum;
       }
 
+      var minLengthAttribute = memberInfo.GetCustomAttribute<MinLengthAttribute>();
+      if (minLengthAttribute != null) {
+        jsonSchemaProperty.MinLength = minLengthAttribute.Length;
+      }
+
+      var maxLengthAttribute = memberInfo.GetCustomAttribute<MaxLengthAttribute>();
+      if (maxLengthAttribute != null) {
+        jsonSchemaProperty.MaxLength = maxLengthAttribute.Length;
+      }
+
       var hideFromExample = memberInfo.GetCustomAttribute<HideFromExampleAttribute>() != null;
 
       DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
