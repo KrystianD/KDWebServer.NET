@@ -217,7 +217,7 @@ public class WebServer
 
     var schemaJson = _openApiDocument.ToJson();
 
-    AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml(endpoint + "/openapi.json", name: Name)));
+    AddGETEndpoint(endpoint, _ => Response.Html(SwaggerHelpers.GenerateSwaggerHtml("./docs/openapi.json", name: Name)));
     AddGETEndpoint(endpoint + "/openapi.json", _ => Response.Text(schemaJson));
   }
 
