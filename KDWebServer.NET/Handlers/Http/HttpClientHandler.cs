@@ -56,8 +56,6 @@ public class HttpClientHandler
     using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_httpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
     var requestAbortedToken = requestCancellationCts.Token;
 
-    _httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-
     HttpRequestContext ctx;
 
     var props = new Dictionary<string, object?>(advLogProperties);

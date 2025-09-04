@@ -68,6 +68,17 @@ public class RequestDispatcher
         return;
       }
 
+      if (!isWS) {
+        httpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        if (httpContext.Request.Method == "OPTIONS") {
+          httpContext.Response.Headers.Append("Access-Control-Allow-Headers", "*");
+          httpContext.Response.Headers.Append("Access-Control-Allow-Methods", "*");
+          httpContext.Response.Headers.Append("Access-Control-Max-Age", "86400");
+          Helpers.CloseStream(response, 204);
+          return;
+        }
+      }
+
       RouteEndpointMatch? match;
       try {
         match = MatchRoutes(path, new HttpMethod(request.Method));
