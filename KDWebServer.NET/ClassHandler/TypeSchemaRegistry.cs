@@ -119,7 +119,7 @@ internal class TypeSchemaRegistry
     };
 
 
-    var exampleObj = new Dictionary<string, object>();
+    var exampleObj = new Dictionary<string, object?>();
     schema.Example = exampleObj;
 
     var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x)
@@ -162,10 +162,10 @@ internal class TypeSchemaRegistry
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
       if (typeConverter != null) {
-        if (jsonSchemaProperty.Example != null)
-          exampleObj[name] = jsonSchemaProperty.Example;
-        else if (jsonSchemaProperty.Default != null)
-          exampleObj[name] = jsonSchemaProperty.Default;
+        if (exampleAttribute != null)
+          exampleObj[name] = exampleAttribute.Value;
+        else if (defaultValueAttribute != null)
+          exampleObj[name] = defaultValueAttribute.Value;
         else if (!hideFromExample)
           exampleObj[name] = typeConverter.Example;
 
