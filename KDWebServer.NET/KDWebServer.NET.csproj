@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <RootNamespace>KDWebServer</RootNamespace>
-        <Version>0.8.33</Version>
+        <Version>1.0.0</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Krystian Dużyński</Authors>
         <LangVersion>10</LangVersion>
