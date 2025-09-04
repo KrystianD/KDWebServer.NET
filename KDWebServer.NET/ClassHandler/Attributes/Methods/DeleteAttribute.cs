@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace KDWebServer.ClassHandler.Attributes.Methods;
 
 [PublicAPI]
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class DeleteAttribute : EndpointAttribute
 {
   public DeleteAttribute(string endpoint) : base(endpoint, HttpMethod.Delete)

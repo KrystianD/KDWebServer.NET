@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace KDWebServer.ClassHandler.Attributes.Methods;
 
 [PublicAPI]
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class PostAttribute : EndpointAttribute
 {
   public PostAttribute(string endpoint) : base(endpoint, HttpMethod.Post)

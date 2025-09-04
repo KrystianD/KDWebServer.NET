@@ -32,11 +32,8 @@ public static class ClassHandlerCreator
 
     var methods = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
-    foreach (var methodInfo in methods) {
-      var endpointAttribute = methodInfo.GetCustomAttribute<EndpointAttribute>();
-      if (endpointAttribute == null)
-        continue;
-
+    foreach (var methodInfo in methods)
+    foreach (var endpointAttribute in methodInfo.GetCustomAttributes<EndpointAttribute>()) {
       var ret = methodInfo.ReturnType;
       var retType = ret == typeof(Task)
           ? typeof(void)

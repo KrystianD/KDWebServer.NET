@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace KDWebServer.ClassHandler.Attributes;
 
 [PublicAPI]
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class EndpointAttribute : Attribute
 {
   public string Endpoint { get; internal set; }
