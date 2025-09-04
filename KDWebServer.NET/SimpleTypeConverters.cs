@@ -15,12 +15,14 @@ public static class SimpleTypeConverters
     public readonly string RouterTypeName;
     public readonly Action<JsonSchema> ApplyToJsonSchema;
     public readonly Func<string, object> FromStringConverter;
+    public object Example;
 
-    public TypeConverter(Type type, string routerTypeName, Action<JsonSchema> applyToJsonSchema, Func<string, object> fromStringConverter)
+    public TypeConverter(Type type, string routerTypeName, Action<JsonSchema> applyToJsonSchema, Func<string, object> fromStringConverter, object example)
     {
       Type = type;
       RouterTypeName = routerTypeName;
       FromStringConverter = fromStringConverter;
+      Example = example;
       ApplyToJsonSchema = applyToJsonSchema;
     }
   }
@@ -30,7 +32,8 @@ public static class SimpleTypeConverters
           x => {
             x.Type = JsonObjectType.Object;
           },
-          str => str),
+          str => str,
+          example: new { }),
       new(typeof(bool), "bool",
           x => {
             x.Type = JsonObjectType.Boolean;
@@ -41,57 +44,66 @@ public static class SimpleTypeConverters
                 "0" or "n" or "no" or "off" or "false" or "f" => false,
                 _ => throw new FormatException($"invalid boolean value: {str}"),
             };
-          }),
+          },
+          example: false),
       new(typeof(string), "string",
           x => {
             x.Type = JsonObjectType.String;
           },
-          str => str),
+          str => str,
+          example: "string"),
       new(typeof(int), "int",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "int32";
           },
-          str => int.Parse(str)),
+          str => int.Parse(str),
+          example: 0),
       new(typeof(long), "long",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "int64";
           },
-          str => long.Parse(str)),
+          str => long.Parse(str),
+          example: 0),
       new(typeof(Guid), "guid",
           x => {
             x.Type = JsonObjectType.String;
             x.Format = "uuid";
           },
-          str => Guid.Parse(str)),
+          str => Guid.Parse(str),
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"),
       new(typeof(decimal), "decimal",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "decimal";
           },
-          str => decimal.Parse(str)),
+          str => decimal.Parse(str),
+          example: "1.23"),
       new(typeof(float), "float",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "float";
           },
-          str => float.Parse(str)),
+          str => float.Parse(str),
+          example: "1.23"),
       new(typeof(double), "double",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "double";
           },
-          str => double.Parse(str)),
+          str => double.Parse(str),
+          example: "1.23"),
       new(typeof(DateTime), "datetime",
           x => {
             x.Type = JsonObjectType.String;
             x.Format = "date-time";
           },
-          str => DateTime.SpecifyKind(DateTime.ParseExact(str, 
+          str => DateTime.SpecifyKind(DateTime.ParseExact(str,
                                                           Consts.DefaultDateTimeFormat,
                                                           CultureInfo.InvariantCulture,
-                                                          DateTimeStyles.AdjustToUniversal), DateTimeKind.Utc)),
+                                                          DateTimeStyles.AdjustToUniversal), DateTimeKind.Utc),
+          example: "2025-01-01T00:00:00.000000Z"),
   };
 
   public static TypeConverter? GetConverterByType(Type type)
@@ -119,7 +131,8 @@ public static class SimpleTypeConverters
             foreach (var enumStr in enumStrs)
               schema.Enumeration.Add(enumStr.Key);
           },
-          s => enumStrs[s]);
+          s => enumStrs[s],
+          example: "string");
     }
     else if (NullabilityUtils.IsNullable(type, out var innerType)) {
       var innerTypeConverter = GetConverterByType(innerType);
@@ -132,7 +145,8 @@ public static class SimpleTypeConverters
                                  innerTypeConverter.ApplyToJsonSchema(x);
                                  x.IsNullableRaw = true;
                                },
-                               x => x == null! ? null! : innerTypeConverter.FromStringConverter(x));
+                               x => x == null! ? null! : innerTypeConverter.FromStringConverter(x),
+                               example: innerTypeConverter.Example);
     }
 
     return Converters.Find(x => x.Type == type);

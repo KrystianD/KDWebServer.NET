@@ -118,6 +118,10 @@ internal class TypeSchemaRegistry
         AllowAdditionalProperties = false,
     };
 
+
+    var exampleObj = new Dictionary<string, object>();
+    schema.Example = exampleObj;
+
     var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x)
                       .Concat(type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x));
 
@@ -152,10 +156,19 @@ internal class TypeSchemaRegistry
         jsonSchemaProperty.Maximum = rangeAttribute.Maximum is int val2 ? val2 : (decimal)rangeAttribute.Maximum;
       }
 
+      var hideFromExample = memberInfo.GetCustomAttribute<HideFromExampleAttribute>() != null;
+
       DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
       if (typeConverter != null) {
+        if (jsonSchemaProperty.Example != null)
+          exampleObj[name] = jsonSchemaProperty.Example;
+        else if (jsonSchemaProperty.Default != null)
+          exampleObj[name] = jsonSchemaProperty.Default;
+        else if (!hideFromExample)
+          exampleObj[name] = typeConverter.Example;
+
         typeConverter.ApplyToJsonSchema(jsonSchemaProperty);
       }
       else {
