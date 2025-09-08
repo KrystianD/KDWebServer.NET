@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Newtonsoft.Json.Linq;
 using NJsonSchema;
 
 namespace KDWebServer;
@@ -29,6 +30,18 @@ public static class SimpleTypeConverters
 
   private static readonly List<TypeConverter> Converters = new() {
       new(typeof(object), "object",
+          x => {
+            x.Type = JsonObjectType.Object;
+          },
+          str => str,
+          example: new { }),
+      new(typeof(JArray), "object",
+          x => {
+            x.Type = JsonObjectType.Array;
+          },
+          str => str,
+          example: Array.Empty<string?>()),
+      new(typeof(JObject), "object",
           x => {
             x.Type = JsonObjectType.Object;
           },
