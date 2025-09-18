@@ -7,9 +7,9 @@ namespace KDWebServer.ClassHandler.Attributes;
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class ExampleAttribute : Attribute
 {
-  public object Value { get; }
+  public object? Value { get; }
 
-  public ExampleAttribute(object value)
+  public ExampleAttribute(object? value)
   {
     Value = value;
   }
