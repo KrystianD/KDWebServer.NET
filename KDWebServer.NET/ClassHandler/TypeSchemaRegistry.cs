@@ -122,8 +122,7 @@ internal class TypeSchemaRegistry
     var exampleObj = new Dictionary<string, object?>();
     schema.Example = exampleObj;
 
-    var members = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x)
-                      .Concat(type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(x => (MemberInfo)x));
+    var members = TraverseForMembers(type).DistinctBy(x => x.Name);
 
     foreach (var memberInfo in members) {
       var jsonSchemaProperty = new JsonSchemaProperty();
@@ -261,5 +260,19 @@ internal class TypeSchemaRegistry
 
     jsonSchemaProperty.IsRequired = dataMemberAttribute.IsRequired;
     jsonSchemaProperty.IsNullableRaw = isNullable;
+  }
+
+  private static IEnumerable<MemberInfo> TraverseForMembers(Type curType)
+  {
+    if (curType.BaseType != null) {
+      foreach (var memberInfo in TraverseForMembers(curType.BaseType)) {
+        yield return memberInfo;
+      }
+    }
+
+    foreach (var memberInfo in curType.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(MemberInfo (x) => x)
+                                      .Concat(curType.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(MemberInfo (x) => x))) {
+      yield return memberInfo;
+    }
   }
 }
