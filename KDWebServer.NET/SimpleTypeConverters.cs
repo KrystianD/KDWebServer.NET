@@ -79,21 +79,21 @@ public static class SimpleTypeConverters
             x.Format = "decimal";
           },
           str => decimal.Parse(str),
-          example: "1.23"),
+          example: 1.23),
       new(typeof(float), "float",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "float";
           },
           str => float.Parse(str),
-          example: "1.23"),
+          example: 1.23),
       new(typeof(double), "double",
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "double";
           },
           str => double.Parse(str),
-          example: "1.23"),
+          example: 1.23),
       new(typeof(DateTime), "datetime",
           x => {
             x.Type = JsonObjectType.String;
