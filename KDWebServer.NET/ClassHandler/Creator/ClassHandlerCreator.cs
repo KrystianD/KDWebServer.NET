@@ -47,12 +47,12 @@ public static class ClassHandlerCreator
       var endpointBuilder = EndpointDefinition.Create(prefix + endpointAttribute.Endpoint, endpointAttribute.HttpMethod)
                                               .WithReturnType(retType);
 
-      foreach (var parameterInfo in methodInfo.GetParameters()) {
-        endpointBuilder.AddParameter(name: parameterInfo.Name!,
-                                     type: parameterInfo.ParameterType,
-                                     isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
-                                     parameterBuilder: builder => {
-                                       builder.WithDescription(parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? "");
+        foreach (var parameterInfo in methodInfo.GetParameters()) {
+          endpointBuilder.AddParameter(name: parameterInfo.GetCustomAttribute<NameAttribute>()?.Name ?? parameterInfo.Name!,
+                                       type: parameterInfo.ParameterType,
+                                       isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
+                                       parameterBuilder: builder => {
+                                         builder.WithDescription(parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? "");
 
                                        var defaultValue = GetParameterDefaultValue(parameterInfo);
                                        if (defaultValue.HasDefaultValue)
