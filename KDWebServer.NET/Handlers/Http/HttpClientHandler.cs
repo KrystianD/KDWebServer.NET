@@ -53,19 +53,18 @@ public class HttpClientHandler
 
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
-    var serverShutdownToken = WebServer.ServerShutdownToken;
+    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_httpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
+    var requestAbortedToken = requestCancellationCts.Token;
 
     _httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
     HttpRequestContext ctx;
 
-    var requestAbortedToken = _httpContext.Response.HttpContext.RequestAborted;
-
     var props = new Dictionary<string, object?>(advLogProperties);
     props.Add("webserver.content_type", _httpContext.Request.ContentType);
     props.Add("webserver.content_length", _httpContext.Request.ContentLength);
     try {
-      var rawData = await ReadPayload(_httpContext, serverShutdownToken).ConfigureAwait(false);
+      var rawData = await ReadPayload(_httpContext, requestAbortedToken).ConfigureAwait(false);
 
       ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, rawData, requestAbortedToken);
 
@@ -96,8 +95,6 @@ public class HttpClientHandler
     Stopwatch timer = new Stopwatch();
     timer.Start();
     try {
-      using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(requestAbortedToken, serverShutdownToken);
-
       WebServerResponse response;
       try {
         // ReSharper disable AccessToDisposedClosure
@@ -134,7 +131,7 @@ public class HttpClientHandler
       foreach (var observer in WebServer.Observers)
         observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);
     }
-    catch (OperationCanceledException) when (serverShutdownToken.IsCancellationRequested) {
+    catch (OperationCanceledException) when (WebServer.ServerShutdownToken.IsCancellationRequested) {
       Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");
     }
     catch (OperationCanceledException) when (requestAbortedToken.IsCancellationRequested) {

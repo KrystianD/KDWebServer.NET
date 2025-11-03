@@ -44,14 +44,14 @@ public class WebsocketClientHandler
   // ReSharper disable AccessToDisposedClosure
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
-    var wsCtx = await _httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+    var ws = await _httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
 
-    var serverShutdownToken = WebServer.ServerShutdownToken;
+    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_httpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
+    var requestAbortedToken = requestCancellationCts.Token;
 
-    var ws = wsCtx;
-    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, ws, WebServer.WebsocketSenderQueueLength, serverShutdownToken);
-
-    using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(serverShutdownToken);
+    using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(requestAbortedToken);
+    
+    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, ws, WebServer.WebsocketSenderQueueLength, senderQueueToken.Token);
 
     // ReSharper disable AccessToDisposedClosure
     var senderTask = Task.Run(async () => {
@@ -84,7 +84,7 @@ public class WebsocketClientHandler
     // ReSharper disable AccessToDisposedClosure
     try {
       if (Match.Endpoint.RunOnThreadPool) {
-        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), serverShutdownToken).ConfigureAwait(false);
+        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), senderQueueToken.Token).ConfigureAwait(false);
       }
       else if (WebServer.SynchronizationContext == null) {
         await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false);
