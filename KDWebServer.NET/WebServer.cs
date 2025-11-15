@@ -29,16 +29,6 @@ using ILogger = NLog.ILogger;
 namespace KDWebServer;
 
 [PublicAPI]
-public class WebServerSslConfig
-{
-  public SslProtocols EnabledSslProtocols { get; set; } = SslProtocols.Tls12;
-  public string? CertificatePath { get; set; }
-  public string? KeyPath { get; set; }
-  public bool ClientCertificateRequired { get; set; } = false;
-  public RemoteCertificateValidationCallback ClientCertificateValidationCallback { get; set; } = (_, _, _, _) => true;
-}
-
-[PublicAPI]
 public class WebServerConfig
 {
   public WebServerRouterConfig Router = new();
