@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Newtonsoft.Json.Linq;
@@ -145,7 +146,7 @@ public static class SimpleTypeConverters
               schema.Enumeration.Add(enumStr.Key);
           },
           s => enumStrs[s],
-          example: "string");
+          example: enumStrs.Keys.First());
     }
     else if (NullabilityUtils.IsNullable(type, out var innerType)) {
       var innerTypeConverter = GetConverterByType(innerType);

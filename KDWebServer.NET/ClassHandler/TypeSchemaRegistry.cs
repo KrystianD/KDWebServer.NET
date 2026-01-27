@@ -63,6 +63,7 @@ internal class TypeSchemaRegistry
     }
     else if (SimpleTypeConverters.GetConverterByType(type) is { } typeConverter) {
       typeConverter.ApplyToJsonSchema(jsonSchema);
+      jsonSchema.Example = typeConverter.Example;
     }
     else if (type.IsGenericType) {
       if (type.GetGenericTypeDefinition() == typeof(List<>)) {
@@ -88,6 +89,7 @@ internal class TypeSchemaRegistry
     jsonSchema.Type = JsonObjectType.Array;
     ApplyTypeToJsonSchema(listItemType, listSchema);
     jsonSchema.Item = listSchema;
+    jsonSchema.Example = new[] { listSchema.Example };
   }
 
   private void ApplyDictionaryTypeToJsonSchema(Type type, JsonSchema jsonSchema)
@@ -103,6 +105,10 @@ internal class TypeSchemaRegistry
     jsonSchema.Type = JsonObjectType.Object;
     ApplyTypeToJsonSchema(dictValueType, itemSchema);
     jsonSchema.AdditionalPropertiesSchema = itemSchema;
+
+    jsonSchema.Example = new Dictionary<string, object?>() {
+        ["string"] = itemSchema.Example,
+    };
   }
 
   private void ApplyCustomTypeToJsonSchema(Type type, JsonSchema jsonSchema)
@@ -182,6 +188,7 @@ internal class TypeSchemaRegistry
       }
       else {
         ApplyTypeToJsonSchema(fieldActualType, jsonSchemaProperty);
+        exampleObj[name] = jsonSchemaProperty.Example;
       }
 
       schema.Properties[name] = jsonSchemaProperty;
