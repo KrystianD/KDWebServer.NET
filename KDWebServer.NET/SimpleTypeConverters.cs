@@ -53,9 +53,9 @@ public static class SimpleTypeConverters
           },
           str => {
             return str.ToLower() switch {
-                "1" or "y" or "yes" or "on" or "t" or "true" => true,
+                "1" or "y" or "yes" or "on" or "t" or "true"  => true,
                 "0" or "n" or "no" or "off" or "false" or "f" => false,
-                _ => throw new FormatException($"invalid boolean value: {str}"),
+                _                                             => throw new FormatException($"invalid boolean value: {str}"),
             };
           },
           example: false),
@@ -130,10 +130,10 @@ public static class SimpleTypeConverters
 
         FieldInfo fieldInfo = value.GetType().GetField(value.ToString())!;
         var attribute = (EnumMemberAttribute?)fieldInfo.GetCustomAttribute(typeof(EnumMemberAttribute));
-        if (attribute?.Value is null)
-          throw new ArgumentException($"all enum ({type}) items must have EnumMember attribute set and not null");
-
-        enumStrs.Add(attribute.Value, value);
+        if (attribute?.Value is not null)
+          enumStrs.Add(attribute.Value, value);
+        else
+          enumStrs.Add(value.ToString(), value);
       }
 
       return new TypeConverter(
