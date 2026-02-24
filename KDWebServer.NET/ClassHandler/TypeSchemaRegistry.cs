@@ -89,7 +89,7 @@ internal class TypeSchemaRegistry
     jsonSchema.Type = JsonObjectType.Array;
     ApplyTypeToJsonSchema(listItemType, listSchema);
     jsonSchema.Item = listSchema;
-    jsonSchema.Example = new[] { listSchema.Example };
+    jsonSchema.Example = new[] { (listSchema.Reference ?? listSchema).Example };
   }
 
   private void ApplyDictionaryTypeToJsonSchema(Type type, JsonSchema jsonSchema)
@@ -107,7 +107,7 @@ internal class TypeSchemaRegistry
     jsonSchema.AdditionalPropertiesSchema = itemSchema;
 
     jsonSchema.Example = new Dictionary<string, object?>() {
-        ["string"] = itemSchema.Example,
+        ["string"] = (itemSchema.Reference ?? itemSchema).Example,
     };
   }
 
