@@ -176,20 +176,22 @@ internal class TypeSchemaRegistry
       DetermineProperties(memberInfo, jsonSchemaProperty, out var name, out var fieldActualType);
 
       var typeConverter = SimpleTypeConverters.GetConverterByType(fieldActualType);
+      object? example = null;
       if (typeConverter != null) {
-        if (exampleAttribute != null)
-          exampleObj[name] = exampleAttribute.Value;
-        else if (defaultValueAttribute != null)
-          exampleObj[name] = defaultValueAttribute.Value;
-        else if (!hideFromExample)
-          exampleObj[name] = typeConverter.Example;
-
         typeConverter.ApplyToJsonSchema(jsonSchemaProperty);
+        example = typeConverter.Example;
       }
       else {
         ApplyTypeToJsonSchema(fieldActualType, jsonSchemaProperty);
-        exampleObj[name] = jsonSchemaProperty.Example;
+        example = exampleObj[name] = jsonSchemaProperty.Example;
       }
+
+      if (exampleAttribute != null)
+        exampleObj[name] = exampleAttribute.Value;
+      else if (defaultValueAttribute != null)
+        exampleObj[name] = defaultValueAttribute.Value;
+      else if (!hideFromExample)
+        exampleObj[name] = example;
 
       schema.Properties[name] = jsonSchemaProperty;
     }
