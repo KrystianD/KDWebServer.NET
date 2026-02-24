@@ -143,7 +143,8 @@ public class WebsocketClientHandler
 
       senderQueueToken.Cancel();
       ctx.SenderQ.Writer.TryComplete();
-      await senderTask.ConfigureAwait(false);
+      if (!senderTask.IsCompleted)
+        await senderTask.ConfigureAwait(false);
 
       try {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -156,7 +157,8 @@ public class WebsocketClientHandler
     finally {
       senderQueueToken.Cancel();
       ctx.SenderQ.Writer.TryComplete();
-      await senderTask.ConfigureAwait(false);
+      if (!senderTask.IsCompleted)
+        await senderTask.ConfigureAwait(false);
     }
   }
 }
