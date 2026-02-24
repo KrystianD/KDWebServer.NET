@@ -271,9 +271,9 @@ public class WebServer
     _listener.RunAsync(_serverShutdownTokenSource.Token);
   }
 
-  public void Stop()
+  public async Task StopAsync()
   {
-    _listener?.StopAsync();
+    await _listener?.StopAsync();
     _serverShutdownTokenSource?.Cancel();
   }
 
