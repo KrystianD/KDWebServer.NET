@@ -11,6 +11,7 @@ internal class MethodParameterDescriptor
   public readonly MethodParameterBuilder ParameterBuilder;
 
   public ParameterKind? Kind;
+  public DefaultValue DefaultValue = new();
 
   // for Path
   public SimpleTypeConverters.TypeConverter? PathTypeConverter;

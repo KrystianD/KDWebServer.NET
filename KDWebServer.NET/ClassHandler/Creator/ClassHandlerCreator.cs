@@ -47,12 +47,12 @@ public static class ClassHandlerCreator
       var endpointBuilder = EndpointDefinition.Create(prefix + endpointAttribute.Endpoint, endpointAttribute.HttpMethod)
                                               .WithReturnType(retType);
 
-        foreach (var parameterInfo in methodInfo.GetParameters()) {
-          endpointBuilder.AddParameter(name: parameterInfo.GetCustomAttribute<NameAttribute>()?.Name ?? parameterInfo.Name!,
-                                       type: parameterInfo.ParameterType,
-                                       isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
-                                       parameterBuilder: builder => {
-                                         builder.WithDescription(parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? "");
+      foreach (var parameterInfo in methodInfo.GetParameters()) {
+        endpointBuilder.AddParameter(name: parameterInfo.GetCustomAttribute<NameAttribute>()?.Name ?? parameterInfo.Name!,
+                                     type: parameterInfo.ParameterType,
+                                     isNullable: NullabilityUtils.IsNullable(parameterInfo, out _),
+                                     parameterBuilder: builder => {
+                                       builder.WithDescription(parameterInfo.GetCustomAttribute<DescriptionAttribute>()?.Let(x => x.Description) ?? "");
 
                                        var defaultValue = GetParameterDefaultValue(parameterInfo);
                                        if (defaultValue.HasDefaultValue)
@@ -204,6 +204,7 @@ public static class ClassHandlerCreator
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue is { HasDefaultValue: true, OnlyForSwagger: false } || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.DefaultValue = methodParameterDescriptor.ParameterBuilder.DefaultValue;
         }
         else {
           if (bodyParameterDescriptor == null) {
@@ -230,6 +231,7 @@ public static class ClassHandlerCreator
           methodParameterDescriptor.Kind = ParameterKind.Query;
           methodParameterDescriptor.QueryTypeConverter = simpleTypeConverter;
           methodParameterDescriptor.QueryIsNullable = methodParameterDescriptor.ParameterBuilder.DefaultValue is { HasDefaultValue: true, OnlyForSwagger: false } || methodParameterDescriptor.IsNullable;
+          methodParameterDescriptor.DefaultValue = methodParameterDescriptor.ParameterBuilder.DefaultValue;
         }
         else {
           throw new MethodDescriptorException($"query parameter {methodParameterDescriptor.Name} type is incorrect for query parameter: {methodParameterDescriptor.ValueType}");
@@ -270,6 +272,12 @@ public static class ClassHandlerCreator
       FillFromDesc(p, descriptor);
       foreach (var value in descriptor.ParameterBuilder.DropdownItems)
         p.Schema.Enumeration.Add(value);
+
+      if (descriptor.DefaultValue.HasDefaultValue) {
+        p.Schema.Default = descriptor.DefaultValue.Value;
+        p.Schema.Example = descriptor.DefaultValue.Value;
+      }
+
       op.Parameters.Add(p);
     }
 
