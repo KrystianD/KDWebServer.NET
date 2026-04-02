@@ -65,6 +65,9 @@ internal class TypeSchemaRegistry
       typeConverter.ApplyToJsonSchema(jsonSchema);
       jsonSchema.Example = typeConverter.Example;
     }
+    else if (type.IsArray) {
+      ApplyListTypeToJsonSchema(type, jsonSchema);
+    }
     else if (type.IsGenericType) {
       if (type.GetGenericTypeDefinition() == typeof(List<>)) {
         ApplyListTypeToJsonSchema(type, jsonSchema);
@@ -83,7 +86,7 @@ internal class TypeSchemaRegistry
 
   private void ApplyListTypeToJsonSchema(Type type, JsonSchema jsonSchema)
   {
-    var listItemType = type.GenericTypeArguments[0];
+    var listItemType = type.IsArray ? type.GetElementType()! : type.GenericTypeArguments[0];
 
     var listSchema = new JsonSchema();
     jsonSchema.Type = JsonObjectType.Array;
@@ -183,7 +186,7 @@ internal class TypeSchemaRegistry
       }
       else {
         ApplyTypeToJsonSchema(fieldActualType, jsonSchemaProperty);
-        example = exampleObj[name] = jsonSchemaProperty.Example;
+        example = jsonSchemaProperty.Example;
       }
 
       if (exampleAttribute != null)
