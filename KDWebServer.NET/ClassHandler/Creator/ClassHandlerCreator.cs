@@ -277,6 +277,10 @@ public static class ClassHandlerCreator
         p.Schema.Default = descriptor.DefaultValue.Value;
         p.Schema.Example = descriptor.DefaultValue.Value;
       }
+      else {
+        p.Schema.Default = null;
+        p.Schema.Example = null;
+      }
 
       op.Parameters.Add(p);
     }
