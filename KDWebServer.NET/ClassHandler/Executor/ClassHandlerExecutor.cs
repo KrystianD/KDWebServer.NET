@@ -76,7 +76,12 @@ internal static class ClassHandlerExecutor
               throw new ParserException(s);
             }
 
-            call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType, Consts.DefaultSerializer)!);
+            try {
+              call.Add(jsonData.ToObject(methodParameterDescriptor.ValueType, Consts.DefaultSerializer)!);
+            }
+            catch (Exception e) {
+              throw new ParserException($"invalid body: {e.Message}");
+            }
           }
           else {
             throw new ArgumentException("invalid parameter type");
