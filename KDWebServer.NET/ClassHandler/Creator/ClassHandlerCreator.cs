@@ -258,6 +258,16 @@ public static class ClassHandlerCreator
       FillFromDesc(p, descriptor);
       foreach (var value in descriptor.ParameterBuilder.DropdownItems)
         p.Schema.Enumeration.Add(value);
+      
+      if (descriptor.DefaultValue.HasDefaultValue) {
+        p.Schema.Default = descriptor.DefaultValue.Value;
+        p.Schema.Example = descriptor.DefaultValue.Value;
+      }
+      else {
+        p.Schema.Default = null;
+        p.Schema.Example = null;
+      }
+      
       op.Parameters.Add(p);
     }
 
