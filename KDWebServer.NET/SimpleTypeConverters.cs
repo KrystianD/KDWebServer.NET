@@ -70,6 +70,8 @@ public static class SimpleTypeConverters
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "int32";
+            x.Minimum ??= int.MinValue;
+            x.Maximum ??= int.MaxValue;
           },
           str => int.Parse(str),
           example: 0),
@@ -77,6 +79,8 @@ public static class SimpleTypeConverters
           x => {
             x.Type = JsonObjectType.Number;
             x.Format = "int64";
+            x.Minimum ??= long.MinValue;
+            x.Maximum ??= long.MaxValue;
           },
           str => long.Parse(str),
           example: 0),
