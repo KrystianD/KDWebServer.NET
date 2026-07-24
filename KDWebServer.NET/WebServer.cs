@@ -48,7 +48,8 @@ public class WebServer
       HashSet<HttpMethod> methods,
       bool skipDocs,
       Action<OpenApiOperation>? docsCreator,
-      bool runOnThreadPool)
+      bool runOnThreadPool,
+      bool requireAuthentication)
   {
     public readonly string Endpoint = endpoint;
     public readonly AsyncEndpointHandlerWithCancellation? HttpCallback = httpCallback;
@@ -57,6 +58,7 @@ public class WebServer
     public readonly bool SkipDocs = skipDocs;
     public readonly Action<OpenApiOperation> DocsCreator = docsCreator ?? (_ => { });
     public readonly bool RunOnThreadPool = runOnThreadPool;
+    public readonly bool RequireAuthentication = requireAuthentication;
 
     public bool IsWebsocket => WsCallback != null;
   }
@@ -97,33 +99,33 @@ public class WebServer
     TrustedProxies = trustedProxies.ToHashSet();
   }
 
-  public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  public void AddEndpoint(string endpoint, EndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false, bool requireAuthentication = false)
   {
-    AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods, skipDocs, docsCreator, runOnThreadPool);
+    AddEndpoint(endpoint, ctx => Task.FromResult(callback(ctx)), methods, skipDocs, docsCreator, runOnThreadPool, requireAuthentication: requireAuthentication);
   }
 
-  public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  public void AddEndpoint(string endpoint, AsyncEndpointHandler callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false, bool requireAuthentication = false)
   {
-    AddEndpoint(endpoint, (x, _) => callback(x), methods, skipDocs, docsCreator, runOnThreadPool);
+    AddEndpoint(endpoint, (x, _) => callback(x), methods, skipDocs, docsCreator, runOnThreadPool, requireAuthentication: requireAuthentication);
   }
 
-  public void AddEndpoint(string endpoint, AsyncEndpointHandlerWithCancellation callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  public void AddEndpoint(string endpoint, AsyncEndpointHandlerWithCancellation callback, HashSet<HttpMethod> methods, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false, bool requireAuthentication = false)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint, Config.Router);
-    Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs, docsCreator, runOnThreadPool)));
+    Endpoints.Add((route, new EndpointDefinition(endpoint, callback, null, methods, skipDocs, docsCreator, runOnThreadPool, requireAuthentication: requireAuthentication)));
   }
 
-  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false)
+  public void AddWsEndpoint(string endpoint, AsyncWebsocketEndpointHandler callback, bool skipDocs = false, Action<OpenApiOperation>? docsCreator = null, bool runOnThreadPool = false, bool requireAuthentication = false)
   {
     if (!(endpoint.StartsWith("/") || endpoint == "*"))
       throw new ArgumentException("endpoint path must start with slash or be a catch-all one (*)");
 
     var route = Router.CompileRoute(endpoint, Config.Router);
     var methods = new HashSet<HttpMethod>() { HttpMethod.Get };
-    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, skipDocs, docsCreator, runOnThreadPool)));
+    Endpoints.Add((route, new EndpointDefinition(endpoint, null, callback, methods, skipDocs, docsCreator, runOnThreadPool, requireAuthentication: requireAuthentication)));
   }
 
   public void AddGETEndpoint(string endpoint, EndpointHandler callback, Action<OpenApiOperation>? docsCreator = null) => AddEndpoint(endpoint, callback, new HashSet<HttpMethod>() { HttpMethod.Get }, skipDocs: false, docsCreator);
@@ -188,8 +190,19 @@ public class WebServer
 
         definition.DocsCreator(op);
 
+        if (definition.RequireAuthentication) {
+          op.Security = [new() { ["bearerAuth"] = [] }];
+        }
+
         item.Add(method.Method, op);
       }
+    }
+
+    if (Config.Auth.BearerAuthEnabled) {
+      _openApiDocument.Components.SecuritySchemes["bearerAuth"] = new OpenApiSecurityScheme() {
+          Type = OpenApiSecuritySchemeType.Http,
+          Scheme = "bearer",
+      };
     }
 
     var schemaJson = _openApiDocument.ToJson();

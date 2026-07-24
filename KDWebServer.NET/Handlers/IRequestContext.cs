@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using JetBrains.Annotations;
+using KDWebServer.Auth;
 using Microsoft.AspNetCore.Http;
 
 namespace KDWebServer.Handlers;
@@ -24,4 +25,7 @@ public interface IRequestContext
 
   // Params
   public QueryStringValuesCollection QueryString { get; }
+
+  // Auth
+  public IAuthState AuthState { get; }
 }

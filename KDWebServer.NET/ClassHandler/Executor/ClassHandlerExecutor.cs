@@ -91,6 +91,9 @@ internal static class ClassHandlerExecutor
         case ParameterKind.Context:
           call.Add(ctx);
           break;
+        case ParameterKind.AuthState:
+          call.Add(Convert.ChangeType(ctx.AuthState, methodParameterDescriptor.ValueType));
+          break;
         default:
           throw new ArgumentException("invalid parameter type");
       }

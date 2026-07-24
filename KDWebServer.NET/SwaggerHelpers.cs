@@ -48,6 +48,7 @@ internal static class SwaggerHelpers
         SwaggerUIBundle.presets.apis,
         SwaggerUIBundle.SwaggerUIStandalonePreset
       ],
+      persistAuthorization: true,
     });
   };
 </script>

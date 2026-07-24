@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KDWebServer.Auth;
 using KDWebServer.ClassHandler.Attributes;
 using KDWebServer.ClassHandler.Exceptions;
 using KDWebServer.ClassHandler.Executor;
@@ -83,6 +84,10 @@ public static class ClassHandlerCreator
         endpointBuilder.WithRunOnThreadPool(true);
       }
 
+      if (methodInfo.GetCustomAttribute<RequireAuthenticationAttribute>() != null) {
+        endpointBuilder.WithRequireAuthentication(true);
+      }
+
       var errorHandlerMiddlewareAttribute = methodInfo.GetCustomAttribute<ErrorHandlerMiddlewareAttribute>();
       if (errorHandlerMiddlewareAttribute != null) {
         endpointBuilder.WithErrorHandlerMiddleware(errorHandlerMiddlewareAttribute.Factory);
@@ -122,7 +127,8 @@ public static class ClassHandlerCreator
                     },
                     new HashSet<HttpMethod>() { endpointDefinition.HttpMethod },
                     skipDocs: true,
-                    runOnThreadPool: endpointDefinition.RunOnThreadPool);
+                    runOnThreadPool: endpointDefinition.RunOnThreadPool,
+                    requireAuthentication: endpointDefinition.RequireAuthentication);
 
     srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
   }
@@ -142,7 +148,8 @@ public static class ClassHandlerCreator
                         }
                       },
                       skipDocs: true,
-                      runOnThreadPool: endpointDefinition.RunOnThreadPool);
+                      runOnThreadPool: endpointDefinition.RunOnThreadPool,
+                      requireAuthentication: endpointDefinition.RequireAuthentication);
 
     srv.AppendSwaggerDocument(endpointDescriptor.OpenApiDocument);
   }
@@ -187,6 +194,9 @@ public static class ClassHandlerCreator
     foreach (var methodParameterDescriptor in methodParameterDescriptors.Where(x => x.Kind == null)) {
       if (methodParameterDescriptor.ValueType == typeof(HttpRequestContext)) {
         methodParameterDescriptor.Kind = ParameterKind.Context;
+      }
+      else if (methodParameterDescriptor.ValueType.GetInterfaces().Contains(typeof(IAuthState))) {
+        methodParameterDescriptor.Kind = ParameterKind.AuthState;
       }
     }
 
@@ -255,7 +265,7 @@ public static class ClassHandlerCreator
       FillFromDesc(p, descriptor);
       foreach (var value in descriptor.ParameterBuilder.DropdownItems)
         p.Schema.Enumeration.Add(value);
-      
+
       if (descriptor.DefaultValue.HasDefaultValue) {
         p.Schema.Default = descriptor.DefaultValue.Value;
         p.Schema.Example = descriptor.DefaultValue.Value;
@@ -264,7 +274,7 @@ public static class ClassHandlerCreator
         p.Schema.Default = null;
         p.Schema.Example = null;
       }
-      
+
       openApiOperation.Parameters.Add(p);
     }
 
@@ -356,8 +366,12 @@ public static class ClassHandlerCreator
       openApiOperation.IsDeprecated = true;
     }
 
+    if (endpointDefinition.RequireAuthentication) {
+      openApiOperation.Security = [new() { ["bearerAuth"] = [] }];
+    }
+
     openApiPathItem.Add(endpointDefinition.HttpMethod.ToString(), openApiOperation);
-    
+
     var routerPath = methodParameterDescriptors
                      .Where(x => x.Kind == ParameterKind.Path)
                      .Aggregate(endpointDefinition.Path, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KDWebServer.Auth;
 using Microsoft.AspNetCore.Http;
 using Nito.AsyncEx;
 
@@ -49,6 +50,9 @@ public class WebsocketRequestContext : IRequestContext
   // Params
   public QueryStringValuesCollection QueryString { get; }
 
+  // Auth
+  public IAuthState AuthState { get; init; }
+
   // WebSocket
   internal long _senderQueueBytes;
   internal readonly Channel<WebsocketOutgoingMessage> SenderQ;
@@ -68,6 +72,8 @@ public class WebsocketRequestContext : IRequestContext
     Params = ictx.Match.RouteParams;
 
     QueryString = QueryStringValuesCollection.FromNameValueCollection(ictx.HttpContext.Request.Query);
+
+    AuthState = ictx.AuthState;
 
     RemoteEndpoint = ictx.RemoteEndpoint;
     RawUrl = ictx.RawUrl;

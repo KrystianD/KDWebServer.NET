@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using JetBrains.Annotations;
+using KDWebServer.Auth;
 
 namespace KDWebServer;
 
@@ -7,6 +9,7 @@ public class WebServerConfig
 {
   public WebServerRouterConfig Router = new();
   public WebServerLoggerConfig Logger = new();
+  public WebServerAuthConfig Auth = new();
   public bool CORSAllowAll;
 }
 
@@ -21,4 +24,12 @@ public class WebServerRouterConfig
 public class WebServerLoggerConfig
 {
   public bool LogPayloads = true;
+}
+
+[PublicAPI]
+public class WebServerAuthConfig
+{
+  public bool BearerAuthEnabled = false;
+
+  public BearerAuthHandler BearerAuthHandler = _ => ValueTask.FromResult<IAuthState>(NotAuthenticatedAuthState.Instance);
 }

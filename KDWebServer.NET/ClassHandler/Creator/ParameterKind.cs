@@ -4,4 +4,5 @@ internal enum ParameterKind
 {
   Path, Query, Body,
   Context,
+  AuthState,
 }

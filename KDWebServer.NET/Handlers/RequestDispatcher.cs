@@ -112,9 +112,52 @@ public class RequestDispatcher
         Helpers.CloseStream(response, 400, e.Message);
         return;
       }
-      
+
       foreach (var observer in WebServer.Observers)
         observer.OnRequestMatch(httpContext, ctx.Match);
+
+      // Auth 
+      if (WebServer.Config.Auth.BearerAuthEnabled) {
+        if (httpContext.Request.Headers.Authorization is { Count: > 0 } auth && auth[0] is { } str0) {
+          var parts = str0.Split(' ', 2);
+          if (parts.Length != 2 || !parts[0].Equals("bearer", StringComparison.InvariantCultureIgnoreCase)) {
+            Logger.ForInfoEvent()
+                  .Message($"[{ctx.ClientId}] Invalid authentication - {logSuffix}")
+                  .Properties(advLogProperties)
+                  .Property("webserver.status_code", 403)
+                  .Log();
+
+            Helpers.CloseStream(response, 403, "invalid authentication");
+            return;
+          }
+
+          var bearerToken = parts[1];
+          ctx.AuthState = await WebServer.Config.Auth.BearerAuthHandler(bearerToken);
+
+          if (ctx is { Match.Endpoint.RequireAuthentication: true, AuthState.IsAuthenticated: false }) {
+            Logger.ForInfoEvent()
+                  .Message($"[{ctx.ClientId}] Not authenticated - {logSuffix}")
+                  .Properties(advLogProperties)
+                  .Property("webserver.status_code", 403)
+                  .Log();
+
+            Helpers.CloseStream(response, 403, "not authenticated");
+            return;
+          }
+        }
+        else {
+          if (ctx.Match.Endpoint.RequireAuthentication) {
+            Logger.ForInfoEvent()
+                  .Message($"[{ctx.ClientId}] No authentication - {logSuffix}")
+                  .Properties(advLogProperties)
+                  .Property("webserver.status_code", 403)
+                  .Log();
+
+            Helpers.CloseStream(response, 403, "no authentication");
+            return;
+          }
+        }
+      }
 
       // Handle
       if (ctx.Match.Endpoint.IsWebsocket) {

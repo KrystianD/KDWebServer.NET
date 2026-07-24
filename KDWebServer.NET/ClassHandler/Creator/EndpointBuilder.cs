@@ -22,6 +22,7 @@ public class EndpointDefinition
   public bool IsDeprecated = false;
   public ResponseTypeEnum ResponseType = ResponseTypeEnum.Json;
   public bool RunOnThreadPool = false;
+  public bool RequireAuthentication = false;
   public readonly List<ParameterDefinition> Parameters = new();
 
   public Func<ErrorHandlerMiddleware>? ErrorHandlerMiddlewareFactory;
@@ -98,6 +99,12 @@ public class EndpointBuilder
   public EndpointBuilder WithRunOnThreadPool(bool runOnThreadPool = true)
   {
     Endpoint.RunOnThreadPool = runOnThreadPool;
+    return this;
+  }
+
+  public EndpointBuilder WithRequireAuthentication(bool requireAuthentication = true)
+  {
+    Endpoint.RequireAuthentication = requireAuthentication;
     return this;
   }
 

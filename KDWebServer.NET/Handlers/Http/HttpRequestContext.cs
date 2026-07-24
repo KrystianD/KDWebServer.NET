@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Xml.Linq;
 using JetBrains.Annotations;
+using KDWebServer.Auth;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 
@@ -27,12 +28,15 @@ public class HttpRequestContext : IRequestContext
   // Params
   public QueryStringValuesCollection QueryString { get; }
 
+  // Auth
+  public IAuthState AuthState { get; init; }
+
   // Content
   public byte[] RawData { get; set; }
   public QueryStringValuesCollection? FormData { get; set; }
   public JToken? JsonData { get; set; }
   public XDocument? XmlData { get; set; }
-
+  
   internal HttpRequestContext(InternalRequestContext ictx, byte[] rawData, CancellationToken token)
   {
     HttpContext = ictx.HttpContext;
@@ -43,6 +47,8 @@ public class HttpRequestContext : IRequestContext
     Params = ictx.Match.RouteParams;
 
     QueryString = QueryStringValuesCollection.FromNameValueCollection(ictx.HttpContext.Request.Query);
+
+    AuthState = ictx.AuthState;
 
     RemoteEndpoint = ictx.RemoteEndpoint;
     RawUrl = ictx.RawUrl;
