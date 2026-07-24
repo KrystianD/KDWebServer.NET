@@ -33,6 +33,7 @@ public class WebServerConfig
 {
   public WebServerRouterConfig Router = new();
   public WebServerLoggerConfig Logger = new();
+  public bool CORSAllowAll;
 }
 
 [PublicAPI]
