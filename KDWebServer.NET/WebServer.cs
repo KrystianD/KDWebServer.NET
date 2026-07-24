@@ -62,34 +62,24 @@ public class WebServer
 
   private WebApplication _listener;
 
-  public class EndpointDefinition
+  public class EndpointDefinition(
+      string endpoint,
+      AsyncEndpointHandlerWithCancellation? httpCallback,
+      AsyncWebsocketEndpointHandler? wsCallback,
+      HashSet<HttpMethod> methods,
+      bool skipDocs,
+      Action<OpenApiOperation>? docsCreator,
+      bool runOnThreadPool)
   {
-    public readonly string Endpoint;
-    public readonly AsyncEndpointHandlerWithCancellation? HttpCallback;
-    public readonly AsyncWebsocketEndpointHandler? WsCallback;
-    public readonly HashSet<HttpMethod> Methods;
-    public readonly bool SkipDocs;
-    public readonly Action<OpenApiOperation> DocsCreator;
-    public readonly bool RunOnThreadPool;
+    public readonly string Endpoint = endpoint;
+    public readonly AsyncEndpointHandlerWithCancellation? HttpCallback = httpCallback;
+    public readonly AsyncWebsocketEndpointHandler? WsCallback = wsCallback;
+    public readonly HashSet<HttpMethod> Methods = methods;
+    public readonly bool SkipDocs = skipDocs;
+    public readonly Action<OpenApiOperation> DocsCreator = docsCreator ?? (_ => { });
+    public readonly bool RunOnThreadPool = runOnThreadPool;
 
     public bool IsWebsocket => WsCallback != null;
-
-    public EndpointDefinition(string endpoint,
-                              AsyncEndpointHandlerWithCancellation? httpCallback,
-                              AsyncWebsocketEndpointHandler? wsCallback,
-                              HashSet<HttpMethod> methods,
-                              bool skipDocs,
-                              Action<OpenApiOperation>? docsCreator,
-                              bool runOnThreadPool)
-    {
-      Endpoint = endpoint;
-      HttpCallback = httpCallback;
-      WsCallback = wsCallback;
-      Methods = methods;
-      SkipDocs = skipDocs;
-      DocsCreator = docsCreator ?? (_ => { });
-      RunOnThreadPool = runOnThreadPool;
-    }
   }
 
   public string? Name { get; set; }
