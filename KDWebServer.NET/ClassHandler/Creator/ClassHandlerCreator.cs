@@ -236,13 +236,13 @@ public static class ClassHandlerCreator
       }
     }
 
-    OpenApiPathItem? item;
-    if (!openApiDocument.Paths.TryGetValue(endpointPath, out item)) {
-      item = new OpenApiPathItem();
-      openApiDocument.Paths[endpointPath] = item;
+    OpenApiPathItem? openApiPathItem;
+    if (!openApiDocument.Paths.TryGetValue(endpointPath, out openApiPathItem)) {
+      openApiPathItem = new OpenApiPathItem();
+      openApiDocument.Paths[endpointPath] = openApiPathItem;
     }
 
-    var op = new OpenApiOperation();
+    var openApiOperation = new OpenApiOperation();
 
     foreach (var descriptor in methodParameterDescriptors.Where(x => x.Kind == ParameterKind.Path)) {
       var p = new OpenApiParameter();
@@ -265,7 +265,7 @@ public static class ClassHandlerCreator
         p.Schema.Example = null;
       }
       
-      op.Parameters.Add(p);
+      openApiOperation.Parameters.Add(p);
     }
 
     foreach (var descriptor in methodParameterDescriptors.Where(x => x.Kind == ParameterKind.Query)) {
@@ -289,12 +289,12 @@ public static class ClassHandlerCreator
         p.Schema.Example = null;
       }
 
-      op.Parameters.Add(p);
+      openApiOperation.Parameters.Add(p);
     }
 
     if (bodyParameterDescriptor != null) {
-      op.RequestBody = new OpenApiRequestBody();
-      op.RequestBody.Content.Add("application/json", new OpenApiMediaType() {
+      openApiOperation.RequestBody = new OpenApiRequestBody();
+      openApiOperation.RequestBody.Content.Add("application/json", new OpenApiMediaType() {
               Schema = bodyJsonSchema,
           }
       );
@@ -334,30 +334,30 @@ public static class ClassHandlerCreator
       }
     }
 
-    op.Responses.Add("200", response);
+    openApiOperation.Responses.Add("200", response);
 
     var category = endpointDefinition.Category;
     if (category != "") {
-      op.Tags = new List<string>() { category };
+      openApiOperation.Tags = new List<string>() { category };
     }
 
     var description = endpointDefinition.Description;
     if (description != "") {
-      op.Summary = description;
-      op.Description = description;
+      openApiOperation.Summary = description;
+      openApiOperation.Description = description;
     }
 
     var summary = endpointDefinition.Summary;
     if (summary != "") {
-      op.Summary = summary;
+      openApiOperation.Summary = summary;
     }
 
     if (endpointDefinition.IsDeprecated) {
-      op.IsDeprecated = true;
+      openApiOperation.IsDeprecated = true;
     }
 
-    item.Add(endpointDefinition.HttpMethod.ToString(), op);
-
+    openApiPathItem.Add(endpointDefinition.HttpMethod.ToString(), openApiOperation);
+    
     var routerPath = methodParameterDescriptors
                      .Where(x => x.Kind == ParameterKind.Path)
                      .Aggregate(endpointDefinition.Path, (current, x) => current.Replace($"{{{x.Name}}}", $"<string:{x.Name}>"));
