@@ -33,19 +33,19 @@ public class HttpRequestContext : IRequestContext
   public JToken? JsonData { get; set; }
   public XDocument? XmlData { get; set; }
 
-  internal HttpRequestContext(HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, RequestDispatcher.RouteEndpointMatch match, byte[] rawData, CancellationToken token)
+  internal HttpRequestContext(InternalRequestContext ictx, byte[] rawData, CancellationToken token)
   {
-    HttpContext = httpContext;
+    HttpContext = ictx.HttpContext;
     Token = token;
 
-    HttpMethod = new HttpMethod(httpContext.Request.Method);
+    HttpMethod = new HttpMethod(ictx.HttpContext.Request.Method);
 
-    Params = match.RouteParams;
+    Params = ictx.Match.RouteParams;
 
-    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Query);
+    QueryString = QueryStringValuesCollection.FromNameValueCollection(ictx.HttpContext.Request.Query);
 
-    RemoteEndpoint = remoteEndpoint;
-    RawUrl = rawUrl;
+    RemoteEndpoint = ictx.RemoteEndpoint;
+    RawUrl = ictx.RawUrl;
 
     RawData = rawData;
   }

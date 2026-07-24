@@ -55,25 +55,22 @@ public class WebsocketRequestContext : IRequestContext
   public long SenderQueueBytes => _senderQueueBytes;
   public int SenderQueueCount => SenderQ.Reader.Count;
 
-  internal WebsocketRequestContext(HttpContext httpContext,
-                                   IPAddress remoteEndpoint,
-                                   string rawUrl,
-                                   RequestDispatcher.RouteEndpointMatch match,
+  internal WebsocketRequestContext(InternalRequestContext ictx,
                                    WebSocket webSocket,
                                    int senderQueueLength,
                                    CancellationToken token)
   {
     _webSocket = webSocket;
 
-    HttpContext = httpContext;
+    HttpContext = ictx.HttpContext;
     Token = token;
 
-    Params = match.RouteParams;
+    Params = ictx.Match.RouteParams;
 
-    QueryString = QueryStringValuesCollection.FromNameValueCollection(httpContext.Request.Query);
+    QueryString = QueryStringValuesCollection.FromNameValueCollection(ictx.HttpContext.Request.Query);
 
-    RemoteEndpoint = remoteEndpoint;
-    RawUrl = rawUrl;
+    RemoteEndpoint = ictx.RemoteEndpoint;
+    RawUrl = ictx.RawUrl;
 
     SenderQ = Channel.CreateBounded<WebsocketOutgoingMessage>(senderQueueLength);
   }

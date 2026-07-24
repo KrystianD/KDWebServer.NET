@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.AspNetCore.Http;
 using Nito.AsyncEx;
 using NLog;
 
@@ -18,40 +15,29 @@ namespace KDWebServer.Handlers.Websocket;
 [SuppressMessage("ReSharper", "MethodHasAsyncOverload")]
 public class WebsocketClientHandler
 {
-  private readonly HttpContext _httpContext;
-  private readonly DateTime _connectionTime;
-  private readonly RequestDispatcher.RouteEndpointMatch Match;
+  public ILogger Logger { get; }
 
   private WebServer WebServer { get; }
-  public ILogger Logger { get; }
-  public string RawUrl { get; }
-  public string ClientId { get; }
-  private IPAddress RemoteEndpoint { get; }
+  private readonly InternalRequestContext _ictx;
 
-  internal WebsocketClientHandler(WebServer webServer, HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, string clientId, DateTime connectionTime, Stopwatch requestTimer, RequestDispatcher.RouteEndpointMatch match)
+  internal WebsocketClientHandler(WebServer webServer, InternalRequestContext ictx)
   {
-    _httpContext = httpContext;
-    _connectionTime = connectionTime;
+    _ictx = ictx;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.ws") ?? LogManager.LogFactory.CreateNullLogger();
-
-    RemoteEndpoint = remoteEndpoint;
-    RawUrl = rawUrl;
-    ClientId = clientId;
-    Match = match;
   }
 
   // ReSharper disable AccessToDisposedClosure
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
-    var ws = await _httpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+    var ws = await _ictx.HttpContext.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
 
-    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_httpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
+    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_ictx.HttpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
     var requestAbortedToken = requestCancellationCts.Token;
 
     using var senderQueueToken = CancellationTokenSource.CreateLinkedTokenSource(requestAbortedToken);
-    
-    WebsocketRequestContext ctx = new WebsocketRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, ws, WebServer.WebsocketSenderQueueLength, senderQueueToken.Token);
+
+    WebsocketRequestContext ctx = new WebsocketRequestContext(_ictx, ws, WebServer.WebsocketSenderQueueLength, senderQueueToken.Token);
 
     // ReSharper disable AccessToDisposedClosure
     var senderTask = Task.Run(async () => {
@@ -73,27 +59,27 @@ public class WebsocketClientHandler
     }, senderQueueToken.Token);
     // ReSharper restore AccessToDisposedClosure
 
-    var logSuffix = $"{_httpContext.Request.Path.Value}";
+    var logSuffix = $"{_ictx.HttpContext.Request.Path.Value}";
 
     Logger.ForInfoEvent()
-          .Message($"[{ClientId}] New WS request - {logSuffix}")
+          .Message($"[{_ictx.ClientId}] New WS request - {logSuffix}")
           .Properties(advLogProperties)
-          .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
+          .Property("webserver.time_conn", $"{(int)(_ictx.ConnectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     // ReSharper disable AccessToDisposedClosure
     try {
-      if (Match.Endpoint.RunOnThreadPool) {
-        await Task.Run(async () => await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), senderQueueToken.Token).ConfigureAwait(false);
+      if (_ictx.Match.Endpoint.RunOnThreadPool) {
+        await Task.Run(async () => await _ictx.Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false), senderQueueToken.Token).ConfigureAwait(false);
       }
       else if (WebServer.SynchronizationContext == null) {
-        await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false);
+        await _ictx.Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token).ConfigureAwait(false);
       }
       else {
         var scope = ScopeContext.GetAllProperties().ToArray();
         await WebServer.SynchronizationContext.PostAsync(async () => {
           using var _ = ScopeContext.PushProperties(scope);
-          await Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token);
+          await _ictx.Match.Endpoint.WsCallback!(ctx, senderQueueToken.Token);
         }).ConfigureAwait(false);
       }
 
@@ -108,13 +94,13 @@ public class WebsocketClientHandler
       }
 
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] WS handler finished gracefully, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
+            .Message($"[{_ictx.ClientId}] WS handler finished gracefully, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
     }
     catch (WebSocketException) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
+            .Message($"[{_ictx.ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
 
@@ -122,7 +108,7 @@ public class WebsocketClientHandler
     }
     catch (WebSocketDisconnect) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
+            .Message($"[{_ictx.ClientId}] WS connection has been closed, code: {ws.CloseStatus?.ToString()}, message: {ws.CloseStatusDescription} - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
 
@@ -130,13 +116,13 @@ public class WebsocketClientHandler
     }
     catch (OperationCanceledException) when (senderQueueToken.IsCancellationRequested) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] WS connection has been closed - {logSuffix}")
+            .Message($"[{_ictx.ClientId}] WS connection has been closed - {logSuffix}")
             .Properties(advLogProperties)
             .Log();
     }
     catch (Exception e) {
       Logger.ForErrorEvent()
-            .Message($"[{ClientId}] Error during handling WS connection - {logSuffix}")
+            .Message($"[{_ictx.ClientId}] Error during handling WS connection - {logSuffix}")
             .Properties(advLogProperties)
             .Exception(e)
             .Log();

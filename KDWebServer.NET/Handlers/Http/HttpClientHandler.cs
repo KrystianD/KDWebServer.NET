@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nito.AsyncEx;
-using Nito.Disposables;
 using NLog;
 
 namespace KDWebServer.Handlers.Http;
@@ -22,72 +21,62 @@ public class HttpClientHandler
 {
   private static readonly JsonSerializerSettings JsonSerializerSettings = new() { DateParseHandling = DateParseHandling.None };
 
-  private readonly HttpContext _httpContext;
-  private readonly DateTime _connectionTime;
-  private readonly Stopwatch _requestTimer;
-  private readonly RequestDispatcher.RouteEndpointMatch Match;
-  public long HandlerTime;
-  public long ProcessingTime;
+  private ILogger Logger { get; }
+  internal ILogger LoggerResponse { get; }
 
   private WebServer WebServer { get; }
-  public ILogger Logger { get; }
-  public ILogger LoggerResponse { get; }
-  public string RawUrl { get; }
-  public string ClientId { get; }
-  private IPAddress RemoteEndpoint { get; }
+  private readonly InternalRequestContext _ictx;
 
-  internal HttpClientHandler(WebServer webServer, HttpContext httpContext, IPAddress remoteEndpoint, string rawUrl, DateTime connectionTime, Stopwatch requestTimer, string clientId, RequestDispatcher.RouteEndpointMatch match)
+  public string ClientId => _ictx.ClientId;
+
+  internal long HandlerTime;
+  internal long ProcessingTime;
+
+  internal HttpClientHandler(WebServer webServer, InternalRequestContext ictx)
   {
-    _httpContext = httpContext;
-    _connectionTime = connectionTime;
-    _requestTimer = requestTimer;
+    _ictx = ictx;
     WebServer = webServer;
     Logger = webServer.LogFactory?.GetLogger("webserver.http") ?? LogManager.LogFactory.CreateNullLogger();
     LoggerResponse = webServer.LogFactory?.GetLogger("webserver.http.response") ?? LogManager.LogFactory.CreateNullLogger();
-
-    RemoteEndpoint = remoteEndpoint;
-    RawUrl = rawUrl;
-    ClientId = clientId;
-    Match = match;
   }
 
   public async Task Handle(Dictionary<string, object?> advLogProperties)
   {
-    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_httpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
+    using var requestCancellationCts = CancellationTokenSource.CreateLinkedTokenSource(_ictx.HttpContext.Response.HttpContext.RequestAborted, WebServer.ServerShutdownToken);
     var requestAbortedToken = requestCancellationCts.Token;
 
     HttpRequestContext ctx;
 
     var props = new Dictionary<string, object?>(advLogProperties);
-    props.Add("webserver.content_type", _httpContext.Request.ContentType);
-    props.Add("webserver.content_length", _httpContext.Request.ContentLength);
+    props.Add("webserver.content_type", _ictx.HttpContext.Request.ContentType);
+    props.Add("webserver.content_length", _ictx.HttpContext.Request.ContentLength);
     try {
-      var rawData = await ReadPayload(_httpContext, requestAbortedToken).ConfigureAwait(false);
+      var rawData = await ReadPayload(_ictx.HttpContext, requestAbortedToken).ConfigureAwait(false);
 
-      ctx = new HttpRequestContext(_httpContext, RemoteEndpoint, RawUrl, Match, rawData, requestAbortedToken);
+      ctx = new HttpRequestContext(_ictx, rawData, requestAbortedToken);
 
-      if (_httpContext.Request.ContentType != null) {
+      if (_ictx.HttpContext.Request.ContentType != null) {
         var parsedContent = ProcessKnownTypes(ctx);
         props.Add("content", WebServer.Config.Logger.LogPayloads ? parsedContent : "<skipped>");
       }
     }
     catch (Exception e) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] Error during reading/parsing HTTP request - {_httpContext.Request.Method} {_httpContext.Request.Path.Value} - {e.Message}")
+            .Message($"[{_ictx.ClientId}] Error during reading/parsing HTTP request - {_ictx.HttpContext.Request.Method} {_ictx.HttpContext.Request.Path.Value} - {e.Message}")
             .Properties(props)
             .Property("webserver.status_code", 400)
             .Log();
 
-      Helpers.SetResponse(_httpContext.Response, 400);
+      Helpers.SetResponse(_ictx.HttpContext.Response, 400);
       return;
     }
 
-    var ep = Match.Endpoint;
+    var ep = _ictx.Match.Endpoint;
 
     Logger.ForInfoEvent()
-          .Message($"[{ClientId}] New HTTP request - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
+          .Message($"[{_ictx.ClientId}] New HTTP request - {_ictx.HttpContext.Request.Method} {_ictx.HttpContext.Request.Path.Value}")
           .Properties(props)
-          .Property("webserver.time_conn", $"{(int)(_connectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
+          .Property("webserver.time_conn", $"{(int)(_ictx.ConnectionTime - DateTime.UtcNow).TotalMilliseconds}ms")
           .Log();
 
     Stopwatch timer = new Stopwatch();
@@ -116,25 +105,25 @@ public class HttpClientHandler
       }
 
       HandlerTime = timer.ElapsedMilliseconds;
-      ProcessingTime = _requestTimer.ElapsedMilliseconds;
+      ProcessingTime = _ictx.RequestTimer.ElapsedMilliseconds;
 
       foreach (string responseHeader in response.Headers)
-        _httpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
+        _ictx.HttpContext.Response.Headers.Add(responseHeader, response.Headers[responseHeader]);
 
       foreach (var observer in WebServer.Observers)
-        observer.AfterRequestCallback(_httpContext, Match, response, timer.Elapsed, _requestTimer.Elapsed);
+        observer.AfterRequestCallback(_ictx.HttpContext, _ictx.Match, response, timer.Elapsed, _ictx.RequestTimer.Elapsed);
 
-      await response.WriteToResponse(this, _httpContext.Response, WebServer.Config.Logger, advLogProperties, requestAbortedToken).ConfigureAwait(false);
+      await response.WriteToResponse(this, _ictx.HttpContext.Response, WebServer.Config.Logger, advLogProperties, requestAbortedToken).ConfigureAwait(false);
 
       foreach (var observer in WebServer.Observers)
-        observer.AfterRequestSent(_httpContext, Match, response, _requestTimer.Elapsed);
+        observer.AfterRequestSent(_ictx.HttpContext, _ictx.Match, response, _ictx.RequestTimer.Elapsed);
     }
     catch (OperationCanceledException) when (WebServer.ServerShutdownToken.IsCancellationRequested) {
-      Helpers.SetResponse(_httpContext.Response, 444, "server is being shut down");
+      Helpers.SetResponse(_ictx.HttpContext.Response, 444, "server is being shut down");
     }
     catch (OperationCanceledException) when (requestAbortedToken.IsCancellationRequested) {
       Logger.ForInfoEvent()
-            .Message($"[{ClientId}] Request aborted - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
+            .Message($"[{_ictx.ClientId}] Request aborted - {_ictx.HttpContext.Request.Method} {_ictx.HttpContext.Request.Path.Value}")
             .Properties(props)
             .Log();
     }
@@ -145,16 +134,16 @@ public class HttpClientHandler
       // transport is already closed
     }
     catch (Exception e) {
-      ProcessingTime = _requestTimer.ElapsedMilliseconds;
+      ProcessingTime = _ictx.RequestTimer.ElapsedMilliseconds;
 
       Logger.ForErrorEvent()
-            .Message($"[{ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_httpContext.Request.Method} {_httpContext.Request.Path.Value}")
+            .Message($"[{_ictx.ClientId}] Error during handling HTTP request ({ProcessingTime}ms) - {_ictx.HttpContext.Request.Method} {_ictx.HttpContext.Request.Path.Value}")
             .Properties(props)
             .Property("webserver.status_code", 500)
             .Exception(e)
             .Log();
 
-      Helpers.SetResponse(_httpContext.Response, 500);
+      Helpers.SetResponse(_ictx.HttpContext.Response, 500);
     }
   }
 
