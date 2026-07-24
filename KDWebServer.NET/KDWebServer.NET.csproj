@@ -6,7 +6,7 @@
         <Version>1.1.9</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Krystian Dużyński</Authors>
-        <LangVersion>10</LangVersion>
+        <LangVersion>12</LangVersion>
         <Nullable>enable</Nullable>
         <DebugSymbols>true</DebugSymbols>
         <DebugType>embedded</DebugType>
