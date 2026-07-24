@@ -57,6 +57,7 @@ public class RequestDispatcher
     using (ScopeContext.PushProperty("webserver.url", rawUrl))
     using (ScopeContext.PushProperty("webserver.short_id", shortId))
     using (ScopeContext.PushProperty("webserver.remote_ip", remoteEndpoint)) {
+      // Validate request integrity
       if (remoteEndpoint == null) {
         Logger.ForInfoEvent()
               .Message($"[{clientId}] Invalid request - {logSuffix}")
@@ -68,6 +69,7 @@ public class RequestDispatcher
         return;
       }
 
+      // CORS
       if (WebServer.Config.CORSAllowAll) {
         if (!isWS) {
           httpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
@@ -81,6 +83,7 @@ public class RequestDispatcher
         }
       }
 
+      // Match route
       RouteEndpointMatch? match;
       try {
         match = MatchRoutes(path, new HttpMethod(request.Method));
@@ -105,10 +108,11 @@ public class RequestDispatcher
         Helpers.CloseStream(response, 400, e.Message);
         return;
       }
-
+      
       foreach (var observer in WebServer.Observers)
         observer.OnRequestMatch(httpContext, match);
 
+      // Handle
       if (match.Endpoint.IsWebsocket) {
         if (isWS) {
           var wsHandler = new Websocket.WebsocketClientHandler(WebServer, httpContext, remoteEndpoint, rawUrl, clientId, connectionTime, requestTimer, match);
